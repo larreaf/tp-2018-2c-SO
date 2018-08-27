@@ -1,6 +1,9 @@
 # ensalada shared library
 1. Clonar e instalar las commons https://github.com/sisoputnfrba/so-commons-library
-2. Clonar este repositorio e importarlo en eclipse https://www.youtube.com/watch?v=v1-POeJtW3E
+2. Clonar este repositorio e importarlo en eclipse
+
+[![image](https://img.youtube.com/vi/v1-POeJtW3E/0.jpg)](https://www.youtube.com/watch?v=v1-POeJtW3E)
+
 3. Compilar la biblioteca.
 
 Para probarla pueden crear proyectos en el mismo directorio y linkear la biblioteca yendo a: 

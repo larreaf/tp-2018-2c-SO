@@ -50,7 +50,7 @@ void conectar_Servidor(int fd_socket, struct sockaddr *addr_servidor){
 }
 
 void comprobar_error(int variable, const char* mensajeError){
-	if(variable == -1){
+	if(variable < 0){
 		perror(mensajeError);
 		exit(1);
 	}

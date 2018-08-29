@@ -17,10 +17,11 @@
 
 
 	typedef enum {
-			PROCESO1,
-			PROCESO2,
-			PROCESO3,
-			PROCESO4
+			safa,
+			elDiego,
+			fm9,
+			cpu,
+			mdj
 	} Proceso;
 
 

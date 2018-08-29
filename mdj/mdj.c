@@ -14,7 +14,7 @@
 
 int main(int argc, char **argv) {
 	validar_parametros(argc);
-	t_config* cfg_file = validar_config(argv[0],mdj);
-	puts(""); /* prints  */
+	t_config* cfg_file = validar_config(argv[1],mdj);
+	puts("fin"); /* prints  */
 	return EXIT_SUCCESS;
 }

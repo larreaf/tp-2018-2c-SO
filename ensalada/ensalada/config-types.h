@@ -49,7 +49,7 @@
 	};
 
 	char CONFIGURACION_elDiego[CONFIG_elDiego][TAMANIO_STRING] = {
-			"PUERTO"
+			"PUERTO",
 			"IP_SAFA",
 			"PUERTO_SAFA",
 			"IP_MDJ",

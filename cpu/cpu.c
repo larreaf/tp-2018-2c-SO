@@ -15,6 +15,8 @@
 int main(int argc, char **argv) {
 	validar_parametros(argc);
 	t_config* cfg_file = validar_config(argv[1],cpu);
+	cfg_cpu* configuracion = asignar_config(cfg_file,cpu);
+
 	puts(""); /* prints  */
 	return EXIT_SUCCESS;
 }

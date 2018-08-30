@@ -13,15 +13,16 @@
 	#include <commons/log.h>
 
 
+
 	#define MY_IP "127.0.0.1"
 
 
 	typedef enum {
-			safa,
-			elDiego,
-			fm9,
-			cpu,
-			mdj
+			t_safa,
+			t_elDiego,
+			t_fm9,
+			t_cpu,
+			t_mdj
 	} Proceso;
 
 

@@ -15,6 +15,8 @@
 int main(int argc, char **argv) {
 	validar_parametros(argc);
 	t_config* cfg_file = validar_config(argv[1],elDiego);
+	cfg_elDiego* configuracion = asignar_config(cfg_file,elDiego);
+
 	puts(""); /* prints  */
 	return EXIT_SUCCESS;
 }

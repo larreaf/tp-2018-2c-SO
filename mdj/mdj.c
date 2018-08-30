@@ -13,6 +13,7 @@
 #include <ensalada/validacion.h>
 #include <ensalada/com.h>
 #include <netinet/in.h>
+#include <commons/string.h>
 
 struct sockaddr_in addr_local;
 
@@ -38,15 +39,15 @@ int main(int argc, char **argv) {
 	for(;;){
 		recv(socket_elDiego,&tamanio,sizeof(int),0);
 
-		buffer = malloc(tamanio);
+		buffer = malloc(tamanio+1);
 
 		recv(socket_elDiego,buffer,tamanio,0);
 		buffer[tamanio] = '\0';
 		printf("recibio: %s\n",buffer);
 		if(!strcmp(buffer,"exit")){
-			free(buffer);
-			free(configuracion);
-			exit(0);
+			free((void*)buffer);
+			destroy_cfg(configuracion,t_mdj);
+			return EXIT_SUCCESS;
 		}
 		free(buffer);
 		tamanio = 0;

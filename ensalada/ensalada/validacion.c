@@ -39,6 +39,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 				true_value = config_has_property(configuracion, CONFIGURACION_safa[i]);
 				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_safa[i]);
 				atrapar_error(true_value,mensaje_error);
+				free(mensaje_error);
 			}
 			break;
 
@@ -47,6 +48,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 				true_value = config_has_property(configuracion, CONFIGURACION_elDiego[i]);
 				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_elDiego[i]);
 				atrapar_error(true_value,mensaje_error);
+				free(mensaje_error);
 			}
 			break;
 
@@ -55,6 +57,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 				true_value = config_has_property(configuracion, CONFIGURACION_fm9[i]);
 				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_fm9[i]);
 				atrapar_error(true_value,mensaje_error);
+				free(mensaje_error);
 			}
 
 			break;
@@ -64,6 +67,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 				true_value = config_has_property(configuracion, CONFIGURACION_cpu[i]);
 				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_cpu[i]);
 				atrapar_error(true_value,mensaje_error);
+				free(mensaje_error);
 			}
 			break;
 
@@ -72,6 +76,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 				true_value = config_has_property(configuracion, CONFIGURACION_mdj[i]);
 				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_mdj[i]);
 				atrapar_error(true_value,mensaje_error);
+				free(mensaje_error);
 			}
 			break;
 
@@ -80,7 +85,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 
 	}
 	printf("Archivo de configuracion correcto!\n");
-	free(mensaje_error);
+	//free(mensaje_error);
 	return configuracion;
 }
 
@@ -159,10 +164,46 @@ void* asignar_config(t_config * archivo_config,t_process tipo_proceso){
 	return retorno;
 }
 
+void destroy_cfg (void* cfg, t_process tipo){
+	switch (tipo) {
+
+			case safa :
+				free(cfg);
+				break;
+
+			case elDiego :
+			//	free(((cfg_elDiego*)(cfg))->ip_safa);
+			//	free(((cfg_elDiego*)(cfg))->ip_mdj);
+			//	free(((cfg_elDiego*)(cfg))->ip_fm9);
+				free(cfg);
+				break;
+
+			case fm9 :
+				free(cfg);
+				break;
+
+			case cpu :
+			//	free(((cfg_cpu*)(cfg))->ip_safa);
+			//	free(((cfg_cpu*)(cfg))->ip_elDiego);
+				free(cfg);
+				break;
+
+			case mdj :
+				//free((void*)((cfg_mdj*)(cfg))->punto_montaje);
+				free(cfg);
+				break;
+			default:
+				atrapar_error(0,"Error en tipo");
+				break;
+
+		}
+}
+
 
 void atrapar_error(bool valor, char* mensaje_error){
 	if(valor == 0){
 		printf("Error: %s",mensaje_error);
+		free(mensaje_error);
 		exit(1);
 	}
 }

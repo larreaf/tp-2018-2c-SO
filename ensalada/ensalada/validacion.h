@@ -32,6 +32,12 @@
 	void* asignar_config(t_config* archivo_config, t_process process);
 
 	/*
+	 * @NAME: destroy_cfg
+	 * @DESC: libera la memoria de los tipos (struct cfg_*)
+	 */
+
+	void destroy_cfg (void* cfg, t_process tipo);
+	/*
 	 * @NAME: atrapar_error
 	 * @DESC: evalua el valor bool, en caso de ser igual a 0 imprime el mensaje_error y cierra el proceso
 	 */

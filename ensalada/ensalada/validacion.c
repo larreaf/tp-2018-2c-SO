@@ -85,7 +85,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 
 	}
 	printf("Archivo de configuracion correcto!\n");
-	//free(mensaje_error);
+
 	return configuracion;
 }
 

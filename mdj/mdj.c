@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 	validar_parametros(argc);
 	t_config* cfg_file = validar_config(argv[1],mdj);
 	cfg_mdj* configuracion = asignar_config(cfg_file,mdj);
-	config_destroy(cfg_file);
+
 	inicializarDireccion(&addr_local,configuracion->puerto,MY_IP);
 	socket_escucha = escuchar_Conexion((&addr_local));
 	socket_elDiego = aceptar_conexion(socket_escucha);
@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
 		if(!strcmp(buffer,"exit")){
 			free((void*)buffer);
 			destroy_cfg(configuracion,t_mdj);
+			config_destroy(cfg_file);
 			return EXIT_SUCCESS;
 		}
 		free(buffer);

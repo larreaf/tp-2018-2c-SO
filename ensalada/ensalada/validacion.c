@@ -1,5 +1,52 @@
 #include "validacion.h"
 
+/*
+ * Arrays de dos dimensiones para contrastar con los archivos de configuracion
+ * correspondientes y verificar si estan correctos.
+ */
+
+char CONFIGURACION_safa[CONFIG_safa][TAMANIO_STRING] = {
+		"PUERTO",
+		"ALGORITMO",
+		"QUANTUM",
+		"MULTIPROGRAMACION",
+		"RETARDO_PLANIF"
+
+};
+
+char CONFIGURACION_elDiego[CONFIG_elDiego][TAMANIO_STRING] = {
+		"PUERTO",
+		"IP_SAFA",
+		"PUERTO_SAFA",
+		"IP_MDJ",
+		"PUERTO_MDJ",
+		"IP_FM9",
+		"PUERTO_FM9",
+		"TRANSFER_SIZE"
+};
+
+char CONFIGURACION_fm9[CONFIG_fm9][TAMANIO_STRING] = {
+		"PUERTO",
+		"MODO",
+		"TAMANIO",
+		"MAX_LINEA",
+		"TAM_PAGINA"
+};
+
+char CONFIGURACION_cpu[CONFIG_cpu][TAMANIO_STRING] = {
+		"IP_SAFA",
+		"PUERTO_SAFA",
+		"IP_DIEGO",
+		"PUERTO_DIEGO",
+		"RETARDO"
+};
+
+char CONFIGURACION_mdj[CONFIG_cpu][TAMANIO_STRING] = {
+		"PUERTO",
+		"PUNTO_MONTAJE",
+		"RETARDO"
+};
+
 algoritmo_planificacion string_to_alg(char* string){
 	if(!strcmp(string,"RR"))
 		return RR;

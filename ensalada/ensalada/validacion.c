@@ -38,10 +38,12 @@ char CONFIGURACION_cpu[CONFIG_cpu][TAMANIO_STRING] = {
 		"PUERTO_SAFA",
 		"IP_DIEGO",
 		"PUERTO_DIEGO",
+		"IP_FM9",
+		"PUERTO_FM9",
 		"RETARDO"
 };
 
-char CONFIGURACION_mdj[CONFIG_cpu][TAMANIO_STRING] = {
+char CONFIGURACION_mdj[CONFIG_mdj][TAMANIO_STRING] = {
 		"PUERTO",
 		"PUNTO_MONTAJE",
 		"RETARDO"
@@ -192,7 +194,9 @@ void* asignar_config(t_config * archivo_config,t_process tipo_proceso){
 			retorno_cpu->puerto_safa = config_get_int_value(archivo_config,CONFIGURACION_cpu[1]);
 			retorno_cpu->ip_elDiego = config_get_string_value(archivo_config,CONFIGURACION_cpu[2]);
 			retorno_cpu->puerto_elDiego = config_get_int_value(archivo_config,CONFIGURACION_cpu[3]);
-			retorno_cpu->retardo = config_get_int_value(archivo_config,CONFIGURACION_cpu[4]);
+			retorno_cpu->ip_fm9= config_get_string_value(archivo_config,CONFIGURACION_cpu[4]);
+			retorno_cpu->puerto_fm9 = config_get_int_value(archivo_config,CONFIGURACION_cpu[5]);
+			retorno_cpu->retardo = config_get_int_value(archivo_config,CONFIGURACION_cpu[6]);
 
 			retorno = retorno_cpu;
 			break;

@@ -20,17 +20,27 @@ int recibir_mensaje(int socket_r, char* buffer){
 	return valor_retorno;
 }
 
+/*!
+ * Recibe un stream de bytes y lo guarda como string
+ * @param socket el socket a leer
+ * @param linea array de char para almacenar el string, si no entra copia nada mas \0
+ */
 void recibir_string(int socket, char* linea){
-    char *buffer_linea;
-    int tamanio_linea;
+    char *buffer_string;
+    int tamanio_string;
 
-    recv(socket, &tamanio_linea, sizeof(int), 0);
+    recv(socket, &tamanio_string, sizeof(int), 0);
 
     // Reservo memoria para la linea + 1 byte para el \0, luego recibo la linea y la imprimo
-    buffer_linea = malloc((size_t) tamanio_linea + 1);
-    recv(socket, buffer_linea, (size_t) tamanio_linea, 0);
-    buffer_linea[tamanio_linea] = '\0';
+    buffer_string = malloc((size_t) tamanio_string + 1);
+    recv(socket, buffer_string, (size_t) tamanio_string, 0);
+    buffer_string[tamanio_string] = '\0';
 
-    strcpy(linea, buffer_linea);
-    free(buffer_linea);
+    // Verificar que el char* pasado tenga suficiente espacio para almacenar el string, sino segmentation fault
+    if(sizeof(linea)>strlen(buffer_string))
+        strcpy(linea, buffer_string);
+    else
+        strcpy(linea, "\0");
+
+    free(buffer_string);
 }

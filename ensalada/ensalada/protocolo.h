@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef enum {
     HANDSHAKE_CLIENTE,

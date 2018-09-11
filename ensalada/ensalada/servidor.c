@@ -19,12 +19,17 @@ void cerrar_conexion(Servidor servidor, int posicion_cola){
 /*!
  * inicializa struct Servidor para multiplexar con select() y atender a varios clientes a la vez
  * @param logger logger a utilizar
- * @param socket_escucha socket ya inicializado con listen
+ * @param puerto puerto en el cual crear el socket escucha
  * @return struct Servidor con su logger, socket y lista de sockets clientes
  */
-Servidor inicializar_servidor(t_log* logger, int socket_escucha, int procesos_permitidos[4]){
+Servidor inicializar_servidor(t_log* logger, int puerto, int procesos_permitidos[4]){
     int* procesos_conectados = calloc(sizeof(int), 4);
+    int socket_escucha;
+    struct sockaddr_in addr_local;
     Servidor servidor;
+
+    inicializarDireccion(&addr_local, puerto, MY_IP);
+    socket_escucha = escuchar_Conexion((&addr_local));
 
     servidor.inicializado = 1;
     servidor.logger = logger;
@@ -113,7 +118,7 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                             switch(cliente){
                                 case t_cpu:
                                     cliente_seleccionado->t_proceso = t_cpu;
-                                    if(servidor.procesos_permitidos[t_cpu]==1){
+                                    if(servidor.procesos_conectados[t_cpu]<servidor.procesos_permitidos[t_cpu]){
                                         log_info(servidor.logger, "Handshake CPU realizado");
                                         servidor.procesos_conectados[t_cpu]++;
                                     }else{

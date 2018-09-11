@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 typedef enum {
     HANDSHAKE_CLIENTE,
+    CONEXION_CERRADA,
     STRING_DIEGO_MDJ,
     STRING_DIEGO_FM9
 }protocolo_header;

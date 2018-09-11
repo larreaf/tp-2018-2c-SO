@@ -22,11 +22,13 @@ typedef struct{
     int inicializado;
     int socket;
     int* procesos_conectados;
+    int* procesos_permitidos;
     t_list* lista_clientes;
     t_log* logger;
 }Servidor;
 
-Servidor inicializar_servidor(t_log*, int);
+void cerrar_conexion(Servidor, int);
+Servidor inicializar_servidor(t_log*, int, int*);
 void destruir_servidor(Servidor);
 MensajeEntrante esperar_mensajes(Servidor);
 

@@ -1,12 +1,28 @@
 #include "servidor.h"
 
 /*!
+ * cierra socket cliente, primero enviando un header CONEXION_CERRADA, libera memoria y elimina el socket de la lista
+ * de clientes del servidor
+ * @param servidor servidor que contiene al socket cliente
+ * @param posicion_cola posicion de la ConexionCliente en la lista de conexiones activas del servidor
+ */
+void cerrar_conexion(Servidor servidor, int posicion_cola){
+    int header = CONEXION_CERRADA, retsend;
+    ConexionCliente* cliente = list_get(servidor.lista_clientes, posicion_cola);
+
+    retsend = send(cliente->socket, &header, sizeof(CONEXION_CERRADA), 0);
+    comprobar_error(retsend, "Falla al cerrar conexion de cliente");
+    close(cliente->socket);
+    list_remove_and_destroy_element(servidor.lista_clientes, posicion_cola, free);
+}
+
+/*!
  * inicializa struct Servidor para multiplexar con select() y atender a varios clientes a la vez
  * @param logger logger a utilizar
  * @param socket_escucha socket ya inicializado con listen
  * @return struct Servidor con su logger, socket y lista de sockets clientes
  */
-Servidor inicializar_servidor(t_log* logger, int socket_escucha){
+Servidor inicializar_servidor(t_log* logger, int socket_escucha, int procesos_permitidos[4]){
     int* procesos_conectados = calloc(sizeof(int), 4);
     Servidor servidor;
 
@@ -15,6 +31,7 @@ Servidor inicializar_servidor(t_log* logger, int socket_escucha){
     servidor.socket = socket_escucha;
     servidor.lista_clientes = list_create();
     servidor.procesos_conectados = procesos_conectados;
+    servidor.procesos_permitidos = procesos_permitidos;
 
     return servidor;
 }
@@ -24,8 +41,13 @@ Servidor inicializar_servidor(t_log* logger, int socket_escucha){
  * @param servidor struct Servidor a destruir
  */
 void destruir_servidor(Servidor servidor){
+
+    while(list_size(servidor.lista_clientes)){
+        cerrar_conexion(servidor, 0);
+    }
+
     close(servidor.socket);
-    list_destroy_and_destroy_elements(servidor.lista_clientes, free);
+    list_destroy(servidor.lista_clientes);
     free(servidor.procesos_conectados);
 }
 
@@ -85,24 +107,51 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                             switch(cliente){
                                 case t_cpu:
                                     cliente_seleccionado->t_proceso = t_cpu;
-                                    log_info(servidor.logger, "Handshake CPU realizado");
-                                    servidor.procesos_conectados[t_cpu]++;
+                                    if(servidor.procesos_permitidos[t_cpu]==1){
+                                        log_info(servidor.logger, "Handshake CPU realizado");
+                                        servidor.procesos_conectados[t_cpu]++;
+                                    }else{
+                                        log_error(servidor.logger, "Conexion de proceso CPU denegada");
+                                        cerrar_conexion(servidor, i);
+                                    }
                                     break;
+
                                 case t_elDiego:
                                     cliente_seleccionado->t_proceso = t_elDiego;
-                                    log_info(servidor.logger, "Handshake elDiego realizado");
-                                    servidor.procesos_conectados[t_elDiego] = 1;
+
+                                    if(servidor.procesos_permitidos[t_elDiego]==1){
+                                        log_info(servidor.logger, "Handshake elDiego realizado");
+                                        servidor.procesos_conectados[t_elDiego] = 1;
+                                    }else{
+                                        log_error(servidor.logger, "Conexion de proceso elDiego denegada");
+                                        cerrar_conexion(servidor, i);
+                                    }
                                     break;
+
                                 case t_mdj:
                                     cliente_seleccionado->t_proceso = t_mdj;
-                                    log_info(servidor.logger, "Handshake MDJ realizado");
-                                    servidor.procesos_conectados[t_mdj] = 1;
+
+                                    if(servidor.procesos_permitidos[t_mdj]==1){
+                                        log_info(servidor.logger, "Handshake MDJ realizado");
+                                        servidor.procesos_conectados[t_mdj] = 1;
+                                    }else{
+                                        log_error(servidor.logger, "Conexion de proceso MDJ denegada");
+                                        cerrar_conexion(servidor, i);
+                                    }
                                     break;
+
                                 case t_safa:
                                     cliente_seleccionado->t_proceso = t_safa;
-                                    log_info(servidor.logger, "Handshake S-AFA realizado");
-                                    servidor.procesos_conectados[t_safa] = 1;
+
+                                    if(servidor.procesos_permitidos[t_safa]==1){
+                                        log_info(servidor.logger, "Handshake S-AFA realizado");
+                                        servidor.procesos_conectados[t_safa] = 1;
+                                    }else{
+                                        log_error(servidor.logger, "Conexion de proceso SAFA denegada");
+                                        cerrar_conexion(servidor, i);
+                                    }
                                     break;
+
                                 default:
                                     log_error(servidor.logger, "Falla handshake, tipo de proceso invalido");
                                     break;
@@ -142,8 +191,7 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                         cliente_seleccionado->socket);
                                 break;
                         }
-                        close(cliente_seleccionado->socket);
-                        list_remove_and_destroy_element(servidor.lista_clientes, i, free);
+                        cerrar_conexion(servidor, i);
                     }
                 }
             }

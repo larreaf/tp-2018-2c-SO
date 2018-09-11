@@ -63,7 +63,7 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
     fd_set descriptores_lectura;
     MensajeEntrante retorno;
     Proceso cliente;
-    int header;
+    int header, retsel;
 
     if(servidor.inicializado != 1){
         log_error(servidor.logger, "Se intento utilizar un Servidor no inicializado");
@@ -84,7 +84,13 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
             FD_SET(cliente_seleccionado->socket, &descriptores_lectura);
         }
         log_info(servidor.logger, "Esperando actividad en %d sockets clientes...", list_size(servidor.lista_clientes));
-        select(FD_SETSIZE, &descriptores_lectura, NULL, NULL, NULL);
+        retsel = select(FD_SETSIZE, &descriptores_lectura, NULL, NULL, NULL);
+
+        if(retsel==-1){
+            log_error(servidor.logger, "Error en select");
+            retorno.header = -1;
+            return retorno;
+        }
 
         if (FD_ISSET(servidor.socket, &descriptores_lectura)) {
             // Hubo actividad en el socket de escucha, o sea hay alguien que se nos esta queriendo conectar

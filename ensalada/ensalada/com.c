@@ -1,5 +1,5 @@
 #include "com.h"
-
+#include "protocolo.h"
 
 
 int crearSocket(){
@@ -10,13 +10,13 @@ int crearSocket(){
 
 void inicializarDireccion(struct sockaddr_in* addr_destino,int puerto_destino, char* ip_destino){
 	addr_destino->sin_family = AF_INET;
-	addr_destino->sin_port = htons(puerto_destino);
+	addr_destino->sin_port = htons((uint16_t)puerto_destino);
 	addr_destino->sin_addr.s_addr = inet_addr(ip_destino);
 	memset(addr_destino->sin_zero,'\0',8);
 }
 
-void asignarDireccion(int fd_socket, struct sockaddr* direccionSocket){
-	int codigo = bind(fd_socket, direccionSocket, sizeof(struct sockaddr));
+void asignarDireccion(int fd_socket, struct sockaddr_in* direccionSocket){
+	int codigo = bind(fd_socket, (struct sockaddr*)direccionSocket, sizeof(struct sockaddr));
 	comprobar_error(codigo, "Error en la funcion bind\0");
 }
 
@@ -27,7 +27,7 @@ void reutilizarSocketEscucha(int fd_socket){
 
 }
 
-int escuchar_Conexion( struct sockaddr* direccionLocal){
+int escuchar_Conexion( struct sockaddr_in* direccionLocal){
 	int socket_escucha = 0;
 	int codigo_error = 0;
 	socket_escucha = crearSocket();
@@ -44,9 +44,11 @@ void handshake(int socket_escucha,struct sockaddr_in direccionLocal){
 
 }*/
 
-void conectar_Servidor(int fd_socket, struct sockaddr *addr_servidor){
+void conectar_Servidor(int fd_socket, struct sockaddr *addr_servidor, Proceso t_proceso){
 	int codigo = connect(fd_socket,addr_servidor, sizeof(struct sockaddr));
 	comprobar_error(codigo, "Error al conectar a un servidor\0");
+
+	handshakeCliente(t_proceso,fd_socket);
 }
 
 void comprobar_error(int variable, const char* mensajeError){
@@ -58,13 +60,17 @@ void comprobar_error(int variable, const char* mensajeError){
 
 
 void handshakeCliente(Proceso cliente, int socket_destino){
-	int error = send(socket_destino,&cliente,sizeof(Proceso),0);
+	int header = HANDSHAKE_CLIENTE;
+	int error = send(socket_destino,&header,sizeof(int),0);
+	comprobar_error(error,"Error en send\n");
+
+	error = send(socket_destino,&cliente,sizeof(Proceso),0);
 	comprobar_error(error,"Error en send\n");
 }
 
 Proceso handshakeServidor(int socket_origen){
 	Proceso cliente = -1;
-	int error = recv(socket_origen,&cliente, sizeof(Proceso),0);
+	int error = recv(socket_origen, &cliente, sizeof(Proceso),0);
 	comprobar_error(error,"Error en recv\n");
 	return cliente;
 }

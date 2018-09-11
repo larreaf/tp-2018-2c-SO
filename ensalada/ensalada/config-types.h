@@ -16,7 +16,7 @@
 		CONFIG_safa = 5,
 		CONFIG_elDiego = 8,
 		CONFIG_fm9 = 5,
-		CONFIG_cpu = 5,
+		CONFIG_cpu = 7,
 		CONFIG_mdj = 3
 
 	}cantidad_parametros; //cantidad de strings en su archivo configuracion
@@ -71,6 +71,8 @@
 		int puerto_safa;
 		char* ip_elDiego;
 		int puerto_elDiego;
+		char* ip_fm9;
+		int puerto_fm9;
 		int retardo;
 
 	}cfg_cpu;

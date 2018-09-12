@@ -138,24 +138,27 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 	return configuracion;
 }
 
-void* asignar_config(t_config * archivo_config,t_process tipo_proceso){
-	void *retorno;
+void* asignar_config(char* path, t_process tipo_proceso){
+	void* retorno;
+    t_config* configuracion;
 	cfg_safa* retorno_safa;
 	cfg_elDiego* retorno_elDiego;
 	cfg_fm9* retorno_fm9;
 	cfg_cpu* retorno_cpu;
 	cfg_mdj* retorno_mdj;
 
+	configuracion = validar_config(path, tipo_proceso);
+
 	switch (tipo_proceso) {
 
 		case safa :
 			retorno_safa = malloc(sizeof(cfg_safa));
 
-			retorno_safa->puerto = config_get_int_value(archivo_config,CONFIGURACION_safa[0]);
-			retorno_safa->algoritmo = string_to_alg(config_get_string_value(archivo_config,CONFIGURACION_safa[1]));
-			retorno_safa->quantum = config_get_int_value(archivo_config,CONFIGURACION_safa[2]);
-			retorno_safa->multiprogramacion = config_get_int_value(archivo_config, CONFIGURACION_safa[3]);
-			retorno_safa->retardo = config_get_int_value(archivo_config, CONFIGURACION_safa[4]);
+			retorno_safa->puerto = config_get_int_value(configuracion,CONFIGURACION_safa[0]);
+			retorno_safa->algoritmo = string_to_alg(config_get_string_value(configuracion,CONFIGURACION_safa[1]));
+			retorno_safa->quantum = config_get_int_value(configuracion,CONFIGURACION_safa[2]);
+			retorno_safa->multiprogramacion = config_get_int_value(configuracion, CONFIGURACION_safa[3]);
+			retorno_safa->retardo = config_get_int_value(configuracion, CONFIGURACION_safa[4]);
 			retorno = retorno_safa;
 
 			break;
@@ -163,14 +166,14 @@ void* asignar_config(t_config * archivo_config,t_process tipo_proceso){
 		case elDiego :
 			retorno_elDiego = malloc(sizeof(cfg_elDiego));
 
-			retorno_elDiego->puerto = config_get_int_value(archivo_config, CONFIGURACION_elDiego[0]);
-			retorno_elDiego->ip_safa = config_get_string_value(archivo_config, CONFIGURACION_elDiego[1]);
-			retorno_elDiego->puerto_safa = config_get_int_value(archivo_config, CONFIGURACION_elDiego[2]);
-			retorno_elDiego->ip_mdj = config_get_string_value(archivo_config, CONFIGURACION_elDiego[3]);
-			retorno_elDiego->puerto_mdj = config_get_int_value(archivo_config, CONFIGURACION_elDiego[4]);
-			retorno_elDiego->ip_fm9 = config_get_string_value(archivo_config, CONFIGURACION_elDiego[5]);
-			retorno_elDiego->puerto_fm9 = config_get_int_value(archivo_config, CONFIGURACION_elDiego[6]);
-			retorno_elDiego->transfer_size = config_get_int_value(archivo_config, CONFIGURACION_elDiego[7]);
+			retorno_elDiego->puerto = config_get_int_value(configuracion, CONFIGURACION_elDiego[0]);
+			retorno_elDiego->ip_safa = config_get_string_value(configuracion, CONFIGURACION_elDiego[1]);
+			retorno_elDiego->puerto_safa = config_get_int_value(configuracion, CONFIGURACION_elDiego[2]);
+			retorno_elDiego->ip_mdj = config_get_string_value(configuracion, CONFIGURACION_elDiego[3]);
+			retorno_elDiego->puerto_mdj = config_get_int_value(configuracion, CONFIGURACION_elDiego[4]);
+			retorno_elDiego->ip_fm9 = config_get_string_value(configuracion, CONFIGURACION_elDiego[5]);
+			retorno_elDiego->puerto_fm9 = config_get_int_value(configuracion, CONFIGURACION_elDiego[6]);
+			retorno_elDiego->transfer_size = config_get_int_value(configuracion, CONFIGURACION_elDiego[7]);
 
 			retorno = retorno_elDiego;
 			break;
@@ -178,11 +181,11 @@ void* asignar_config(t_config * archivo_config,t_process tipo_proceso){
 		case fm9 :
 			retorno_fm9 = malloc(sizeof(cfg_fm9));
 
-			retorno_fm9->puerto = config_get_int_value(archivo_config,CONFIGURACION_fm9[0]);
-			retorno_fm9->modo = string_to_memory(config_get_string_value(archivo_config,CONFIGURACION_fm9[1]));
-			retorno_fm9->tamanio = config_get_int_value(archivo_config,CONFIGURACION_fm9[2]);
-			retorno_fm9->max_linea = config_get_int_value(archivo_config,CONFIGURACION_fm9[3]);
-			retorno_fm9->tam_pagina = config_get_int_value(archivo_config,CONFIGURACION_fm9[4]);
+			retorno_fm9->puerto = config_get_int_value(configuracion,CONFIGURACION_fm9[0]);
+			retorno_fm9->modo = string_to_memory(config_get_string_value(configuracion,CONFIGURACION_fm9[1]));
+			retorno_fm9->tamanio = config_get_int_value(configuracion,CONFIGURACION_fm9[2]);
+			retorno_fm9->max_linea = config_get_int_value(configuracion,CONFIGURACION_fm9[3]);
+			retorno_fm9->tam_pagina = config_get_int_value(configuracion,CONFIGURACION_fm9[4]);
 
 			retorno = retorno_fm9;
 			break;
@@ -190,13 +193,13 @@ void* asignar_config(t_config * archivo_config,t_process tipo_proceso){
 		case cpu :
 			retorno_cpu = malloc(sizeof(cfg_cpu));
 
-			retorno_cpu->ip_safa = config_get_string_value(archivo_config,CONFIGURACION_cpu[0]);
-			retorno_cpu->puerto_safa = config_get_int_value(archivo_config,CONFIGURACION_cpu[1]);
-			retorno_cpu->ip_elDiego = config_get_string_value(archivo_config,CONFIGURACION_cpu[2]);
-			retorno_cpu->puerto_elDiego = config_get_int_value(archivo_config,CONFIGURACION_cpu[3]);
-			retorno_cpu->ip_fm9= config_get_string_value(archivo_config,CONFIGURACION_cpu[4]);
-			retorno_cpu->puerto_fm9 = config_get_int_value(archivo_config,CONFIGURACION_cpu[5]);
-			retorno_cpu->retardo = config_get_int_value(archivo_config,CONFIGURACION_cpu[6]);
+			retorno_cpu->ip_safa = config_get_string_value(configuracion,CONFIGURACION_cpu[0]);
+			retorno_cpu->puerto_safa = config_get_int_value(configuracion,CONFIGURACION_cpu[1]);
+			retorno_cpu->ip_elDiego = config_get_string_value(configuracion,CONFIGURACION_cpu[2]);
+			retorno_cpu->puerto_elDiego = config_get_int_value(configuracion,CONFIGURACION_cpu[3]);
+			retorno_cpu->ip_fm9= config_get_string_value(configuracion,CONFIGURACION_cpu[4]);
+			retorno_cpu->puerto_fm9 = config_get_int_value(configuracion,CONFIGURACION_cpu[5]);
+			retorno_cpu->retardo = config_get_int_value(configuracion,CONFIGURACION_cpu[6]);
 
 			retorno = retorno_cpu;
 			break;
@@ -204,12 +207,15 @@ void* asignar_config(t_config * archivo_config,t_process tipo_proceso){
 		case mdj :
 			retorno_mdj = malloc(sizeof(cfg_mdj));
 
-			retorno_mdj->puerto = config_get_int_value(archivo_config,CONFIGURACION_mdj[0]);
-			retorno_mdj->punto_montaje = config_get_string_value(archivo_config,CONFIGURACION_mdj[1]);
-			retorno_mdj->retardo = config_get_int_value(archivo_config,CONFIGURACION_mdj[2]);
+			retorno_mdj->puerto = config_get_int_value(configuracion,CONFIGURACION_mdj[0]);
+			retorno_mdj->punto_montaje = config_get_string_value(configuracion,CONFIGURACION_mdj[1]);
+			retorno_mdj->retardo = config_get_int_value(configuracion,CONFIGURACION_mdj[2]);
 
 			retorno = retorno_mdj;
 			break;
+
+		default:
+			retorno = 0;
 
 	}
 	return retorno;

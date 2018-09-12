@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 	Servidor server;
 	MensajeEntrante mensaje;
 
-    logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
+	logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
 	validar_parametros(argc);
 	cfg_mdj* configuracion = asignar_config(argv[1],mdj);
 

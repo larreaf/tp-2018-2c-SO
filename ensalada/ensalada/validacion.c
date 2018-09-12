@@ -218,6 +218,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno = 0;
 
 	}
+	config_destroy(configuracion);
 	return retorno;
 }
 

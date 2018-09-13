@@ -22,6 +22,7 @@ typedef struct {
 
 MensajeDinamico* crear_mensaje(int, int);
 void agregar_dato(MensajeDinamico*, int, void*);
+void agregar_string(MensajeDinamico*, char*);
 int enviar_mensaje(MensajeDinamico*);
 
-#endif MENSAJE_H
+#endif //MENSAJE_H

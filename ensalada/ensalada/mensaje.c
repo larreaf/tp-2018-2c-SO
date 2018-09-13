@@ -24,10 +24,23 @@ MensajeDinamico* crear_mensaje(int header, int socket_destino){
  */
 void agregar_dato(MensajeDinamico* mensaje, int longitud, void* dato){
     NodoPayload* nuevo_nodo = malloc(sizeof(NodoPayload));
-    nuevo_nodo->datos = dato;
-    nuevo_nodo->longitud=longitud;
+    void* buffer_dato = malloc((size_t)longitud);
+    memcpy(buffer_dato, dato, (size_t)longitud);
+
+    nuevo_nodo->datos = buffer_dato;
+    nuevo_nodo->longitud = longitud;
     queue_push(mensaje->payload, nuevo_nodo);
     mensaje->longitud+=sizeof(int)+longitud;
+}
+
+
+/*!
+ * agrega un string al mensaje dinamico
+ * @param mensaje mensaje dinamico al cual agregar el string
+ * @param str string a agregar
+ */
+void agregar_string(MensajeDinamico* mensaje, char* str){
+    agregar_dato(mensaje, strlen(str)+1, str);
 }
 
 /*!
@@ -52,6 +65,7 @@ int enviar_mensaje(MensajeDinamico* mensaje){
         posicion_buffer += sizeof(int);
         memmove(buffer_mensaje+posicion_buffer, buffer_nodo->datos, (size_t)buffer_nodo->longitud);
         posicion_buffer += buffer_nodo->longitud;
+        free(buffer_nodo->datos);
         free(buffer_nodo);
     }
 

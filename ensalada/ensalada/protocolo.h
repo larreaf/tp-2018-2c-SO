@@ -12,11 +12,10 @@ typedef enum {
     HANDSHAKE_CLIENTE,
     CONEXION_CERRADA,
     STRING_DIEGO_MDJ,
-    STRING_DIEGO_FM9
+    STRING_DIEGO_FM9,
+    STRING_MDJ_DIEGO
 }protocolo_header;
 
-int enviar_mensaje();
-int recibir_mensaje();
 void recibir_string(int, char*, int);
 
 #endif /* PROTOCOLO_H_ */

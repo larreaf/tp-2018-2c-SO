@@ -1,25 +1,5 @@
 #include "protocolo.h"
 
-
-int enviar_mensaje(int socket_e, char* buffer){
-	return 0;
-}
-
-int recibir_mensaje(int socket_r, char* buffer){
-	int valor_retorno = 0;
-	protocolo_header header = 0;
-	valor_retorno = recv(socket_r,&header,sizeof(int),0);
-	switch(header){
-		case HANDSHAKE_CLIENTE:
-			break;
-		case STRING_DIEGO_MDJ:
-			break;
-		default:
-			break;
-	}
-	return valor_retorno;
-}
-
 /*!
  * Recibe un stream de bytes y lo guarda como string
  * @param socket el socket a leer

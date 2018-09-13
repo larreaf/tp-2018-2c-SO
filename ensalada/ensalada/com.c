@@ -44,8 +44,8 @@ void handshake(int socket_escucha,struct sockaddr_in direccionLocal){
 
 }*/
 
-void conectar_Servidor(int fd_socket, struct sockaddr *addr_servidor, Proceso t_proceso){
-	int codigo = connect(fd_socket,addr_servidor, sizeof(struct sockaddr));
+void conectar_Servidor(int fd_socket, struct sockaddr_in *addr_servidor, Proceso t_proceso){
+	int codigo = connect(fd_socket,(struct sockaddr*)addr_servidor, sizeof(struct sockaddr));
 	comprobar_error(codigo, "Error al conectar a un servidor\0");
 
 	handshakeCliente(t_proceso,fd_socket);

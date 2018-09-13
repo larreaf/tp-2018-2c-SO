@@ -45,6 +45,7 @@
 		int quantum;
 		int multiprogramacion;
 		int retardo;
+		t_config* config;
 	}cfg_safa;
 
 	typedef struct{
@@ -56,6 +57,7 @@
 		char* 	ip_fm9;
 		int 	puerto_fm9;
 		int transfer_size;
+		t_config* config;
 	}cfg_elDiego;
 
 	typedef struct {
@@ -64,6 +66,7 @@
 		int max_linea;
 		int tamanio;
 		int tam_pagina;
+		t_config* config;
 	}cfg_fm9;
 
 	typedef struct {
@@ -74,14 +77,14 @@
 		char* ip_fm9;
 		int puerto_fm9;
 		int retardo;
-
+		t_config* config;
 	}cfg_cpu;
 
 	typedef struct {
 		int puerto;
 		char* punto_montaje;
 		int retardo;
-
+		t_config* config;
 	}cfg_mdj;
 
 

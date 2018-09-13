@@ -16,6 +16,7 @@
 #include <commons/log.h>
 #include "protocolo.h"
 #include "servidor.h"
+#include "mensaje.h"
 
 void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, Servidor server){
     log_info(logger, "Cerrando MDJ...");
@@ -34,6 +35,7 @@ int main(int argc, char **argv) {
 	t_log* logger;
 	Servidor server;
 	MensajeEntrante mensaje;
+	MensajeDinamico* mensaje_respuesta;
 
 	logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
 	validar_parametros(argc);
@@ -42,7 +44,7 @@ int main(int argc, char **argv) {
 	// conexiones_permitidas es un array de 4 ints que indica que procesos se pueden conectar, o en el caso de t_cpu,
 	// cuantas conexiones de cpu se van a aceptar
 	conexiones_permitidas[t_elDiego] = 1;
-	server = inicializar_servidor(logger, configuracion->puerto, conexiones_permitidas);
+	server = inicializar_servidor(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
 
     while (1){
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
@@ -60,6 +62,11 @@ int main(int argc, char **argv) {
                 // como string, agregando \0 al final y metiendo los datos en el array str
                 recibir_string(mensaje.socket, str, TAMANIO_MAXIMO_STRING);
                 printf("MDJ recibio: %s\n", str);
+
+                // para probar la capacidad de comunicacion bidireccional, le contestamos un "hola!"
+                mensaje_respuesta = crear_mensaje(STRING_MDJ_DIEGO, mensaje.socket);
+                agregar_string(mensaje_respuesta, "Hola!");
+                enviar_mensaje(mensaje_respuesta);
 
                 //si recibe el string "exit", MDJ se cierra
                 if(!strcmp(str, "exit"))

@@ -1,17 +1,41 @@
 #include "servidor.h"
 
 /*!
+ * conecta a otro servidor y devuelve el socket de esa conexion, tambien lo guarda en conexiones activas en el struct
+ * Servidor
+ * @param servidor servidor host que contiene la lista de conexiones activas
+ * @param ip_destino ip del servidor al cual conectarse
+ * @param puerto_destino puerto del servidor al cual conectarse
+ * @param t_proceso_destino tipo de proceso destino
+ * @return socket con la nueva conexion
+ */
+int conectar_a_servidor(Servidor servidor, char* ip_destino, int puerto_destino, Proceso t_proceso_destino){
+    struct sockaddr_in addr;
+    int socket = crearSocket();
+    ConexionCliente* nueva_conexion;
+
+    inicializarDireccion(&addr,puerto_destino,ip_destino);
+    conectar_Servidor(socket,&addr, servidor.t_proceso_host);
+
+    nueva_conexion = malloc(sizeof(ConexionCliente));
+    nueva_conexion->socket = socket;
+    nueva_conexion->t_proceso = t_proceso_destino;
+    list_add(servidor.lista_clientes, nueva_conexion);
+
+    return socket;
+}
+
+/*!
  * cierra socket cliente, primero enviando un header CONEXION_CERRADA, libera memoria y elimina el socket de la lista
  * de clientes del servidor
  * @param servidor servidor que contiene al socket cliente
  * @param posicion_cola posicion de la ConexionCliente en la lista de conexiones activas del servidor
  */
 void cerrar_conexion(Servidor servidor, int posicion_cola){
-    int header = CONEXION_CERRADA, retsend;
+    int header = CONEXION_CERRADA;
     ConexionCliente* cliente = list_get(servidor.lista_clientes, posicion_cola);
 
-    retsend = send(cliente->socket, &header, sizeof(CONEXION_CERRADA), 0);
-    comprobar_error(retsend, "Falla al cerrar conexion de cliente");
+    send(cliente->socket, &header, sizeof(CONEXION_CERRADA), 0);
     close(cliente->socket);
     list_remove_and_destroy_element(servidor.lista_clientes, posicion_cola, free);
 }
@@ -20,9 +44,12 @@ void cerrar_conexion(Servidor servidor, int posicion_cola){
  * inicializa struct Servidor para multiplexar con select() y atender a varios clientes a la vez
  * @param logger logger a utilizar
  * @param puerto puerto en el cual crear el socket escucha
+ * @param procesos_permitidos array de 4 int indicando que procesos se pueden conectar al servidor (o cuantos en caso de
+ *        t_cpu
+ * @param t_proceso_host tipo de proceso que ejecuta el servidor
  * @return struct Servidor con su logger, socket y lista de sockets clientes
  */
-Servidor inicializar_servidor(t_log* logger, int puerto, int procesos_permitidos[4]){
+Servidor inicializar_servidor(t_log* logger, int puerto, int procesos_permitidos[4], Proceso t_proceso_host){
     int* procesos_conectados = calloc(sizeof(int), 4);
     int socket_escucha;
     struct sockaddr_in addr_local;
@@ -37,6 +64,7 @@ Servidor inicializar_servidor(t_log* logger, int puerto, int procesos_permitidos
     servidor.lista_clientes = list_create();
     servidor.procesos_conectados = procesos_conectados;
     servidor.procesos_permitidos = procesos_permitidos;
+    servidor.t_proceso_host = t_proceso_host;
 
     return servidor;
 }

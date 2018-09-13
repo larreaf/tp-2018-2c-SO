@@ -25,10 +25,12 @@ typedef struct{
     int* procesos_permitidos;
     t_list* lista_clientes;
     t_log* logger;
+    Proceso t_proceso_host;
 }Servidor;
 
+int conectar_a_servidor(Servidor, char*, int, Proceso);
 void cerrar_conexion(Servidor, int);
-Servidor inicializar_servidor(t_log*, int, int*);
+Servidor inicializar_servidor(t_log*, int, int*, Proceso);
 void destruir_servidor(Servidor);
 MensajeEntrante esperar_mensajes(Servidor);
 

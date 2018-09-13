@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
                 // recibir_string recibe un stream de datos del socket del cual se envio el mensaje y los interpreta
                 // como string, agregando \0 al final y metiendo los datos en el array str
                 recibir_string(mensaje.socket, str, TAMANIO_MAXIMO_STRING);
-                printf("MDJ recibio: %s\n", (char*)str);
+                printf("MDJ recibio: %s\n", str);
 
                 //si recibe el string "exit", MDJ se cierra
                 if(!strcmp(str, "exit"))

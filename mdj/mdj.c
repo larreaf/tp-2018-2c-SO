@@ -1,22 +1,18 @@
-/*
- ============================================================================
- Name        : mdj.c
- Author      : 
- Version     :
- Copyright   : 
- Description : Hello World in C, Ansi-style
- ============================================================================
- */
-
 #include <stdio.h>
 #include <stdlib.h>
-#include "validacion.h"
+#include <unistd.h>
+#include <pthread.h>
 #include <netinet/in.h>
 #include <commons/string.h>
 #include <commons/log.h>
+#include <readline/readline.h>
 #include "protocolo.h"
 #include "servidor.h"
 #include "mensaje.h"
+#include "validacion.h"
+
+pthread_mutex_t semaforo_servidor_corriendo;
+pthread_t thread_consola;
 
 void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, Servidor server){
     log_info(logger, "Cerrando MDJ...");
@@ -26,27 +22,90 @@ void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, Servidor server){
     destruir_servidor(server);
     log_destroy(logger);
     destroy_cfg(configuracion, t_mdj);
+    pthread_mutex_destroy(&semaforo_servidor_corriendo);
     exit(0);
+}
+
+void* ejecutar_consola(void* arg){
+    char *linea;
+    MensajeDinamico* mensaje_saliente;
+    int puerto = (int)arg;
+    struct sockaddr_in addr;
+    int socket = crearSocket(), header, retsocket = 0;
+
+    // aca bloqueamos hasta que el servidor este listo para recibir nuestra conexion, despues nos conectamos
+    pthread_mutex_lock(&semaforo_servidor_corriendo);
+    inicializarDireccion(&addr,puerto,MY_IP);
+    conectar_Servidor(socket,&addr, t_consola_mdj);
+    pthread_mutex_unlock(&semaforo_servidor_corriendo);
+
+    while(1) {
+        // leemos linea y la mandamos al servidor (o sea al proceso MDJ porque somos la consola de MDJ)
+        mensaje_saliente = crear_mensaje(STRING_CONSOLA_PROPIA, socket);
+
+        linea = readline("> ");
+
+        agregar_string(mensaje_saliente, linea);
+        retsocket = enviar_mensaje(mensaje_saliente);
+        comprobar_error(retsocket, "Error al enviar mensaje en hilo de consola de MDJ");
+
+        // si la linea es "exit" dejamos de leer mas lineas y retornamos del thread
+        if(!strcmp(linea, "exit")) {
+            free(linea);
+            return NULL;
+        }
+        free(linea);
+
+        // aca nuestro servidor nos indica que termino de ejecutar lo que le pedimos, entonces volvemos al principio
+        // del while
+        retsocket = recv(socket, &header, sizeof(header), MSG_WAITALL);
+        comprobar_error(retsocket, "Error en recv en hilo de consola de MDJ");
+        if(header==OPERACION_CONSOLA_TERMINADA)
+            continue;
+    }
 }
 
 int main(int argc, char **argv) {
 	char str[TAMANIO_MAXIMO_STRING];
-	int conexiones_permitidas[4]={0};
+	int conexiones_permitidas[cantidad_tipos_procesos]={0}, err, looped=0, header, retsocket=0;
 	t_log* logger;
 	Servidor server;
 	MensajeEntrante mensaje;
 	MensajeDinamico* mensaje_respuesta;
 
-	logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
-	validar_parametros(argc);
-	cfg_mdj* configuracion = asignar_config(argv[1],mdj);
+    validar_parametros(argc);
+    logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
+    cfg_mdj* configuracion = asignar_config(argv[1],mdj);
 
-	// conexiones_permitidas es un array de 4 ints que indica que procesos se pueden conectar, o en el caso de t_cpu,
+	// inicializamos el semaforo, si no inicializa se cierra el programa
+    if (pthread_mutex_init(&semaforo_servidor_corriendo, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        return 1;
+    }
+
+    // bloqueamos el semaforo hasta que arranque el servidor
+    pthread_mutex_lock(&semaforo_servidor_corriendo);
+
+	// intentamos arrancar el thread de la consola, que se va a bloquear hasta que esperemos mensajes mas abajo
+    err = pthread_create(&thread_consola, NULL, &ejecutar_consola, (void*)configuracion->puerto);
+    if (err != 0)
+        printf("\ncan't create thread :[%s]", strerror(err));
+
+	// conexiones_permitidas es un array de ints que indica que procesos se pueden conectar, o en el caso de t_cpu,
 	// cuantas conexiones de cpu se van a aceptar
+	// en este caso permitimos que se nos conecte el diego y nuestra propia consola
 	conexiones_permitidas[t_elDiego] = 1;
+	conexiones_permitidas[t_consola_mdj] = 1;
 	server = inicializar_servidor(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
 
     while (1){
+        if(!looped){
+            // desbloqueamos el semaforo justo antes de que entramos a recibir mensajes
+            pthread_mutex_unlock(&semaforo_servidor_corriendo);
+            looped=1;
+        }
+
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
         // sin retornar
         mensaje = esperar_mensajes(server);
@@ -57,6 +116,7 @@ int main(int argc, char **argv) {
 
             // en cada case del switch se puede manejar cada header como se desee
             case STRING_DIEGO_MDJ:
+                // este header indica que el diego nos esta mandando un string
 
                 // recibir_string recibe un stream de datos del socket del cual se envio el mensaje y los interpreta
                 // como string, agregando \0 al final y metiendo los datos en el array str
@@ -64,22 +124,41 @@ int main(int argc, char **argv) {
                 printf("MDJ recibio: %s\n", str);
 
                 // para probar la capacidad de comunicacion bidireccional, le contestamos un "hola!"
+                // el header STRING_MDJ_DIEGO significa que le estamos mandando un string al diego desde MDJ
                 mensaje_respuesta = crear_mensaje(STRING_MDJ_DIEGO, mensaje.socket);
                 agregar_string(mensaje_respuesta, "Hola!");
                 enviar_mensaje(mensaje_respuesta);
 
-                //si recibe el string "exit", MDJ se cierra
-                if(!strcmp(str, "exit"))
+                break;
+
+            case STRING_CONSOLA_PROPIA:
+                // este header indica que vamos a recibir un string leido de nuestra propia consola
+
+                // entonces recibimos el string y lo imprimimos, y ademas si es "exit" cerramos el programa
+                retsocket = recibir_string(mensaje.socket, str, TAMANIO_MAXIMO_STRING);
+                comprobar_error(retsocket, "Error en recv de consola de MDJ");
+                printf("MDJ recibio de su propia consola: %s\n", str);
+
+                if(!strcmp(str, "exit")) {
+                    pthread_join(thread_consola, NULL);
                     cerrar_mdj(logger, configuracion, server);
+                }
+
+                // TODO parsear string para interpretar comandos
+                // cuando terminamos de ejecutar lo que nos pidio la consola le mandamos un header
+                // OPERACION_CONSOLA_TERMINADA que le indica que terminamos en este caso
+                // tambien le podriamos mandar un mensaje cualquiera dependiendo de lo que nos haya pedido
+                header = OPERACION_CONSOLA_TERMINADA;
+                retsocket = send(mensaje.socket, &header, sizeof(OPERACION_CONSOLA_TERMINADA), 0);
+                comprobar_error(retsocket, "Error en send a consola de MDJ");
                 break;
 
             case CONEXION_CERRADA:
                 // el header CONEXION_CERRADA indica que el que nos envio ese mensaje se desconecto, idealmente los
                 // procesos que cierran deberian mandar este header antes de hacerlo para que los procesos a los cuales
-                // estan conectados se enteren
-
-                if(mensaje.t_proceso==t_elDiego)
-                    cerrar_mdj(logger, configuracion, server);
+                // estan conectados se enteren, de todas maneras esperar_mensaje se encarga internamente de cerrar
+                // su socket, liberar memoria, etc
+                break;
 
             default:
                 // TODO aca habria que programar que pasa si se manda un header invalido

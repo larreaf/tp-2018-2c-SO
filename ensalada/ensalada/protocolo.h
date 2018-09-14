@@ -13,9 +13,11 @@ typedef enum {
     CONEXION_CERRADA,
     STRING_DIEGO_MDJ,
     STRING_DIEGO_FM9,
-    STRING_MDJ_DIEGO
+    STRING_MDJ_DIEGO,
+    STRING_CONSOLA_PROPIA,
+    OPERACION_CONSOLA_TERMINADA
 }protocolo_header;
 
-void recibir_string(int, char*, int);
+int recibir_string(int, char*, int);
 
 #endif /* PROTOCOLO_H_ */

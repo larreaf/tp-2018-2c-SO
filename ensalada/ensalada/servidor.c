@@ -49,8 +49,8 @@ void cerrar_conexion(Servidor servidor, int posicion_cola){
  * @param t_proceso_host tipo de proceso que ejecuta el servidor
  * @return struct Servidor con su logger, socket y lista de sockets clientes
  */
-Servidor inicializar_servidor(t_log* logger, int puerto, int procesos_permitidos[4], Proceso t_proceso_host){
-    int* procesos_conectados = calloc(sizeof(int), 4);
+Servidor inicializar_servidor(t_log* logger, int puerto, int procesos_permitidos[6], Proceso t_proceso_host){
+    int* procesos_conectados = calloc(sizeof(int), cantidad_tipos_procesos);
     int socket_escucha;
     struct sockaddr_in addr_local;
     Servidor servidor;
@@ -143,6 +143,7 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                     if(recv(cliente_seleccionado->socket, &header, sizeof(int),0)>0){
                         if(header==HANDSHAKE_CLIENTE){
                             cliente = handshakeServidor(cliente_seleccionado->socket);
+
                             switch(cliente){
                                 case t_cpu:
                                     cliente_seleccionado->t_proceso = t_cpu;
@@ -179,6 +180,18 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                     }
                                     break;
 
+                                case t_fm9:
+                                    cliente_seleccionado->t_proceso = t_fm9;
+
+                                    if(servidor.procesos_permitidos[t_fm9]==1){
+                                        log_info(servidor.logger, "Handshake FM9 realizado");
+                                        servidor.procesos_conectados[t_fm9] = 1;
+                                    }else{
+                                        log_error(servidor.logger, "Conexion de proceso FM9 denegada");
+                                        cerrar_conexion(servidor, i);
+                                    }
+                                    break;
+
                                 case t_safa:
                                     cliente_seleccionado->t_proceso = t_safa;
 
@@ -187,6 +200,42 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                         servidor.procesos_conectados[t_safa] = 1;
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso SAFA denegada");
+                                        cerrar_conexion(servidor, i);
+                                    }
+                                    break;
+
+                                case t_consola_mdj:
+                                    cliente_seleccionado->t_proceso = t_consola_mdj;
+
+                                    if(servidor.procesos_permitidos[t_consola_mdj]==1){
+                                        log_info(servidor.logger, "Handshake consola MDJ realizado");
+                                        servidor.procesos_conectados[t_consola_mdj] = 1;
+                                    }else{
+                                        log_error(servidor.logger, "Conexion de consola MDJ denegada");
+                                        cerrar_conexion(servidor, i);
+                                    }
+                                    break;
+
+                                case t_consola_fm9:
+                                    cliente_seleccionado->t_proceso = t_consola_fm9;
+
+                                    if(servidor.procesos_permitidos[t_consola_fm9]==1){
+                                        log_info(servidor.logger, "Handshake consola FM9 realizado");
+                                        servidor.procesos_conectados[t_consola_fm9] = 1;
+                                    }else{
+                                        log_error(servidor.logger, "Conexion de consola FM9 denegada");
+                                        cerrar_conexion(servidor, i);
+                                    }
+                                    break;
+
+                                case t_consola_safa:
+                                    cliente_seleccionado->t_proceso = t_consola_safa;
+
+                                    if(servidor.procesos_permitidos[t_consola_safa]==1){
+                                        log_info(servidor.logger, "Handshake consola SAFA realizado");
+                                        servidor.procesos_conectados[t_consola_safa] = 1;
+                                    }else{
+                                        log_error(servidor.logger, "Conexion de consola SAFA denegada");
                                         cerrar_conexion(servidor, i);
                                     }
                                     break;

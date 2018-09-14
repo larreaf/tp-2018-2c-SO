@@ -22,7 +22,11 @@ typedef enum {
 		t_elDiego,
 		t_fm9,
 		t_cpu,
-		t_mdj
+		t_mdj,
+		t_consola_mdj,
+		t_consola_safa,
+		t_consola_fm9,
+		cantidad_tipos_procesos // este tiene que ir ultimo en el enum SIEMPRE o hacemos quilombo
 } Proceso;
 
 

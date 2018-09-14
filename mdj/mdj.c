@@ -66,7 +66,7 @@ void* ejecutar_consola(void* arg){
 }
 
 int main(int argc, char **argv) {
-	char str[TAMANIO_MAXIMO_STRING];
+	char* str;
 	int conexiones_permitidas[cantidad_tipos_procesos]={0}, err, looped=0, header, retsocket=0;
 	t_log* logger;
 	Servidor server;
@@ -120,8 +120,9 @@ int main(int argc, char **argv) {
 
                 // recibir_string recibe un stream de datos del socket del cual se envio el mensaje y los interpreta
                 // como string, agregando \0 al final y metiendo los datos en el array str
-                recibir_string(mensaje.socket, str, TAMANIO_MAXIMO_STRING);
+                str = recibir_string(mensaje.socket);
                 printf("MDJ recibio: %s\n", str);
+                free(str);
 
                 // para probar la capacidad de comunicacion bidireccional, le contestamos un "hola!"
                 // el header STRING_MDJ_DIEGO significa que le estamos mandando un string al diego desde MDJ
@@ -135,14 +136,16 @@ int main(int argc, char **argv) {
                 // este header indica que vamos a recibir un string leido de nuestra propia consola
 
                 // entonces recibimos el string y lo imprimimos, y ademas si es "exit" cerramos el programa
-                retsocket = recibir_string(mensaje.socket, str, TAMANIO_MAXIMO_STRING);
+                str = recibir_string(mensaje.socket);
                 comprobar_error(retsocket, "Error en recv de consola de MDJ");
                 printf("MDJ recibio de su propia consola: %s\n", str);
 
                 if(!strcmp(str, "exit")) {
+                    free(str);
                     pthread_join(thread_consola, NULL);
                     cerrar_mdj(logger, configuracion, server);
                 }
+                free(str);
 
                 // TODO parsear string para interpretar comandos
                 // cuando terminamos de ejecutar lo que nos pidio la consola le mandamos un header

@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TAMANIO_MAXIMO_STRING 128
-
 typedef enum {
     HANDSHAKE_CLIENTE,
     CONEXION_CERRADA,
@@ -18,6 +16,6 @@ typedef enum {
     OPERACION_CONSOLA_TERMINADA
 }protocolo_header;
 
-int recibir_string(int, char*, int);
+char* recibir_string(int);
 
 #endif /* PROTOCOLO_H_ */

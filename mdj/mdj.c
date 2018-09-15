@@ -11,7 +11,6 @@
 #include "mensaje.h"
 #include "validacion.h"
 
-pthread_mutex_t semaforo_servidor_corriendo;
 pthread_t thread_consola;
 
 void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, Servidor server){
@@ -22,7 +21,6 @@ void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, Servidor server){
     destruir_servidor(server);
     log_destroy(logger);
     destroy_cfg(configuracion, t_mdj);
-    pthread_mutex_destroy(&semaforo_servidor_corriendo);
     exit(0);
 }
 
@@ -33,11 +31,8 @@ void* ejecutar_consola(void* arg){
     struct sockaddr_in addr;
     int socket = crearSocket(), header, retsocket = 0;
 
-    // aca bloqueamos hasta que el servidor este listo para recibir nuestra conexion, despues nos conectamos
-    pthread_mutex_lock(&semaforo_servidor_corriendo);
     inicializarDireccion(&addr,puerto,MY_IP);
     conectar_Servidor(socket,&addr, t_consola_mdj);
-    pthread_mutex_unlock(&semaforo_servidor_corriendo);
 
     while(1) {
         // leemos linea y la mandamos al servidor (o sea al proceso MDJ porque somos la consola de MDJ)
@@ -67,7 +62,7 @@ void* ejecutar_consola(void* arg){
 
 int main(int argc, char **argv) {
 	char* str;
-	int conexiones_permitidas[cantidad_tipos_procesos]={0}, err, looped=0, header, retsocket=0;
+	int conexiones_permitidas[cantidad_tipos_procesos]={0}, err, header, retsocket=0;
 	t_log* logger;
 	Servidor server;
 	MensajeEntrante mensaje;
@@ -77,21 +72,6 @@ int main(int argc, char **argv) {
     logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
     cfg_mdj* configuracion = asignar_config(argv[1],mdj);
 
-	// inicializamos el semaforo, si no inicializa se cierra el programa
-    if (pthread_mutex_init(&semaforo_servidor_corriendo, NULL) != 0)
-    {
-        printf("\n mutex init failed\n");
-        return 1;
-    }
-
-    // bloqueamos el semaforo hasta que arranque el servidor
-    pthread_mutex_lock(&semaforo_servidor_corriendo);
-
-	// intentamos arrancar el thread de la consola, que se va a bloquear hasta que esperemos mensajes mas abajo
-    err = pthread_create(&thread_consola, NULL, &ejecutar_consola, (void*)configuracion->puerto);
-    if (err != 0)
-        printf("\ncan't create thread :[%s]", strerror(err));
-
 	// conexiones_permitidas es un array de ints que indica que procesos se pueden conectar, o en el caso de t_cpu,
 	// cuantas conexiones de cpu se van a aceptar
 	// en este caso permitimos que se nos conecte el diego y nuestra propia consola
@@ -99,12 +79,12 @@ int main(int argc, char **argv) {
 	conexiones_permitidas[t_consola_mdj] = 1;
 	server = inicializar_servidor(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
 
+    // intentamos arrancar el thread de la consola, que se va a bloquear hasta que esperemos mensajes mas abajo
+    err = pthread_create(&thread_consola, NULL, &ejecutar_consola, (void*)configuracion->puerto);
+    if (err != 0)
+        printf("\ncan't create thread :[%s]", strerror(err));
+
     while (1){
-        if(!looped){
-            // desbloqueamos el semaforo justo antes de que entramos a recibir mensajes
-            pthread_mutex_unlock(&semaforo_servidor_corriendo);
-            looped=1;
-        }
 
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
         // sin retornar

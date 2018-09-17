@@ -14,7 +14,7 @@ char* recibir_string(int socket){
     retrecv = recv(socket, &tamanio_string, sizeof(int), 0);
     comprobar_error(retrecv, "Error en recv en recibir_string");
 
-    // Reservo memoria para la linea + 1 byte para el \0, luego recibo la linea y la imprimo
+    // Reservo memoria para la linea + 1 byte para el \0, luego recibo la linea
     buffer_string = malloc((size_t) tamanio_string + 1);
     retrecv = recv(socket, buffer_string, (size_t) tamanio_string, 0);
     comprobar_error(retrecv, "Error en recv en recibir_string");

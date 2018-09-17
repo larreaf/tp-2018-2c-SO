@@ -9,7 +9,7 @@
  * @param t_proceso_destino tipo de proceso destino
  * @return socket con la nueva conexion
  */
-int conectar_a_servidor(Servidor servidor, char* ip_destino, int puerto_destino, Proceso t_proceso_destino){
+int conectar_como_cliente(Servidor servidor, char *ip_destino, int puerto_destino, Proceso t_proceso_destino){
     struct sockaddr_in addr;
     int socket = crearSocket();
     ConexionCliente* nueva_conexion;

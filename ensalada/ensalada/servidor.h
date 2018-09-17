@@ -28,7 +28,7 @@ typedef struct{
     Proceso t_proceso_host;
 }Servidor;
 
-int conectar_a_servidor(Servidor, char*, int, Proceso);
+int conectar_como_cliente(Servidor, char *, int, Proceso);
 void cerrar_conexion(Servidor, int);
 Servidor inicializar_servidor(t_log*, int, int*, Proceso);
 void destruir_servidor(Servidor);

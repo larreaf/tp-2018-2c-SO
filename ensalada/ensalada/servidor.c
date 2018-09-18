@@ -116,7 +116,7 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
             cliente_seleccionado = list_get(servidor.lista_clientes, i);
             FD_SET(cliente_seleccionado->socket, &descriptores_lectura);
         }
-        log_info(servidor.logger, "Esperando actividad en %d sockets clientes...", list_size(servidor.lista_clientes));
+        log_trace(servidor.logger, "Esperando actividad en %d sockets clientes...", list_size(servidor.lista_clientes));
         retsel = select(FD_SETSIZE, &descriptores_lectura, NULL, NULL, NULL);
 
         if(retsel==-1){
@@ -275,7 +275,7 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                 servidor.procesos_conectados[t_safa] = 0;
                                 break;
                             default:
-                                log_error(servidor.logger, "Proceso desconocido desconectado (socket %d)",
+                                log_warning(servidor.logger, "Proceso desconocido desconectado (socket %d)",
                                         cliente_seleccionado->socket);
                                 break;
                         }

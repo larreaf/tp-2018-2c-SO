@@ -6,19 +6,19 @@
 #include <commons/string.h>
 #include <commons/log.h>
 #include <readline/readline.h>
-#include "protocolo.h"
-#include "servidor.h"
-#include "mensaje.h"
-#include "validacion.h"
+#include <ensalada/protocolo.h>
+#include <ensalada/servidor.h>
+#include <ensalada/mensaje.h>
+#include <ensalada/validacion.h>
 
 pthread_t thread_consola;
 
-void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, Servidor server){
+void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, ConexionesActivas conexiones_activas){
     log_info(logger, "Cerrando MDJ...");
 
-    // destruir_servidor manda headers CONEXION_CERRADA a todos los clientes conectados para que se enteren y despues
+    // destruir_conexiones_activas manda headers CONEXION_CERRADA a todos los clientes conectados para que se enteren y despues
     // cierra cada socket
-    destruir_servidor(server);
+    destruir_conexiones_activas(conexiones_activas);
     log_destroy(logger);
     destroy_cfg(configuracion, t_mdj);
     exit(0);
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 	char* str;
 	int conexiones_permitidas[cantidad_tipos_procesos]={0}, err, header, retsocket=0;
 	t_log* logger;
-	Servidor server;
+	ConexionesActivas conexiones_activas;
 	MensajeEntrante mensaje;
 	MensajeDinamico* mensaje_respuesta;
 
@@ -77,18 +77,20 @@ int main(int argc, char **argv) {
 	// en este caso permitimos que se nos conecte el diego y nuestra propia consola
 	conexiones_permitidas[t_elDiego] = 1;
 	conexiones_permitidas[t_consola_mdj] = 1;
-	server = inicializar_servidor(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
+	conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
 
     // intentamos arrancar el thread de la consola, que se va a bloquear hasta que esperemos mensajes mas abajo
     err = pthread_create(&thread_consola, NULL, &ejecutar_consola, (void*)configuracion->puerto);
     if (err != 0)
         printf("\ncan't create thread :[%s]", strerror(err));
 
+    log_info(logger, "Listo");
+
     while (1){
 
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
         // sin retornar
-        mensaje = esperar_mensajes(server);
+        mensaje = esperar_mensajes(conexiones_activas);
 
         // cuando esperar_mensajes retorna, devuelve un MensajeEntrante que tiene como campos el socket que lo envio,
         // el header que se envio y el tipo de proceso que lo envio
@@ -123,7 +125,7 @@ int main(int argc, char **argv) {
                 if(!strcmp(str, "exit")) {
                     free(str);
                     pthread_join(thread_consola, NULL);
-                    cerrar_mdj(logger, configuracion, server);
+                    cerrar_mdj(logger, configuracion, conexiones_activas);
                 }
                 free(str);
 
@@ -140,7 +142,8 @@ int main(int argc, char **argv) {
                 // el header CONEXION_CERRADA indica que el que nos envio ese mensaje se desconecto, idealmente los
                 // procesos que cierran deberian mandar este header antes de hacerlo para que los procesos a los cuales
                 // estan conectados se enteren, de todas maneras esperar_mensaje se encarga internamente de cerrar
-                // su socket, liberar memoria, etc
+                // el socket, liberar memoria, etc
+                // cerrar_mdj(logger, configuracion, conexiones_activas);
                 break;
 
             default:

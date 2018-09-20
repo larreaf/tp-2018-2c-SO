@@ -10,15 +10,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "validacion.h"
-#include "com.h"
+#include <ensalada/validacion.h>
+#include <ensalada/com.h>
 #include <commons/log.h>
 #include <sys/select.h>
 #include <unistd.h>
 #include <signal.h>
-#include <servidor.h>
-#include "protocolo.h"
-#include "servidor.h"
+#include <ensalada/servidor.h>
+#include <ensalada/protocolo.h>
 #include <string.h>
 
 void cerrar_fm9(t_log* logger, cfg_fm9* configuracion, Servidor server){

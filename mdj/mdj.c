@@ -6,10 +6,10 @@
 #include <commons/string.h>
 #include <commons/log.h>
 #include <readline/readline.h>
-#include "protocolo.h"
-#include "servidor.h"
-#include "mensaje.h"
-#include "validacion.h"
+#include <ensalada/protocolo.h>
+#include <ensalada/servidor.h>
+#include <ensalada/mensaje.h>
+#include <ensalada/validacion.h>
 
 pthread_t thread_consola;
 

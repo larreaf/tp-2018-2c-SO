@@ -10,14 +10,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "validacion.h"
-#include "com.h"
-#include "mensaje.h"
+#include <ensalada/validacion.h>
+#include <ensalada/com.h>
+#include <ensalada/mensaje.h>
 #include <readline/readline.h>
-#include "protocolo.h"
+#include <ensalada/protocolo.h>
 #include <string.h>
 #include <commons/log.h>
-#include "servidor.h"
+#include <ensalada/servidor.h>
 
 int main(int argc, char **argv) {
     int socket_mdj, socket_fm9, retorno_send, header, conexiones_permitidas[cantidad_tipos_procesos]={0};

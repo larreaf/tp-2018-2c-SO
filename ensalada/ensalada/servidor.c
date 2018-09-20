@@ -3,24 +3,24 @@
 /*!
  * conecta a otro servidor y devuelve el socket de esa conexion, tambien lo guarda en conexiones activas en el struct
  * Servidor
- * @param servidor servidor host que contiene la lista de conexiones activas
+ * @param conexiones_activas servidor host que contiene la lista de conexiones activas
  * @param ip_destino ip del servidor al cual conectarse
  * @param puerto_destino puerto del servidor al cual conectarse
  * @param t_proceso_destino tipo de proceso destino
  * @return socket con la nueva conexion
  */
-int conectar_como_cliente(Servidor servidor, char *ip_destino, int puerto_destino, Proceso t_proceso_destino){
+int conectar_como_cliente(ConexionesActivas conexiones_activas, char *ip_destino, int puerto_destino, Proceso t_proceso_destino){
     struct sockaddr_in addr;
     int socket = crearSocket();
     ConexionCliente* nueva_conexion;
 
     inicializarDireccion(&addr,puerto_destino,ip_destino);
-    conectar_Servidor(socket,&addr, servidor.t_proceso_host);
+    conectar_Servidor(socket,&addr, conexiones_activas.t_proceso_host);
 
     nueva_conexion = malloc(sizeof(ConexionCliente));
     nueva_conexion->socket = socket;
     nueva_conexion->t_proceso = t_proceso_destino;
-    list_add(servidor.lista_clientes, nueva_conexion);
+    list_add(conexiones_activas.lista_clientes, nueva_conexion);
 
     return socket;
 }
@@ -31,7 +31,8 @@ int conectar_como_cliente(Servidor servidor, char *ip_destino, int puerto_destin
  * @param servidor servidor que contiene al socket cliente
  * @param posicion_cola posicion de la ConexionCliente en la lista de conexiones activas del servidor
  */
-void cerrar_conexion(Servidor servidor, int posicion_cola){
+
+void cerrar_conexion(ConexionesActivas servidor, int posicion_cola){
     int header = CONEXION_CERRADA;
     ConexionCliente* cliente = list_get(servidor.lista_clientes, posicion_cola);
 
@@ -43,20 +44,23 @@ void cerrar_conexion(Servidor servidor, int posicion_cola){
 /*!
  * inicializa struct Servidor para multiplexar con select() y atender a varios clientes a la vez
  * @param logger logger a utilizar
- * @param puerto puerto en el cual crear el socket escucha
+ * @param puerto puerto en el cual crear el socket escucha, si es 0 no se crea puerto de escucha
  * @param procesos_permitidos array de 4 int indicando que procesos se pueden conectar al servidor (o cuantos en caso de
  *        t_cpu
  * @param t_proceso_host tipo de proceso que ejecuta el servidor
  * @return struct Servidor con su logger, socket y lista de sockets clientes
  */
-Servidor inicializar_servidor(t_log* logger, int puerto, int procesos_permitidos[6], Proceso t_proceso_host){
+ConexionesActivas inicializar_conexiones_activas(t_log *logger, int puerto, int *procesos_permitidos,
+                                                 Proceso t_proceso_host){
     int* procesos_conectados = calloc(sizeof(int), cantidad_tipos_procesos);
-    int socket_escucha;
+    int socket_escucha = 0;
     struct sockaddr_in addr_local;
-    Servidor servidor;
+    ConexionesActivas servidor;
 
-    inicializarDireccion(&addr_local, puerto, MY_IP);
-    socket_escucha = escuchar_Conexion((&addr_local));
+    if(puerto){
+        inicializarDireccion(&addr_local, puerto, MY_IP);
+        socket_escucha = escuchar_Conexion((&addr_local));
+    }
 
     servidor.inicializado = 1;
     servidor.logger = logger;
@@ -73,7 +77,7 @@ Servidor inicializar_servidor(t_log* logger, int puerto, int procesos_permitidos
  * destruye el servidor, cerrando su socket de escucha, sockets de clientes si fuese necesario y liberando memoria
  * @param servidor struct Servidor a destruir
  */
-void destruir_servidor(Servidor servidor){
+void destruir_conexiones_activas(ConexionesActivas servidor){
 
     while(list_size(servidor.lista_clientes)){
         cerrar_conexion(servidor, 0);
@@ -91,7 +95,7 @@ void destruir_servidor(Servidor servidor){
  * @param servidor struct Servidor inicializada a monitorear
  * @return un MensajeEntrante con su campo header con el valor de header que se recibio, o -1 si hubo un error
  */
-MensajeEntrante esperar_mensajes(Servidor servidor){
+MensajeEntrante esperar_mensajes(ConexionesActivas servidor){
     ConexionCliente* cliente_seleccionado;
     fd_set descriptores_lectura;
     MensajeEntrante retorno;
@@ -99,7 +103,7 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
     int header, retsel;
 
     if(servidor.inicializado != 1){
-        log_error(servidor.logger, "Se intento utilizar un Servidor no inicializado");
+        log_error(servidor.logger, "Se intento utilizar un ConexionesActivas no inicializado");
         retorno.header = -1;
         return retorno;
     }
@@ -110,7 +114,9 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
         // el while se ejecuta solo si es una conexion nueva y un handshake, si no es asi se retorna un MensajeEntrante
 
         FD_ZERO(&descriptores_lectura);
-        FD_SET(servidor.socket, &descriptores_lectura);
+
+        if(servidor.socket)
+            FD_SET(servidor.socket, &descriptores_lectura);
 
         for(int i = 0; i<list_size(servidor.lista_clientes); i++) {
             cliente_seleccionado = list_get(servidor.lista_clientes, i);
@@ -125,10 +131,10 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
             return retorno;
         }
 
-        if (FD_ISSET(servidor.socket, &descriptores_lectura)) {
+        if (servidor.socket && FD_ISSET(servidor.socket, &descriptores_lectura)) {
             // Hubo actividad en el socket de escucha, o sea hay alguien que se nos esta queriendo conectar
 
-            log_info(servidor.logger, "Nueva conexion");
+            log_trace(servidor.logger, "Nueva conexion");
             cliente_seleccionado = malloc(sizeof(ConexionCliente));
 
             cliente_seleccionado->socket = aceptar_conexion(servidor.socket);
@@ -148,7 +154,8 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                 case t_cpu:
                                     cliente_seleccionado->t_proceso = t_cpu;
                                     if(servidor.procesos_conectados[t_cpu]<servidor.procesos_permitidos[t_cpu]){
-                                        log_info(servidor.logger, "Handshake CPU realizado");
+                                        log_info(servidor.logger, "Proceso CPU conectado (socket %d)",
+                                                cliente_seleccionado->socket);
                                         servidor.procesos_conectados[t_cpu]++;
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso CPU denegada");
@@ -160,7 +167,8 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                     cliente_seleccionado->t_proceso = t_elDiego;
 
                                     if(servidor.procesos_permitidos[t_elDiego]==1){
-                                        log_info(servidor.logger, "Handshake elDiego realizado");
+                                        log_info(servidor.logger, "Proceso elDiego conectado (socket %d)",
+                                                 cliente_seleccionado->socket);
                                         servidor.procesos_conectados[t_elDiego] = 1;
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso elDiego denegada");
@@ -172,7 +180,8 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                     cliente_seleccionado->t_proceso = t_mdj;
 
                                     if(servidor.procesos_permitidos[t_mdj]==1){
-                                        log_info(servidor.logger, "Handshake MDJ realizado");
+                                        log_info(servidor.logger, "Proceso MDJ conectado (socket %d)",
+                                                 cliente_seleccionado->socket);
                                         servidor.procesos_conectados[t_mdj] = 1;
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso MDJ denegada");
@@ -184,7 +193,8 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                     cliente_seleccionado->t_proceso = t_fm9;
 
                                     if(servidor.procesos_permitidos[t_fm9]==1){
-                                        log_info(servidor.logger, "Handshake FM9 realizado");
+                                        log_info(servidor.logger, "Proceso FM9 conectado (socket %d)",
+                                                 cliente_seleccionado->socket);
                                         servidor.procesos_conectados[t_fm9] = 1;
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso FM9 denegada");
@@ -196,7 +206,8 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                     cliente_seleccionado->t_proceso = t_safa;
 
                                     if(servidor.procesos_permitidos[t_safa]==1){
-                                        log_info(servidor.logger, "Handshake S-AFA realizado");
+                                        log_info(servidor.logger, "Proceso SAFA conectado (socket %d)",
+                                                 cliente_seleccionado->socket);
                                         servidor.procesos_conectados[t_safa] = 1;
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso SAFA denegada");
@@ -208,7 +219,8 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                     cliente_seleccionado->t_proceso = t_consola_mdj;
 
                                     if(servidor.procesos_permitidos[t_consola_mdj]==1){
-                                        log_info(servidor.logger, "Handshake consola MDJ realizado");
+                                        log_info(servidor.logger, "Hilo consola MDJ conectado (socket %d)",
+                                                 cliente_seleccionado->socket);
                                         servidor.procesos_conectados[t_consola_mdj] = 1;
                                     }else{
                                         log_error(servidor.logger, "Conexion de consola MDJ denegada");
@@ -220,7 +232,8 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                     cliente_seleccionado->t_proceso = t_consola_fm9;
 
                                     if(servidor.procesos_permitidos[t_consola_fm9]==1){
-                                        log_info(servidor.logger, "Handshake consola FM9 realizado");
+                                        log_info(servidor.logger, "Hilo consola FM9 conectado (socket %d)",
+                                                 cliente_seleccionado->socket);
                                         servidor.procesos_conectados[t_consola_fm9] = 1;
                                     }else{
                                         log_error(servidor.logger, "Conexion de consola FM9 denegada");
@@ -232,7 +245,8 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                     cliente_seleccionado->t_proceso = t_consola_safa;
 
                                     if(servidor.procesos_permitidos[t_consola_safa]==1){
-                                        log_info(servidor.logger, "Handshake consola SAFA realizado");
+                                        log_info(servidor.logger, "Hilo consola SAFA conectado (socket %d)",
+                                                 cliente_seleccionado->socket);
                                         servidor.procesos_conectados[t_consola_safa] = 1;
                                     }else{
                                         log_error(servidor.logger, "Conexion de consola SAFA denegada");
@@ -255,24 +269,29 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                         // se desconecto
                         switch (cliente_seleccionado->t_proceso) {
                             case t_cpu:
-                                log_info(servidor.logger, "Proceso CPU desconectado (socket %d)",
+                                log_warning(servidor.logger, "Proceso CPU desconectado (socket %d)",
                                         cliente_seleccionado->socket);
                                 servidor.procesos_conectados[t_cpu]--;
                                 break;
                             case t_elDiego:
-                                log_info(servidor.logger, "Proceso elDiego desconectado (socket %d)",
+                                log_warning(servidor.logger, "Proceso elDiego desconectado (socket %d)",
                                         cliente_seleccionado->socket);
                                 servidor.procesos_conectados[t_elDiego] = 0;
                                 break;
                             case t_mdj:
-                                log_info(servidor.logger, "Proceso MDJ desconectado (socket %d)",
+                                log_warning(servidor.logger, "Proceso MDJ desconectado (socket %d)",
                                         cliente_seleccionado->socket);
                                 servidor.procesos_conectados[t_mdj] = 0;
                                 break;
                             case t_safa:
-                                log_info(servidor.logger, "Proceso S-AFA desconectado (socket %d)",
+                                log_warning(servidor.logger, "Proceso S-AFA desconectado (socket %d)",
                                         cliente_seleccionado->socket);
                                 servidor.procesos_conectados[t_safa] = 0;
+                                break;
+                            case t_fm9:
+                                log_warning(servidor.logger, "Proceso FM9 desconectado (socket %d)",
+                                         cliente_seleccionado->socket);
+                                servidor.procesos_conectados[t_fm9] = 0;
                                 break;
                             default:
                                 log_warning(servidor.logger, "Proceso desconocido desconectado (socket %d)",
@@ -280,6 +299,10 @@ MensajeEntrante esperar_mensajes(Servidor servidor){
                                 break;
                         }
                         cerrar_conexion(servidor, i);
+                        retorno.header = CONEXION_CERRADA;
+                        retorno.t_proceso = cliente_seleccionado->t_proceso;
+                        retorno.socket = cliente_seleccionado->socket;
+                        return retorno;
                     }
                 }
             }

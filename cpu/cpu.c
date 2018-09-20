@@ -58,6 +58,10 @@ int main(int argc, char **argv) {
                         log_warning(logger, "CPU perdio conexion con elDiego, cerrando CPU");
                         cerrar_cpu(logger, configuracion, conexiones_activas);
 
+                    case t_fm9:
+                        log_warning(logger, "CPU perdio conexion con FM9, cerrando CPU");
+                        cerrar_cpu(logger, configuracion, conexiones_activas);
+
                     default:
                         break;
                 }

@@ -26,3 +26,32 @@ Consola FM9	FM9		Se conecta a FM9	T1
 FM9		Consola FM9	Se conectó OK		Socket
 FM9		Consola FM9	Se conectó Error	Mensaje
 
+Interacciones con consola			
+Origen		Destino		Acción		Protocolo
+Consola FM9	FM9		DUMP		Comando con parámetro ID
+FM9		Consola FM9	DUMP ok		Data
+FM9		Consola FM9	DUMP Error	Mensaje
+Consola MDJ	MDJ		IS		Comando
+MDJ		Consola MDJ	IS ok 		Directorios y archivos	Data
+MDJ		Consola MDJ	IS Error	Mensaje
+Consola MDJ	MDJ		CD 		Comando con parámetro PATH
+MDJ		Consola MDJ	CD 		Data
+MDJ		Consola MDJ	CD Error	Mensaje
+Consola MDJ	MDJ		MD5		Comando con parámetro PATH
+MDJ		Consola MDJ	MD5 Ok		Data
+MDJ		Consola MDJ	MD5 Error	Mensaje
+Consola MDJ	MDJ		CAT		Comando con parámetro PATH
+MDJ		Consola MDJ	CAT Ok		Data
+MDJ		Consola MDJ	CAT Error	Mensaje
+Consola SATA	SATA		Ejecutar	Comando con parámetro PATH
+SATA		Consola SATA	Ejecutar ok	Mensaje 
+SATA		Consola SATA	Ejecutar error	Mensaje
+Consola SATA	SATA		Status 		Comando con parámetro null o ID
+SATA		Consola SATA	Status ok	Data
+SATA		Consola SATA	Status Error	Mensaje
+Consola SATA	SATA		Finalizar	Comando con parámetro ID
+SATA		Consola SATA	Finalizar ok	Mensaje
+SATA		Consola SATA	Finalizar error	Mensaje
+Consola SATA	SATA		Métricas	Comando con parámetro null o ID
+SATA		Consola SATA	Métricas ok	Data
+SATA		Consola SATA	Métricas Error	Mensaje

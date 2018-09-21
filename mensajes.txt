@@ -1,0 +1,28 @@
+Conexiones
+
+Origen		Destino		Acción			Protocolo
+El Diego	SAFA		Se conecta a SAFA	T1
+SAFA		El Diego	Se conectó OK		Socket
+SAFA		El Diego	Se conectó Error	Mensaje
+El Diego	MDJ		Se conecta a MDJ	T1
+MDJ		El Diego	Se conectó OK		Socket
+MDJ		El Diego	Se conectó Error	Mensaje
+El Diego	FM9		Se conecta a FM9	T1
+FM9		El Diego	Se conectó OK		Socket
+FM9		El Diego	Se conectó Error	Mensaje
+CPU		SAFA		Se conecta a SAFA	T1
+SAFA		CPU		Se conectó OK		Socket
+SAFA		CPU		Se conectó Error	Mensaje
+CPU		El Diego	Se conecta a EL DIEGO	T1
+El Diego	CPU		Se conectó OK		Socket
+El Diego	CPU		Se conectó Error	Mensaje
+Consola MDJ	MDJ		Se conecta a MDJ	T1
+MDJ		Consola MDJ	Se conectó OK		Socket
+MDJ		Consola MDJ	Se conectó Error	Mensaje
+Consola SAFA	SAFA		Se conecta a SAFA	T1
+SAFA		Consola SAFA	Se conectó OK		Socket
+SAFA		Consola SAFA	Se conectó Error	Mensaje
+Consola FM9	FM9		Se conecta a FM9	T1
+FM9		Consola FM9	Se conectó OK		Socket
+FM9		Consola FM9	Se conectó Error	Mensaje
+

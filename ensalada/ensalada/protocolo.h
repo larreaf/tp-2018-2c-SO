@@ -20,6 +20,17 @@ typedef enum {
     OPERACION_CONSOLA_TERMINADA
 }protocolo_header;
 
+typedef enum {
+    OK,
+    ERROR,
+    WARNING
+}tipo_mensaje;
+
+typedef struct{
+    tipo_mensaje tipo;
+    char detalle[200];
+}mensaje;
+
 char* recibir_string(int);
 
 #endif /* PROTOCOLO_H_ */

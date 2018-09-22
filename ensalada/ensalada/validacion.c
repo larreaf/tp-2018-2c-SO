@@ -225,7 +225,7 @@ void destroy_cfg (void* cfg, t_process tipo){
 	switch (tipo) {
 
 			case safa :
-                free(((cfg_safa*)cfg)->config);
+                config_destroy(((cfg_safa*)cfg)->config);
 				free(cfg);
 				break;
 

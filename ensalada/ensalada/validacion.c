@@ -84,7 +84,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 	switch (tipo_proceso) {
 
 		case safa :
-			for(i = 0;i < CONFIG_cpu; i++){
+			for(i = 0;i < CONFIG_safa; i++){
 				true_value = config_has_property(configuracion, CONFIGURACION_safa[i]);
 				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_safa[i]);
 				atrapar_error(true_value,mensaje_error);
@@ -225,7 +225,7 @@ void destroy_cfg (void* cfg, t_process tipo){
 	switch (tipo) {
 
 			case safa :
-                free(((cfg_safa*)cfg)->config);
+                config_destroy(((cfg_safa*)cfg)->config);
 				free(cfg);
 				break;
 

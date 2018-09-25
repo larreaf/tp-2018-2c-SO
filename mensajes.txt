@@ -1,0 +1,78 @@
+Conexiones
+
+Origen		Destino		Acción			Protocolo
+El Diego	SAFA		Se conecta a SAFA	T1
+SAFA		El Diego	Se conectó OK		Socket
+SAFA		El Diego	Se conectó Error	Mensaje
+El Diego	MDJ		Se conecta a MDJ	T1
+MDJ		El Diego	Se conectó OK		Socket
+MDJ		El Diego	Se conectó Error	Mensaje
+El Diego	FM9		Se conecta a FM9	T1
+FM9		El Diego	Se conectó OK		Socket
+FM9		El Diego	Se conectó Error	Mensaje
+CPU		SAFA		Se conecta a SAFA	T1
+SAFA		CPU		Se conectó OK		Socket
+SAFA		CPU		Se conectó Error	Mensaje
+CPU		El Diego	Se conecta a EL DIEGO	T1
+El Diego	CPU		Se conectó OK		Socket
+El Diego	CPU		Se conectó Error	Mensaje
+Consola MDJ	MDJ		Se conecta a MDJ	T1
+MDJ		Consola MDJ	Se conectó OK		Socket
+MDJ		Consola MDJ	Se conectó Error	Mensaje
+Consola SAFA	SAFA		Se conecta a SAFA	T1
+SAFA		Consola SAFA	Se conectó OK		Socket
+SAFA		Consola SAFA	Se conectó Error	Mensaje
+Consola FM9	FM9		Se conecta a FM9	T1
+FM9		Consola FM9	Se conectó OK		Socket
+FM9		Consola FM9	Se conectó Error	Mensaje
+
+Interacciones con consola			
+Origen		Destino		Acción		Protocolo
+Consola FM9	FM9		DUMP		Comando con parámetro ID
+FM9		Consola FM9	DUMP ok		Data
+FM9		Consola FM9	DUMP Error	Mensaje
+Consola MDJ	MDJ		IS		Comando
+MDJ		Consola MDJ	IS ok 		Directorios y archivos	Data
+MDJ		Consola MDJ	IS Error	Mensaje
+Consola MDJ	MDJ		CD 		Comando con parámetro PATH
+MDJ		Consola MDJ	CD 		Data
+MDJ		Consola MDJ	CD Error	Mensaje
+Consola MDJ	MDJ		MD5		Comando con parámetro PATH
+MDJ		Consola MDJ	MD5 Ok		Data
+MDJ		Consola MDJ	MD5 Error	Mensaje
+Consola MDJ	MDJ		CAT		Comando con parámetro PATH
+MDJ		Consola MDJ	CAT Ok		Data
+MDJ		Consola MDJ	CAT Error	Mensaje
+Consola SATA	SATA		Ejecutar	Comando con parámetro PATH
+SATA		Consola SATA	Ejecutar ok	Mensaje 
+SATA		Consola SATA	Ejecutar error	Mensaje
+Consola SATA	SATA		Status 		Comando con parámetro null o ID
+SATA		Consola SATA	Status ok	Data
+SATA		Consola SATA	Status Error	Mensaje
+Consola SATA	SATA		Finalizar	Comando con parámetro ID
+SATA		Consola SATA	Finalizar ok	Mensaje
+SATA		Consola SATA	Finalizar error	Mensaje
+Consola SATA	SATA		Métricas	Comando con parámetro null o ID
+SATA		Consola SATA	Métricas ok	Data
+SATA		Consola SATA	Métricas Error	Mensaje
+
+
+estructuras de dato
+Estructuras		
+		
+Mensaje{		
+	Status	[ENUM]
+	Detalle	Char[200]
+}
+
+PATH	CHAR[]	
+Socket	INT	
+ID	INT	
+
+Comando{		
+	Tipo	
+	Nombre	
+	Parametros	ID | PATH | NULL
+}
+		
+Data	Char[]	

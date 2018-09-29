@@ -104,5 +104,5 @@ MensajeDinamico* recibir_mensaje(MensajeEntrante metadata){
 		free(buffer);
 	}
 
-	return NULL;
+	return mensaje;
 }

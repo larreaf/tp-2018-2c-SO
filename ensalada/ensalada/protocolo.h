@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "com.h"
+
 
 typedef enum {
     HANDSHAKE_CLIENTE,
@@ -17,6 +17,10 @@ typedef enum {
     STRING_DIEGO_SAFA,
     STRING_CONSOLA_PROPIA,
     STRING_SAFA_DIEGO,
+	VALIDAR_ARCHIVO,
+	CREAR_ARCHIVO,
+	OBTENER_DATOS,
+	GUARDAR_DATOS,
     OPERACION_CONSOLA_TERMINADA
 }protocolo_header;
 

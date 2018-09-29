@@ -4,8 +4,7 @@
 #include <sys/select.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
-#include "protocolo.h"
-#include "com.h"
+
 
 typedef struct{
     int socket;
@@ -15,6 +14,7 @@ typedef struct{
 typedef struct{
     int socket;
     int header;
+    int longitud;
     Proceso t_proceso;
 }MensajeEntrante;
 

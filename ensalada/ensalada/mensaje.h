@@ -6,6 +6,7 @@
 #include <commons/collections/queue.h>
 #include <sys/socket.h>
 
+
 typedef struct {
     int longitud;
     void* datos;
@@ -21,8 +22,10 @@ typedef struct {
 }MensajeDinamico;
 
 MensajeDinamico* crear_mensaje(int, int);
+void destruir_mensaje(MensajeDinamico* mensaje);
 void agregar_dato(MensajeDinamico*, int, void*);
 void agregar_string(MensajeDinamico*, char*);
 int enviar_mensaje(MensajeDinamico*);
+MensajeDinamico* recibir_mensaje(MensajeEntrante metadata);
 
 #endif //MENSAJE_H

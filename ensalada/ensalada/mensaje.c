@@ -95,7 +95,7 @@ MensajeDinamico* recibir_mensaje(MensajeEntrante metadata){
 
 	comprobar_error(recv(metadata.socket,&longitud,sizeof(int)),"Error");
 	metadata.longitud = longitud - 2* sizeof(int);
-	while(recibido < longitud){
+	while(recibido < metadata.longitud){
 		int tamanio = 0;
 		recibido += recv(metadata.socket,&tamanio,sizeof(int),0);
 		buffer = malloc(tamanio);

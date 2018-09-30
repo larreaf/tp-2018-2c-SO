@@ -1,4 +1,4 @@
-#include "mensaje.h"
+
 
 /*!
  * Crea mensaje en memoria con el header elegido y crea la cola que almacenara los datos a enviar y sus longitudes
@@ -17,7 +17,10 @@ MensajeDinamico* crear_mensaje(int header, int socket_destino){
 }
 
 void destruir_mensaje(MensajeDinamico* mensaje){
-	queue_destroy(mensaje->payload);
+	void destroy_nodo(void* element){
+		free(element);
+	}
+	queue_destroy_and_destroy_elements(mensaje->payload,&destroy_nodo);
 	free(mensaje);
 }
 
@@ -99,10 +102,41 @@ MensajeDinamico* recibir_mensaje(MensajeEntrante metadata){
 		int tamanio = 0;
 		recibido += recv(metadata.socket,&tamanio,sizeof(int),0);
 		buffer = malloc(tamanio);
-		recibido += recv(metadata.socket,buffer,tamanio,0);
+		recibido += recv(metadata.socket,buffer,&tamanio,0);
 		agregar_dato(mensaje,tamanio,buffer);
 		free(buffer);
 	}
 
 	return mensaje;
 }
+
+MensajeDinamico* crear_mensaje_mdj_validar_archivo(int socket_destino, char* path){
+	MensajeDinamico* mensaje_dinamico = crear_mensaje(VALIDAR_ARCHIVO,socket_destino);
+	agregar_dato(mensaje_dinamico,strlen(path),path);
+	return mensaje_dinamico;
+}
+
+MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path, int cantidad_lineas){
+	MensajeDinamico* mensaje_dinamico = crear_mensaje(CREAR_ARCHIVO,socket_destino);
+	agregar_dato(mensaje_dinamico,sizeof(int),cantidad_lineas);
+	agregar_dato(mensaje_dinamico,strlen(path),path);
+	return mensaje_dinamico;
+}
+
+MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path, int offset,int size){
+	MensajeDinamico* mensaje_dinamico = crear_mensaje(OBTENER_DATOS,socket_destino);
+	agregar_dato(mensaje_dinamico,sizeof(int),size);
+	agregar_dato(mensaje_dinamico,sizeof(int),offset);
+	agregar_dato(mensaje_dinamico,strlen(path),path);
+	return mensaje_dinamico;
+}
+
+MensajeDinamico* crear_mensaje_mdj_guardar_datos(int socket_destino, char* path, int offset, int size, char* buffer){
+	MensajeDinamico* mensaje_dinamico = crear_mensaje(OBTENER_DATOS,socket_destino);
+	agregar_dato(mensaje_dinamico,strlen(buffer),buffer);
+	agregar_dato(mensaje_dinamico,sizeof(int),size);
+	agregar_dato(mensaje_dinamico,sizeof(int),offset);
+	agregar_dato(mensaje_dinamico,strlen(path),path);
+	return mensaje_dinamico;
+}
+

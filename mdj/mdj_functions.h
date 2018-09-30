@@ -17,6 +17,11 @@
 		int cantidad_lineas;
 	} t_mdj_interface;
 
+	typedef struct{
+		int tamanio_bloques;
+		int cantidad_bloques;
+	}metadata_fifa;
+
 	void interface_mdj(MensajeDinamico* mensaje_dinamico);
 
 	void validar_archivo(t_mdj_interface* data_operacion);

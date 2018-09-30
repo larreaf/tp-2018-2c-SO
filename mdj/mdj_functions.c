@@ -18,6 +18,10 @@ int guardar_datos(t_mdj_interface* data_operacion){
 	return 0;
 }
 
+void borrar_archivo(t_mdj_interface* data_operacion){
+
+}
+
 t_mdj_interface* crear_data_mdj_operacion(MensajeDinamico* mensaje){
 	t_mdj_interface* data_mdj_operacion = malloc(sizeof(t_mdj_interface));
 	NodoPayload* nodo_aux = queue_pop(mensaje->payload);
@@ -68,7 +72,9 @@ void interface_mdj(MensajeDinamico* mensaje_dinamico){
 		case GUARDAR_DATOS:
 			pthread_create(&nuevo_hilo, NULL,(void*)guardar_datos(),data_operacion);
 			break;
-
+		case BORRAR_ARCHIVO:
+			pthread_create(&nuevo_hilo, NULL,(void*)borrar_archivo(),data_operacion);
+			break;
 	}
 	pthread_detach(nuevo_hilo);
 }

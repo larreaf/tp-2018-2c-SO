@@ -64,4 +64,11 @@ MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path,
  */
 MensajeDinamico* crear_mensaje_mdj_guardar_datos(int socket_destino, char* path, int offset, int size, char* buffer);
 
+/*
+ * @NAME: crear_mensaje_mdj_borrar_archivo
+ * @DESC: crea el mensaje para enviar request a mdj para borrar un archivo de mdj
+ * @ARG: socket de mdj + path del archivo
+ */
+MensajeDinamico* crear_mensaje_mdj_borrar_archivo(int socket_destino, char* path);
+
 #endif //MENSAJE_H

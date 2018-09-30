@@ -139,4 +139,8 @@ MensajeDinamico* crear_mensaje_mdj_guardar_datos(int socket_destino, char* path,
 	agregar_dato(mensaje_dinamico,strlen(path),path);
 	return mensaje_dinamico;
 }
-
+MensajeDinamico* crear_mensaje_mdj_borrar_archivo(int socket_destino, char* path){
+	MensajeDinamico* mensaje_dinamico = crear_mensaje(BORRAR_ARCHIVO,socket_destino);
+	agregar_dato(mensaje_dinamico,strlen(path),path);
+	return mensaje_dinamico;
+}

@@ -57,16 +57,16 @@ void interface_mdj(MensajeDinamico* mensaje_dinamico){
 	switch(mensaje_dinamico->header){
 
 		case VALIDAR_ARCHIVO:
-			pthread_create(&nuevo_hilo,validar_archivo(),data_operacion);
+			pthread_create(&nuevo_hilo, NULL,(void*)validar_archivo(),data_operacion);
 			break;
 		case CREAR_ARCHIVO:
-			pthread_create(&nuevo_hilo,crear_archivo(),data_operacion);
+			pthread_create(&nuevo_hilo, NULL,(void*)crear_archivo(),data_operacion);
 			break;
 		case OBTENER_DATOS:
-			pthread_create(&nuevo_hilo,obtener_datos(),data_operacion);
+			pthread_create(&nuevo_hilo, NULL,(void*)obtener_datos(),data_operacion);
 			break;
 		case GUARDAR_DATOS:
-			pthread_create(&nuevo_hilo,guardar_datos(),data_operacion);
+			pthread_create(&nuevo_hilo, NULL,(void*)guardar_datos(),data_operacion);
 			break;
 
 	}

@@ -1,4 +1,4 @@
-
+#include "mensaje.h"
 
 /*!
  * Crea mensaje en memoria con el header elegido y crea la cola que almacenara los datos a enviar y sus longitudes

@@ -2,9 +2,18 @@
 #define SERVIDOR_H
 
 #include <sys/select.h>
+#include <semaphore.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
+#include "com.h"
+#include "protocolo.h"
 
+
+typedef struct{
+    int socket;
+    int id;
+    int cantidad_procesos_asignados;
+}CPU;
 
 typedef struct{
     int socket;
@@ -23,9 +32,16 @@ typedef struct{
     int socket;
     int* procesos_conectados;
     int* procesos_permitidos;
+    int socket_eldiego;
+    int socket_safa;
+    int socket_mdj;
+    int socket_fm9;
     t_list* lista_clientes;
+    t_list* lista_cpus;
     t_log* logger;
     Proceso t_proceso_host;
+    sem_t semaforo_safa;
+
 }ConexionesActivas;
 
 int conectar_como_cliente(ConexionesActivas, char *, int, Proceso);

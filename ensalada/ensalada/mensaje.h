@@ -4,13 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <commons/collections/queue.h>
+#include "servidor.h"
 #include <sys/socket.h>
-
 
 typedef struct {
     int longitud;
     void* datos;
-
 }NodoPayload;
 
 typedef struct {
@@ -34,14 +33,14 @@ MensajeDinamico* recibir_mensaje(MensajeEntrante metadata);
  * @DESC: crea el mensaje para enviar request a mdj para validar un archivo
  * @ARG: socket de mdj + path del archivo
  */
-MensajeDinamico* crear_mensaje_mdj_validar_archivo(int socket_destino, char* path);
+MensajeDinamico* crear_mensaje_mdj_validar_archivo(int, char*);
 
 /*
  * @NAME: crear_mensaje_mdj_crear_archivo
  * @DESC: crea el mensaje para enviar request a mdj para crear un archivo
  * @ARG: socket de mdj + path del archivo
  */
-MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path);
+MensajeDinamico* crear_mensaje_mdj_crear_archivo(int, char*, int);
 
 /*
  * @NAME: crear_mensaje_mdj_obtener_datos
@@ -51,7 +50,7 @@ MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path)
  * 		+ offset: desde donde leer
  *		+ size: tamanio a leer
  */
-MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path, int offset, int size);
+MensajeDinamico* crear_mensaje_mdj_obtener_datos(int, char*, int, int);
 
 /*
  * @NAME: crear_mensaje_mdj_guardar_datos
@@ -62,13 +61,13 @@ MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path,
  *		+ size: tamanio a leer
  *		+ buffer: datos a guardar
  */
-MensajeDinamico* crear_mensaje_mdj_guardar_datos(int socket_destino, char* path, int offset, int size, char* buffer);
+MensajeDinamico* crear_mensaje_mdj_guardar_datos(int, char*, int, int, char*);
 
 /*
  * @NAME: crear_mensaje_mdj_borrar_archivo
  * @DESC: crea el mensaje para enviar request a mdj para borrar un archivo de mdj
  * @ARG: socket de mdj + path del archivo
  */
-MensajeDinamico* crear_mensaje_mdj_borrar_archivo(int socket_destino, char* path);
+MensajeDinamico* crear_mensaje_mdj_borrar_archivo(int, char*);
 
 #endif //MENSAJE_H

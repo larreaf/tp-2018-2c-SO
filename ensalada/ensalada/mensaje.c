@@ -10,17 +10,14 @@ MensajeDinamico* crear_mensaje(int header, int socket_destino){
     MensajeDinamico *mensaje = malloc(sizeof(MensajeDinamico));
     mensaje->header = header;
     mensaje->payload = queue_create();
-    mensaje->longitud = sizeof(int);
+    mensaje->longitud = sizeof(int)*2;
     mensaje->socket_destino = socket_destino;
 
     return mensaje;
 }
 
 void destruir_mensaje(MensajeDinamico* mensaje){
-	void destroy_nodo(void* element){
-		free(element);
-	}
-	queue_destroy_and_destroy_elements(mensaje->payload,&destroy_nodo);
+	queue_destroy_and_destroy_elements(mensaje->payload, free);
 	free(mensaje);
 }
 
@@ -38,7 +35,8 @@ void agregar_dato(MensajeDinamico* mensaje, int longitud, void* dato){
     nuevo_nodo->datos = buffer_dato;
     nuevo_nodo->longitud = longitud;
     queue_push(mensaje->payload, nuevo_nodo);
-    mensaje->longitud+=sizeof(int)+longitud;
+
+    mensaje->longitud+=longitud+sizeof(int);
 }
 
 
@@ -63,25 +61,23 @@ int enviar_mensaje(MensajeDinamico* mensaje){
     NodoPayload* buffer_nodo;
     void* buffer_mensaje;
 
-    mensaje->longitud += sizeof(int); //Por el envio de la longitud total despues del header
-
-
     buffer_mensaje = malloc((size_t)mensaje->longitud);
-    memmove(buffer_mensaje, &(mensaje->header), sizeof(int));
+    memcpy(buffer_mensaje, &(mensaje->header), sizeof(int));
     posicion_buffer += sizeof(int);
 
-    memmove(buffer_mensaje, &(mensaje->longitud), sizeof(int));
+	memcpy(buffer_mensaje+posicion_buffer, &(mensaje->longitud), sizeof(int));
     posicion_buffer += sizeof(int);
 
     while(!queue_is_empty(mensaje->payload)){
         buffer_nodo = queue_pop(mensaje->payload);
-        memmove(buffer_mensaje+posicion_buffer, &(buffer_nodo->longitud), sizeof(int));
+
+		memcpy(buffer_mensaje+posicion_buffer, &(buffer_nodo->longitud), sizeof(int));
         posicion_buffer += sizeof(int);
-        memmove(buffer_mensaje+posicion_buffer, buffer_nodo->datos, (size_t)buffer_nodo->longitud);
+
+		memcpy(buffer_mensaje+posicion_buffer, buffer_nodo->datos, (size_t)buffer_nodo->longitud);
         posicion_buffer += buffer_nodo->longitud;
-        free(buffer_nodo->datos);
-        free(buffer_nodo);
     }
+
     resultado = send(mensaje->socket_destino, buffer_mensaje, (size_t)mensaje->longitud, 0);
     free(buffer_mensaje);
     destruir_mensaje(mensaje);
@@ -90,19 +86,19 @@ int enviar_mensaje(MensajeDinamico* mensaje){
 }
 
 MensajeDinamico* recibir_mensaje(MensajeEntrante metadata){
-	MensajeDinamico mensaje = crear_mensaje(metadata.header,metadata.socket);
+	MensajeDinamico* mensaje = crear_mensaje(metadata.header,metadata.socket);
 
 	int longitud = 0;
 	int recibido = 0;
 	char* buffer;
 
-	comprobar_error(recv(metadata.socket,&longitud,sizeof(int)),"Error");
+	comprobar_error(recv(metadata.socket,&longitud,sizeof(int), MSG_WAITALL),"Error");
 	metadata.longitud = longitud - 2* sizeof(int);
 	while(recibido < metadata.longitud){
 		int tamanio = 0;
-		recibido += recv(metadata.socket,&tamanio,sizeof(int),0);
-		buffer = malloc(tamanio);
-		recibido += recv(metadata.socket,buffer,&tamanio,0);
+		recibido += recv(metadata.socket,&tamanio,sizeof(int),MSG_WAITALL);
+		buffer = malloc((size_t)tamanio);
+		recibido += recv(metadata.socket,buffer,(size_t)tamanio,MSG_WAITALL);
 		agregar_dato(mensaje,tamanio,buffer);
 		free(buffer);
 	}
@@ -118,15 +114,15 @@ MensajeDinamico* crear_mensaje_mdj_validar_archivo(int socket_destino, char* pat
 
 MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path, int cantidad_lineas){
 	MensajeDinamico* mensaje_dinamico = crear_mensaje(CREAR_ARCHIVO,socket_destino);
-	agregar_dato(mensaje_dinamico,sizeof(int),cantidad_lineas);
+	agregar_dato(mensaje_dinamico,sizeof(int),&cantidad_lineas);
 	agregar_dato(mensaje_dinamico,strlen(path),path);
 	return mensaje_dinamico;
 }
 
 MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path, int offset,int size){
 	MensajeDinamico* mensaje_dinamico = crear_mensaje(OBTENER_DATOS,socket_destino);
-	agregar_dato(mensaje_dinamico,sizeof(int),size);
-	agregar_dato(mensaje_dinamico,sizeof(int),offset);
+	agregar_dato(mensaje_dinamico,sizeof(int),&size);
+	agregar_dato(mensaje_dinamico,sizeof(int),&offset);
 	agregar_dato(mensaje_dinamico,strlen(path),path);
 	return mensaje_dinamico;
 }
@@ -134,8 +130,8 @@ MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path,
 MensajeDinamico* crear_mensaje_mdj_guardar_datos(int socket_destino, char* path, int offset, int size, char* buffer){
 	MensajeDinamico* mensaje_dinamico = crear_mensaje(OBTENER_DATOS,socket_destino);
 	agregar_dato(mensaje_dinamico,strlen(buffer),buffer);
-	agregar_dato(mensaje_dinamico,sizeof(int),size);
-	agregar_dato(mensaje_dinamico,sizeof(int),offset);
+	agregar_dato(mensaje_dinamico,sizeof(int),&size);
+	agregar_dato(mensaje_dinamico,sizeof(int),&offset);
 	agregar_dato(mensaje_dinamico,strlen(path),path);
 	return mensaje_dinamico;
 }

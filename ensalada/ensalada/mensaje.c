@@ -82,7 +82,10 @@ int enviar_mensaje(MensajeDinamico* mensaje){
     free(buffer_mensaje);
     destruir_mensaje(mensaje);
 
-    return resultado;
+    if(resultado == mensaje->longitud)
+        return 1;
+    else
+        return -1;
 }
 
 MensajeDinamico* recibir_mensaje(MensajeEntrante metadata){
@@ -92,9 +95,9 @@ MensajeDinamico* recibir_mensaje(MensajeEntrante metadata){
 	int recibido = 0;
 	char* buffer;
 
-	comprobar_error(recv(metadata.socket,&longitud,sizeof(int), MSG_WAITALL),"Error");
-	metadata.longitud = longitud - 2* sizeof(int);
-	while(recibido < metadata.longitud){
+	longitud = metadata.longitud - sizeof(int)*2;
+
+	while(recibido < longitud){
 		int tamanio = 0;
 		recibido += recv(metadata.socket,&tamanio,sizeof(int),MSG_WAITALL);
 		buffer = malloc((size_t)tamanio);

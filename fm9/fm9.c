@@ -10,9 +10,16 @@
 #include <ensalada/servidor.h>
 #include <ensalada/validacion.h>
 
+void* puntero = NULL;
+void* comienzo_storage = NULL;
+
+void destruir_storage(){
+	free(comienzo_storage);
+	free(puntero);
+}
+
 void* asignar_memoria(t_log *logger, int tamanioMemoria){
 	//esta funcion deberia estar en ensalada quiza
-	void* puntero = NULL;
 	puntero = malloc(tamanioMemoria);
 
 	if(puntero == NULL)
@@ -31,7 +38,7 @@ void inicializar_storage(t_log *logger,int tamanioMemoria){
 
 	log_info(logger, "Inicializando storage según archivo de configuración...");
 
-	asignar_memoria(logger, tamanioMemoria);
+	comienzo_storage = asignar_memoria(logger, tamanioMemoria);
 	//que hace si asigna_memoria devuelve 0 (no pudo asignar)
 	// para mi tendriamos que en este caso cerrar fm9 o volver a solicitarlo cada tanto tiempo con un tope de veces
 
@@ -45,7 +52,7 @@ void cerrar_fm9(t_log* logger, cfg_fm9* configuracion, ConexionesActivas server)
     destruir_conexiones_activas(server);
     log_destroy(logger);
     destroy_cfg(configuracion, t_fm9);
-
+    destruir_storage();
     exit(0);
 }
 

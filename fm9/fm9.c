@@ -10,6 +10,33 @@
 #include <ensalada/servidor.h>
 #include <ensalada/validacion.h>
 
+void* asignar_memoria(t_log *logger, int tamanioMemoria){
+	//esta funcion deberia estar en ensalada quiza
+	void* puntero = NULL;
+	puntero = malloc(tamanioMemoria);
+
+	if(puntero == NULL)
+	{
+		log_info(logger, "No se puede asignar ese espacio de memoria...");
+	}
+	else
+	{
+		log_info(logger, "Se asigno correctamente el espacio de memoria necesario...");
+	}
+
+	return puntero;
+}
+
+void inicializar_storage(t_log *logger,int tamanioMemoria){
+
+	log_info(logger, "Inicializando storage según archivo de configuración...");
+
+	asignar_memoria(logger, tamanioMemoria);
+	//que hace si asigna_memoria devuelve 0 (no pudo asignar)
+	// para mi tendriamos que en este caso cerrar fm9 o volver a solicitarlo cada tanto tiempo con un tope de veces
+
+}
+
 void cerrar_fm9(t_log* logger, cfg_fm9* configuracion, ConexionesActivas server){
     log_info(logger, "Cerrando FM9...");
 
@@ -18,11 +45,12 @@ void cerrar_fm9(t_log* logger, cfg_fm9* configuracion, ConexionesActivas server)
     destruir_conexiones_activas(server);
     log_destroy(logger);
     destroy_cfg(configuracion, t_fm9);
+
     exit(0);
 }
 
 int main(int argc, char **argv) {
-    int conexiones_permitidas[cantidad_tipos_procesos] = {0};
+	int conexiones_permitidas[cantidad_tipos_procesos] = {0};
     char* str;
     MensajeEntrante mensaje;
     ConexionesActivas conexiones_activas;
@@ -38,6 +66,8 @@ int main(int argc, char **argv) {
     conexiones_permitidas[elDiego] = 1;
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_fm9);
 
+    inicializar_storage(logger, configuracion->tamanio);
+
     log_info(logger, "Listo");
 
     while (1){
@@ -47,6 +77,8 @@ int main(int argc, char **argv) {
             case STRING_DIEGO_FM9:
                 str = recibir_string(mensaje.socket);
                 printf("Recibio: %s\n", str);
+
+                //hay que cambiar esto ya que de el diego puede recibir porcion de codigo o puntero a espacio de memoria
 
                 if(!strcmp(str, "exit"))
                     cerrar_fm9(logger, configuracion, conexiones_activas);

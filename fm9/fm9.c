@@ -59,7 +59,7 @@ void cerrar_fm9(t_log* logger, cfg_fm9* configuracion, ConexionesActivas server)
 int main(int argc, char **argv) {
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0};
     char* str;
-    MensajeEntrante mensaje;
+    MensajeDinamico* mensaje;
     ConexionesActivas conexiones_activas;
 
     t_log *logger = log_create("fm9.log", "fm9", true, log_level_from_string("info"));
@@ -80,9 +80,9 @@ int main(int argc, char **argv) {
     while (1){
         mensaje = esperar_mensajes(conexiones_activas);
 
-        switch (mensaje.header) {
+        switch (mensaje->header) {
             case STRING_DIEGO_FM9:
-                str = recibir_string(mensaje.socket);
+                str = recibir_string(mensaje->socket);
                 printf("Recibio: %s\n", str);
 
                 //hay que cambiar esto ya que de el diego puede recibir porcion de codigo o puntero a espacio de memoria
@@ -104,5 +104,6 @@ int main(int argc, char **argv) {
                 break;
 
         }
+        destruir_mensaje(mensaje);
     }
 }

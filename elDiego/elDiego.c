@@ -23,7 +23,7 @@ void cerrar_elDiego(t_log* logger, cfg_elDiego* configuracion, ConexionesActivas
 int main(int argc, char **argv) {
     int socket_mdj, socket_fm9, socket_safa, conexiones_permitidas[cantidad_tipos_procesos]={0};
     t_log* logger;
-    MensajeEntrante nuevo_mensaje;
+    MensajeDinamico* nuevo_mensaje;
     ConexionesActivas conexiones_activas;
 
 	validar_parametros(argc);
@@ -48,10 +48,10 @@ int main(int argc, char **argv) {
     while(1){
         nuevo_mensaje = esperar_mensajes(conexiones_activas);
 
-        switch(nuevo_mensaje.header){
+        switch(nuevo_mensaje->header){
 
             case CONEXION_CERRADA:
-                switch(nuevo_mensaje.t_proceso){
+                switch(nuevo_mensaje->t_proceso){
                     case t_safa:
                         log_warning(logger, "elDiego perdio conexion con SAFA, cerrando elDiego");
                         cerrar_elDiego(logger, configuracion, conexiones_activas);
@@ -71,5 +71,6 @@ int main(int argc, char **argv) {
             default:
                 break;
         }
+        destruir_mensaje(nuevo_mensaje);
     }
 }

@@ -16,9 +16,23 @@ MensajeDinamico* crear_mensaje(int header, int socket_destino){
     return mensaje;
 }
 
+void destruir_elemento_cola(void* arg){
+    NodoPayload* elemento = (NodoPayload*)arg;
+
+    free(elemento->datos);
+    free(elemento);
+}
+
 void destruir_mensaje(MensajeDinamico* mensaje){
-	queue_destroy_and_destroy_elements(mensaje->payload, free);
-	free(mensaje);
+	NodoPayload* nodo_aux;
+
+	while(queue_size(mensaje->payload)){
+	    nodo_aux = queue_pop(mensaje->payload);
+
+	    free(nodo_aux->datos);
+	    free(nodo_aux);
+	}
+    queue_destroy(mensaje->payload);
 }
 
 /*!
@@ -60,6 +74,8 @@ int enviar_mensaje(MensajeDinamico* mensaje){
     int resultado, posicion_buffer = 0;
     NodoPayload* buffer_nodo;
     void* buffer_mensaje;
+    int longitud;
+    memcpy(&longitud, &mensaje->longitud, sizeof(int));
 
     buffer_mensaje = malloc((size_t)mensaje->longitud);
     memcpy(buffer_mensaje, &(mensaje->header), sizeof(int));
@@ -76,16 +92,20 @@ int enviar_mensaje(MensajeDinamico* mensaje){
 
 		memcpy(buffer_mensaje+posicion_buffer, buffer_nodo->datos, (size_t)buffer_nodo->longitud);
         posicion_buffer += buffer_nodo->longitud;
+
+        free(buffer_nodo->datos);
+        free(buffer_nodo);
     }
 
     resultado = send(mensaje->socket, buffer_mensaje, (size_t)mensaje->longitud, 0);
-    free(buffer_mensaje);
     destruir_mensaje(mensaje);
+    free(buffer_mensaje);
 
-    if(resultado == mensaje->longitud)
+    if(resultado == longitud)
         return resultado;
     else
         return -1;
+
 }
 
 MensajeDinamico* recibir_mensaje(int header, int socket){
@@ -110,6 +130,22 @@ MensajeDinamico* recibir_mensaje(int header, int socket){
 	}
 
 	return mensaje;
+}
+
+void recibir_int(int* destino, MensajeDinamico* mensaje){
+    NodoPayload* nodo_aux = queue_pop(mensaje->payload);
+    memcpy(destino, nodo_aux->datos, sizeof(int));
+    free(nodo_aux->datos);
+    free(nodo_aux);
+}
+
+void recibir_string(char** destino, MensajeDinamico* mensaje){
+    NodoPayload* nodo_aux = queue_pop(mensaje->payload);
+
+    *destino = string_new();
+    string_append(destino, nodo_aux->datos);
+    free(nodo_aux->datos);
+    free(nodo_aux);
 }
 
 MensajeDinamico* crear_mensaje_mdj_validar_archivo(int socket_destino, char* path){

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <commons/collections/queue.h>
+#include <commons/string.h>
 #include <sys/socket.h>
 #include "protocolo.h"
 
@@ -21,8 +22,11 @@ typedef struct {
 }MensajeDinamico;
 
 MensajeDinamico* crear_mensaje(int, int);
+void destruir_elemento_cola(void*);
 void destruir_mensaje(MensajeDinamico* mensaje);
 void agregar_dato(MensajeDinamico*, int, void*);
+void recibir_int(int*, MensajeDinamico*);
+void recibir_string(char**, MensajeDinamico*);
 void agregar_string(MensajeDinamico*, char*);
 int enviar_mensaje(MensajeDinamico*);
 MensajeDinamico* recibir_mensaje(int, int);

@@ -83,7 +83,7 @@ int enviar_mensaje(MensajeDinamico* mensaje){
     destruir_mensaje(mensaje);
 
     if(resultado == mensaje->longitud)
-        return 1;
+        return resultado;
     else
         return -1;
 }

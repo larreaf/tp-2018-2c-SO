@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include "com.h"
 
 
 typedef enum {
@@ -26,6 +27,10 @@ typedef enum {
 	BORRAR_ARCHIVO,
     ABRIR_ARCHIVO_CPU_DIEGO,
     CERRAR_ARCHIVO_CPU_FM9,
+    CREAR_ARCHIVO_CPU_DIEGO,
+    BORRAR_ARCHIVO_CPU_DIEGO,
+    ASIGNAR_ARCHIVO_CPU_FM9,
+    ABRIR_SCRIPT_CPU_DIEGO
 }protocolo_header;
 
 typedef enum {

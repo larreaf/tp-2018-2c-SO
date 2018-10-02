@@ -121,17 +121,18 @@ void destruir_conexiones_activas(ConexionesActivas servidor){
  * @param servidor struct Servidor inicializada a monitorear
  * @return un MensajeEntrante con su campo header con el valor de header que se recibio, o -1 si hubo un error
  */
-MensajeEntrante esperar_mensajes(ConexionesActivas servidor){
+MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
     ConexionCliente* cliente_seleccionado;
     fd_set descriptores_lectura;
-    MensajeEntrante retorno;
+    MensajeDinamico* retorno;
     Proceso cliente;
     CPU* cpu;
     int header, retsel, ids_cpu = 0;
 
     if(servidor.inicializado != 1){
         log_error(servidor.logger, "Se intento utilizar un ConexionesActivas no inicializado");
-        retorno.header = -1;
+        retorno = crear_mensaje(-1, 0);
+        retorno->header = -1;
         return retorno;
     }
 
@@ -157,7 +158,8 @@ MensajeEntrante esperar_mensajes(ConexionesActivas servidor){
 
         if(retsel==-1){
             log_error(servidor.logger, "Error en select");
-            retorno.header = -1;
+            retorno = crear_mensaje(-1, 0);
+            retorno->header = -1;
             return retorno;
         }
 
@@ -298,11 +300,8 @@ MensajeEntrante esperar_mensajes(ConexionesActivas servidor){
                                     break;
                             }
                         }else{
-                            comprobar_error(recv(cliente_seleccionado->socket, &retorno.longitud, sizeof(int),
-                                    MSG_WAITALL), "Error al recibir longitud mensaje");
-                            retorno.header = header;
-                            retorno.t_proceso = cliente_seleccionado->t_proceso;
-                            retorno.socket = cliente_seleccionado->socket;
+                            retorno = recibir_mensaje(header, cliente_seleccionado->socket);
+                            retorno->t_proceso = cliente_seleccionado->t_proceso;
                             return retorno;
                         }
                     }else {
@@ -344,9 +343,8 @@ MensajeEntrante esperar_mensajes(ConexionesActivas servidor){
                                 break;
                         }
                         cerrar_conexion(servidor, cliente_seleccionado->socket);
-                        retorno.header = CONEXION_CERRADA;
-                        retorno.t_proceso = cliente_seleccionado->t_proceso;
-                        retorno.socket = cliente_seleccionado->socket;
+                        retorno = crear_mensaje(CONEXION_CERRADA, cliente_seleccionado->socket);
+                        retorno->t_proceso = cliente_seleccionado->t_proceso;
                         return retorno;
                     }
                 }

@@ -7,7 +7,7 @@
 #include <commons/collections/list.h>
 #include "com.h"
 #include "protocolo.h"
-
+#include "mensaje.h"
 
 typedef struct{
     int socket;
@@ -19,13 +19,6 @@ typedef struct{
     int socket;
     Proceso t_proceso;
 }ConexionCliente;
-
-typedef struct{
-    int socket;
-    int header;
-    int longitud;
-    Proceso t_proceso;
-}MensajeEntrante;
 
 typedef struct{
     int inicializado;
@@ -48,6 +41,6 @@ int conectar_como_cliente(ConexionesActivas, char *, int, Proceso);
 void cerrar_conexion(ConexionesActivas, int);
 ConexionesActivas inicializar_conexiones_activas(t_log *, int, int *, Proceso);
 void destruir_conexiones_activas(ConexionesActivas);
-MensajeEntrante esperar_mensajes(ConexionesActivas);
+MensajeDinamico* esperar_mensajes(ConexionesActivas);
 
 #endif //SERVIDOR_H

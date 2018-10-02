@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <commons/collections/queue.h>
-#include "servidor.h"
 #include <sys/socket.h>
+#include "protocolo.h"
 
 typedef struct {
     int longitud;
@@ -15,9 +15,9 @@ typedef struct {
 typedef struct {
     int header;
     int longitud;
-    int socket_destino;
+    int socket;
     t_queue* payload;
-
+    Proceso t_proceso;
 }MensajeDinamico;
 
 MensajeDinamico* crear_mensaje(int, int);
@@ -25,7 +25,7 @@ void destruir_mensaje(MensajeDinamico* mensaje);
 void agregar_dato(MensajeDinamico*, int, void*);
 void agregar_string(MensajeDinamico*, char*);
 int enviar_mensaje(MensajeDinamico*);
-MensajeDinamico* recibir_mensaje(MensajeEntrante metadata);
+MensajeDinamico* recibir_mensaje(int, int);
 
 
 /*
@@ -33,14 +33,14 @@ MensajeDinamico* recibir_mensaje(MensajeEntrante metadata);
  * @DESC: crea el mensaje para enviar request a mdj para validar un archivo
  * @ARG: socket de mdj + path del archivo
  */
-MensajeDinamico* crear_mensaje_mdj_validar_archivo(int, char*);
+MensajeDinamico* crear_mensaje_mdj_validar_archivo(int socket_destino, char* path);
 
 /*
  * @NAME: crear_mensaje_mdj_crear_archivo
  * @DESC: crea el mensaje para enviar request a mdj para crear un archivo
  * @ARG: socket de mdj + path del archivo
  */
-MensajeDinamico* crear_mensaje_mdj_crear_archivo(int, char*, int);
+MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path, int);
 
 /*
  * @NAME: crear_mensaje_mdj_obtener_datos
@@ -50,7 +50,7 @@ MensajeDinamico* crear_mensaje_mdj_crear_archivo(int, char*, int);
  * 		+ offset: desde donde leer
  *		+ size: tamanio a leer
  */
-MensajeDinamico* crear_mensaje_mdj_obtener_datos(int, char*, int, int);
+MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path, int offset, int size);
 
 /*
  * @NAME: crear_mensaje_mdj_guardar_datos
@@ -61,13 +61,13 @@ MensajeDinamico* crear_mensaje_mdj_obtener_datos(int, char*, int, int);
  *		+ size: tamanio a leer
  *		+ buffer: datos a guardar
  */
-MensajeDinamico* crear_mensaje_mdj_guardar_datos(int, char*, int, int, char*);
+MensajeDinamico* crear_mensaje_mdj_guardar_datos(int socket_destino, char* path, int offset, int size, char* buffer);
 
 /*
  * @NAME: crear_mensaje_mdj_borrar_archivo
  * @DESC: crea el mensaje para enviar request a mdj para borrar un archivo de mdj
  * @ARG: socket de mdj + path del archivo
  */
-MensajeDinamico* crear_mensaje_mdj_borrar_archivo(int, char*);
+MensajeDinamico* crear_mensaje_mdj_borrar_archivo(int socket_destino, char* path);
 
 #endif //MENSAJE_H

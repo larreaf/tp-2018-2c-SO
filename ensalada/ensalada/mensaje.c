@@ -11,7 +11,7 @@ MensajeDinamico* crear_mensaje(int header, int socket_destino){
     mensaje->header = header;
     mensaje->payload = queue_create();
     mensaje->longitud = sizeof(int)*2;
-    mensaje->socket_destino = socket_destino;
+    mensaje->socket = socket_destino;
 
     return mensaje;
 }
@@ -78,7 +78,7 @@ int enviar_mensaje(MensajeDinamico* mensaje){
         posicion_buffer += buffer_nodo->longitud;
     }
 
-    resultado = send(mensaje->socket_destino, buffer_mensaje, (size_t)mensaje->longitud, 0);
+    resultado = send(mensaje->socket, buffer_mensaje, (size_t)mensaje->longitud, 0);
     free(buffer_mensaje);
     destruir_mensaje(mensaje);
 
@@ -88,20 +88,23 @@ int enviar_mensaje(MensajeDinamico* mensaje){
         return -1;
 }
 
-MensajeDinamico* recibir_mensaje(MensajeEntrante metadata){
-	MensajeDinamico* mensaje = crear_mensaje(metadata.header,metadata.socket);
+MensajeDinamico* recibir_mensaje(int header, int socket){
+	MensajeDinamico* mensaje = crear_mensaje(header, socket);
 
 	int longitud = 0;
 	int recibido = 0;
 	char* buffer;
 
-	longitud = metadata.longitud - sizeof(int)*2;
+    comprobar_error(recv(socket, &longitud, sizeof(int), MSG_WAITALL), "Error al recibir longitud mensaje");
+    mensaje->longitud = longitud;
+
+	longitud -= sizeof(int)*2;
 
 	while(recibido < longitud){
 		int tamanio = 0;
-		recibido += recv(metadata.socket,&tamanio,sizeof(int),MSG_WAITALL);
+		recibido += recv(socket,&tamanio,sizeof(int),MSG_WAITALL);
 		buffer = malloc((size_t)tamanio);
-		recibido += recv(metadata.socket,buffer,(size_t)tamanio,MSG_WAITALL);
+		recibido += recv(socket,buffer,(size_t)tamanio,MSG_WAITALL);
 		agregar_dato(mensaje,tamanio,buffer);
 		free(buffer);
 	}

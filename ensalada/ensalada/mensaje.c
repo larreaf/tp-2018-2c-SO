@@ -102,7 +102,7 @@ int enviar_mensaje(MensajeDinamico* mensaje){
     free(buffer_mensaje);
 
     if(resultado == longitud)
-        return resultado;
+        return 1;
     else
         return -1;
 

@@ -44,6 +44,4 @@ typedef struct{
     char detalle[200];
 }mensaje;
 
-char* recibir_string(int);
-
 #endif /* PROTOCOLO_H_ */

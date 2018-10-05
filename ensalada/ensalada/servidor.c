@@ -193,7 +193,13 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                         cpu = malloc(sizeof(CPU));
                                         cpu->socket = cliente_seleccionado->socket;
                                         cpu->id = ids_cpu++;
+                                        cpu->cantidad_procesos_asignados = 0;
                                         list_add(servidor.lista_cpus, cpu);
+
+                                        retorno = crear_mensaje(NUEVA_CONEXION_CPU, cliente_seleccionado->socket);
+                                        retorno->t_proceso = cliente_seleccionado->t_proceso;
+                                        return retorno;
+
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso CPU denegada");
                                         cerrar_conexion(servidor, i);

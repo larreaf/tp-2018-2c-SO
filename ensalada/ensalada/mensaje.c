@@ -33,6 +33,7 @@ void destruir_mensaje(MensajeDinamico* mensaje){
 	    free(nodo_aux);
 	}
     queue_destroy(mensaje->payload);
+	free(mensaje);
 }
 
 /*!

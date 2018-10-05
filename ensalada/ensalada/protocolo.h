@@ -30,7 +30,8 @@ typedef enum {
     CREAR_ARCHIVO_CPU_DIEGO,
     BORRAR_ARCHIVO_CPU_DIEGO,
     ASIGNAR_ARCHIVO_CPU_FM9,
-    ABRIR_SCRIPT_CPU_DIEGO
+    ABRIR_SCRIPT_CPU_DIEGO,
+    NUEVA_CONEXION_CPU
 }protocolo_header;
 
 typedef enum {

@@ -1,14 +1,14 @@
 #include "types.h"
+#include "plp.h"
 
-extern cfg_safa* configuracion;
-extern t_config* cfg_file;
+int correr_consola = 1;
+extern PLP* plp;
 
-
-void consola_safa(){
-	while(1){
-		signal(SIGINT, sig_handler);
-		signal(SIGTERM, sig_handler);
-		signal(SIGKILL, sig_handler);
+void* consola_safa(void* arg){
+	while(correr_consola){
+		//signal(SIGINT, sig_handler);
+		//signal(SIGTERM, sig_handler);
+		//signal(SIGKILL, sig_handler);
 
 		char *linea_leida = readline(">");
 
@@ -19,6 +19,9 @@ void consola_safa(){
 		free(linea_leida);
 
 	}
+
+	//raise(SIGINT);
+	return NULL;
 }
 
 void ejecutar_linea(char* linea){
@@ -30,7 +33,7 @@ void ejecutar_linea(char* linea){
 			break;
 
 		case STATUS:
-			con_status(0);
+			con_status(-1);
 			destroy_operacion(op_consola);
 			break;
 
@@ -46,8 +49,7 @@ void ejecutar_linea(char* linea){
 
 		case EXIT:
 			destroy_operacion(op_consola);
-			free(linea);
-			pthread_exit(NULL);
+			correr_consola = 0;
 			break;
 
 		default:
@@ -73,8 +75,8 @@ operacionConsolaSafa* parsear_linea(char* linea){
 		}
 		else {
 			int longitudWord = strlen(word);
-			retorno->argumento = realloc(retorno->argumento, offset+longitudWord+1);
-			memcpy(retorno->argumento+offset, word, longitudWord);
+			retorno->argumento = realloc(retorno->argumento, (size_t)offset+longitudWord+1);
+			memcpy(retorno->argumento+offset, word, (size_t)longitudWord);
 			offset += longitudWord;
 			retorno->argumento[offset] = ' ' ;
 		}
@@ -108,10 +110,19 @@ tipo_accion_consola_safa string_to_accion(char* string){
 
 
 void con_ejecutar(char* ruta_escriptorio){
+    DTB* nuevo_dtb = crear_dtb(contador_id_dtb++, 1);
+	log_info(plp->logger, "Creando DTB %d", nuevo_dtb->id);
+	string_append(&nuevo_dtb->path_script, ruta_escriptorio);
+
+    agregar_a_new(plp, nuevo_dtb);
+
 	return;
 }
 
 void con_status(int id_DTB){
+    if(id_DTB == -1){
+        imprimir_estado(plp);
+    }
 	return;
 }
 

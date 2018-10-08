@@ -4,10 +4,17 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <commons/log.h>
+#include <commons/collections/queue.h>
+#include <commons/collections/list.h>
+#include <commons/string.h>
 #include <ensalada/validacion.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <signal.h>
+#include <unistd.h>
+#include <ensalada/dtb.h>
+
+static int contador_id_dtb = 1;
 
 typedef enum{
 	EJECUTAR,
@@ -52,7 +59,7 @@ void ejecutar_linea(char* linea);
  * @NAME: consola_safa
  * @DESC: recibir las operaciones por teclado y mostrar resultado
  */
-void consola_safa();
+void* consola_safa(void*);
 
 
 /*********************************

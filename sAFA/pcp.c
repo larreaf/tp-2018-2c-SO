@@ -6,6 +6,7 @@
 
 extern ConexionesActivas conexiones_activas;
 extern sem_t cantidad_cpus;
+extern bool correr;
 
 /*!
  * Busca un CPU libre y lo retorna a fin de ejecutar un script en el mismo
@@ -265,19 +266,24 @@ DTB* conseguir_y_actualizar_dtb(PCP* pcp, DTB* datos_actualizados_dtb){
 /*!
  * Ejecuta el PCP
  * @param arg Puntero al PCP a ejecutar
- * @return No retorna
+ * @return NULL cuando se recibe exit desde consola
  */
 void* ejecutar_pcp(void* arg){
     PCP* pcp = (PCP*)arg;
     DTB* dtb_seleccionado;
     CPU* cpu_seleccionado;
 
-    while(1){
+    while(correr){
         // TODO switch algoritmo planificador, por ahora es FIFO
 
         sem_wait(&(pcp->semaforo_ready));
+        if(errno == EINTR)
+            break;
+
         log_info(pcp->logger, "Esperando CPU disponible...");
         sem_wait(&cantidad_cpus);
+        if(errno == EINTR)
+            break;
 
         dtb_seleccionado = ready_a_exec(pcp);
 
@@ -292,4 +298,6 @@ void* ejecutar_pcp(void* arg){
         enviar_datos_dtb(cpu_seleccionado->socket, dtb_seleccionado);
         (cpu_seleccionado->cantidad_procesos_asignados)++;
     }
+
+    return NULL;
 }

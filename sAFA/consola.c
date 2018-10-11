@@ -1,11 +1,11 @@
 #include "types.h"
 #include "plp.h"
 
-int correr_consola = 1;
+extern bool correr;
 extern PLP* plp;
 
 void* consola_safa(void* arg){
-	while(correr_consola){
+	while(correr){
 		//signal(SIGINT, sig_handler);
 		//signal(SIGTERM, sig_handler);
 		//signal(SIGKILL, sig_handler);
@@ -20,7 +20,6 @@ void* consola_safa(void* arg){
 
 	}
 
-	//raise(SIGINT);
 	return NULL;
 }
 
@@ -49,7 +48,7 @@ void ejecutar_linea(char* linea){
 
 		case EXIT:
 			destroy_operacion(op_consola);
-			correr_consola = 0;
+			correr = 0;
 			break;
 
 		default:

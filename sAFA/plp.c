@@ -6,6 +6,7 @@
 
 extern PCP* pcp;
 extern t_log* logger;
+extern bool correr;
 
 /*!
  * Crea e inicializa un PLP
@@ -113,15 +114,20 @@ void imprimir_estado(PLP* plp){
 /*!
  * Ejecuta el PLP
  * @param arg PLP a ejecutar
- * @return No retorna
+ * @return NULL cuando se recibe exit desde consola
  */
 void* ejecutar_plp(void* arg){
     PLP* plp = (PLP*)arg;
     DTB* dtb_seleccionado;
 
-    while(1){
+    while(correr){
         sem_wait(&(plp->semaforo_new));
+        if(errno == EINTR)
+            break;
+
         sem_wait(&(plp->semaforo_multiprogramacion));
+        if(errno == EINTR)
+            break;
 
         pthread_mutex_lock(&(plp->mutex_new));
         dtb_seleccionado = list_get(plp->lista_new, 0);
@@ -132,4 +138,6 @@ void* ejecutar_plp(void* arg){
         // TODO sacar esto y codear logica para elegir dtb de NEW y pasarlo a READY
         list_remove_and_destroy_element(plp->lista_new, 0, destruir_dtb);
     }
+
+    return NULL;
 }

@@ -14,6 +14,7 @@ ConexionesActivas conexiones_activas;
 cfg_safa *configuracion;
 PLP* plp;
 PCP* pcp;
+bool correr = 1;
 
 void cerrar_safa(t_log* logger, cfg_safa* configuracion, ConexionesActivas server){
     log_info(logger, "Cerrando s-AFA...");
@@ -63,21 +64,28 @@ int main(int argc, char **argv) {
 
     err = pthread_create(&thread_servidor, NULL, &ejecutar_servidor, NULL);
     comprobar_error(err, "Error al iniciar thread servidor");
-    pthread_detach(thread_servidor);
 
     err = pthread_create(&thread_pcp, NULL, &ejecutar_pcp, pcp);
     comprobar_error(err, "Error al iniciar thread PCP");
-    pthread_detach(thread_pcp);
 
     err = pthread_create(&thread_plp, NULL, &ejecutar_plp, plp);
     comprobar_error(err, "Error al iniciar thread PLP");
-    pthread_detach(thread_plp);
 
     sleep(1);
     log_info(logger, "Listo");
 
+    // cerrar todos los hilos
     pthread_join(thread_consola, NULL);
+    pthread_cancel(thread_plp);
+    pthread_join(thread_plp, NULL);
+    pthread_cancel(thread_pcp);
+    pthread_join(thread_pcp, NULL);
+    pthread_cancel(thread_servidor);
+    pthread_join(thread_servidor, NULL);
+
     destruir_plp(plp);
     destruir_pcp(pcp);
     cerrar_safa(logger, configuracion, conexiones_activas);
+
+    return 0;
 }

@@ -9,11 +9,12 @@ extern t_log* logger;
 extern cfg_safa* configuracion;
 extern PCP* pcp;
 extern sem_t cantidad_cpus;
+extern bool correr;
 
 /*!
  * Ejecuta el servidor de safa para comunicarse con CPUs y elDiego
  * @param arg No utilizado
- * @return No retorna
+ * @return NULL cuando se recibe exit desde consola
  */
 void* ejecutar_servidor(void *arg){
     int conexiones_permitidas[cantidad_tipos_procesos] = {0};
@@ -27,7 +28,7 @@ void* ejecutar_servidor(void *arg){
     conexiones_permitidas[t_cpu] = 1;
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_safa);
 
-    while (1) {
+    while (correr) {
 
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
         // sin retornar
@@ -107,5 +108,5 @@ void* ejecutar_servidor(void *arg){
 
         destruir_mensaje(mensaje);
     }
-
+    return NULL;
 }

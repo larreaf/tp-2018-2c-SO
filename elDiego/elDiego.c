@@ -9,6 +9,8 @@
 #include <ensalada/mensaje.h>
 #include <ensalada/com.h>
 
+t_log* logger;
+
 void cerrar_elDiego(t_log* logger, cfg_elDiego* configuracion, ConexionesActivas conexiones_activas){
     log_info(logger, "Cerrando elDiego...");
 
@@ -22,9 +24,10 @@ void cerrar_elDiego(t_log* logger, cfg_elDiego* configuracion, ConexionesActivas
 
 int main(int argc, char **argv) {
     int socket_mdj, socket_fm9, socket_safa, conexiones_permitidas[cantidad_tipos_procesos]={0};
-    t_log* logger;
     MensajeDinamico* nuevo_mensaje;
     ConexionesActivas conexiones_activas;
+    int id_dtb;
+    char* path;
 
 	validar_parametros(argc);
 	cfg_elDiego* configuracion = asignar_config(argv[1],elDiego);
@@ -49,6 +52,13 @@ int main(int argc, char **argv) {
         nuevo_mensaje = esperar_mensajes(conexiones_activas);
 
         switch(nuevo_mensaje->header){
+            case ABRIR_SCRIPT_CPU_DIEGO:
+                recibir_int(&id_dtb, nuevo_mensaje);
+                recibir_string(&path, nuevo_mensaje);
+
+                printf("Pedido abrir script de DTB %d\n", id_dtb);
+                printf("Path %s\n", path);
+                break;
 
             case CONEXION_CERRADA:
                 switch(nuevo_mensaje->t_proceso){

@@ -8,6 +8,13 @@
 #include <sys/socket.h>
 #include "protocolo.h"
 
+#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
+
+typedef struct {
+    t_queue* cola_particiones_dato;
+    int tamanio_cola_particiones_dato;
+}DatoParticionado;
+
 typedef struct {
     int longitud;
     void* datos;
@@ -17,20 +24,20 @@ typedef struct {
     int header;
     int longitud;
     int socket;
+    int particionado;
     t_queue* payload;
     Proceso t_proceso;
 }MensajeDinamico;
 
-MensajeDinamico* crear_mensaje(int, int);
-void destruir_elemento_cola(void*);
+MensajeDinamico* crear_mensaje(int, int, int);
 void destruir_mensaje(MensajeDinamico* mensaje);
 void agregar_dato(MensajeDinamico*, int, void*);
 void recibir_int(int*, MensajeDinamico*);
 void recibir_string(char**, MensajeDinamico*);
 void agregar_string(MensajeDinamico*, char*);
+DatoParticionado particionar_dato(void*, int, int);
 int enviar_mensaje(MensajeDinamico*);
 MensajeDinamico* recibir_mensaje(int, int);
-
 
 /*
  * @NAME: crear_mensaje_mdj_validar_archivo

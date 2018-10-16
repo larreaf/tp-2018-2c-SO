@@ -127,11 +127,11 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
     MensajeDinamico* retorno;
     Proceso cliente;
     CPU* cpu;
-    int header, retsel, ids_cpu = 0;
+    int header, retsel, ids_cpu = 0
 
     if(servidor.inicializado != 1){
         log_error(servidor.logger, "Se intento utilizar un ConexionesActivas no inicializado");
-        retorno = crear_mensaje(-1, 0);
+        retorno = crear_mensaje(-1, 0, 0);
         retorno->header = -1;
         return retorno;
     }
@@ -158,7 +158,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
 
         if(retsel==-1){
             log_error(servidor.logger, "Error en select");
-            retorno = crear_mensaje(-1, 0);
+            retorno = crear_mensaje(-1, 0, 0);
             retorno->header = -1;
             return retorno;
         }
@@ -196,7 +196,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                         cpu->cantidad_procesos_asignados = 0;
                                         list_add(servidor.lista_cpus, cpu);
 
-                                        retorno = crear_mensaje(NUEVA_CONEXION_CPU, cliente_seleccionado->socket);
+                                        retorno = crear_mensaje(NUEVA_CONEXION_CPU, cliente_seleccionado->socket, 0);
                                         retorno->t_proceso = cliente_seleccionado->t_proceso;
                                         return retorno;
 
@@ -349,7 +349,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                 break;
                         }
                         cerrar_conexion(servidor, cliente_seleccionado->socket);
-                        retorno = crear_mensaje(CONEXION_CERRADA, cliente_seleccionado->socket);
+                        retorno = crear_mensaje(CONEXION_CERRADA, cliente_seleccionado->socket, 0);
                         retorno->t_proceso = cliente_seleccionado->t_proceso;
                         return retorno;
                     }

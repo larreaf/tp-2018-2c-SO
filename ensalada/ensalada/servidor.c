@@ -127,7 +127,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
     MensajeDinamico* retorno;
     Proceso cliente;
     CPU* cpu;
-    int header, retsel, ids_cpu = 0
+    int header, retsel, ids_cpu = 0;
 
     if(servidor.inicializado != 1){
         log_error(servidor.logger, "Se intento utilizar un ConexionesActivas no inicializado");

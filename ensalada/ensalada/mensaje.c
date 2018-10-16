@@ -139,10 +139,10 @@ int enviar_mensaje(MensajeDinamico* mensaje){
         memcpy(buffer_mensaje, &(mensaje->header), sizeof(int));
         posicion_buffer += sizeof(int);
 
-        memcpy(buffer_mensaje, &(mensaje->particionado), sizeof(char));
-        posicion_buffer += sizeof(char);
-
         memcpy(buffer_mensaje + posicion_buffer, &(mensaje->longitud), sizeof(int));
+        posicion_buffer += sizeof(int);
+
+        memcpy(buffer_mensaje + posicion_buffer, &(mensaje->particionado), sizeof(int));
         posicion_buffer += sizeof(int);
 
         while (!queue_is_empty(mensaje->payload)) {

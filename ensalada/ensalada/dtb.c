@@ -33,7 +33,7 @@ void desempaquetar_dtb(MensajeDinamico* mensaje, DTB* dtb){
  * @param dtb DTB del cual enviar los datos
  */
 void enviar_datos_dtb(int socket_cpu, DTB* dtb){
-    MensajeDinamico* mensaje = crear_mensaje(DATOS_DTB, socket_cpu);
+    MensajeDinamico* mensaje = crear_mensaje(DATOS_DTB, socket_cpu, 0);
     int tamanio_lista_archivos_abiertos = list_size(dtb->archivos_abiertos);
     int resultado;
     ArchivoAbierto* archivo_abierto_seleccionado;

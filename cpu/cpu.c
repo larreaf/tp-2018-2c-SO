@@ -28,7 +28,7 @@ void cerrar_cpu(t_log* logger, cfg_cpu* configuracion, ConexionesActivas conexio
 int main(int argc, char **argv) {
 	int socket_fm9, socket_safa, socket_elDiego;
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0};
-    t_accion_post_instruccion resultado_instruccion = READY;
+    t_accion_post_instruccion resultado_instruccion;
 	DTB datos_dtb;
 	MensajeDinamico *peticion_abrir_script, *mensaje;
     char* linea = "";
@@ -60,20 +60,23 @@ int main(int argc, char **argv) {
 	        case DATOS_DTB:
 	            desempaquetar_dtb(mensaje, &datos_dtb);
                 log_info(logger, "Datos DTB entrantes de DTB %d...", datos_dtb.id);
+                resultado_instruccion = READY;
 
 	            switch(datos_dtb.inicializado){
                     case 0:
                         // es el DTB dummy
 
                         log_info(logger, "Ejecutando DTB dummy, enviando peticion abrir %s", datos_dtb.path_script);
-                        peticion_abrir_script = crear_mensaje(ABRIR_SCRIPT_CPU_DIEGO, socket_elDiego);
+                        peticion_abrir_script = crear_mensaje(ABRIR_SCRIPT_CPU_DIEGO, socket_elDiego, 0);
                         agregar_dato(peticion_abrir_script, sizeof(int), &datos_dtb.id);
                         agregar_string(peticion_abrir_script, datos_dtb.path_script);
-                        enviar_mensaje(peticion_abrir_script);
+                        if(enviar_mensaje(peticion_abrir_script)==1)
+                            log_info(logger, "Enviada peticion de abrir script");
+                        else
+                            log_error(logger, "Fallo al enviar peticion de abrir script");
+
                         datos_dtb.status = BLOQUEAR;
                         enviar_datos_dtb(socket_safa, &datos_dtb);
-
-                        resultado_instruccion = BLOQUEAR;
                         break;
 
 	                case 1:

@@ -9,6 +9,7 @@
 #include "types.h"
 #include "pcp.h"
 #include <semaphore.h>
+#include <errno.h>
 
 typedef struct {
     t_list* lista_new;

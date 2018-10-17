@@ -22,7 +22,7 @@ int in_abrir(DTB* dtb, char* path){
             return READY;
     }
 
-    peticion_abrir = crear_mensaje(ABRIR_ARCHIVO_CPU_DIEGO, conexiones_activas.socket_eldiego);
+    peticion_abrir = crear_mensaje(ABRIR_ARCHIVO_CPU_DIEGO, conexiones_activas.socket_eldiego, 0);
     agregar_dato(peticion_abrir, sizeof(int), &dtb->id);
     agregar_string(peticion_abrir, path);
     enviar_mensaje(peticion_abrir);
@@ -51,7 +51,7 @@ int in_close(DTB* dtb, char* path){
     if(error)
         return error;
 
-    peticion_cerrar = crear_mensaje(CERRAR_ARCHIVO_CPU_FM9, conexiones_activas.socket_fm9);
+    peticion_cerrar = crear_mensaje(CERRAR_ARCHIVO_CPU_FM9, conexiones_activas.socket_fm9, 0);
     agregar_dato(peticion_cerrar, sizeof(int), &dtb->id);
     agregar_string(peticion_cerrar, path);
     enviar_mensaje(peticion_cerrar);
@@ -95,7 +95,7 @@ int in_flush(DTB* dtb, char* path){
 int in_crear(int dtb_id, char* path, int cant_lineas){
     MensajeDinamico* peticion_crear;
 
-    peticion_crear = crear_mensaje(CREAR_ARCHIVO_CPU_DIEGO, conexiones_activas.socket_eldiego);
+    peticion_crear = crear_mensaje(CREAR_ARCHIVO_CPU_DIEGO, conexiones_activas.socket_eldiego, 0);
     agregar_dato(peticion_crear, sizeof(int), &dtb_id);
     agregar_string(peticion_crear, path);
     agregar_dato(peticion_crear, sizeof(int), &cant_lineas);
@@ -114,7 +114,7 @@ int in_crear(int dtb_id, char* path, int cant_lineas){
 int in_borrar(int dtb_id, char* path){
     MensajeDinamico* peticion_borrar;
 
-    peticion_borrar = crear_mensaje(BORRAR_ARCHIVO_CPU_DIEGO, conexiones_activas.socket_eldiego);
+    peticion_borrar = crear_mensaje(BORRAR_ARCHIVO_CPU_DIEGO, conexiones_activas.socket_eldiego, 0);
     agregar_dato(peticion_borrar, sizeof(int), &dtb_id);
     agregar_string(peticion_borrar, path);
     enviar_mensaje(peticion_borrar);
@@ -145,7 +145,7 @@ int in_asignar(DTB* dtb, char* path, int linea, char* datos){
     if(error)
         return error;
 
-    peticion_asignar = crear_mensaje(ASIGNAR_ARCHIVO_CPU_FM9, conexiones_activas.socket_eldiego);
+    peticion_asignar = crear_mensaje(ASIGNAR_ARCHIVO_CPU_FM9, conexiones_activas.socket_eldiego, 0);
     agregar_dato(peticion_asignar, sizeof(int), &dtb->id);
     agregar_string(peticion_asignar, path);
     agregar_dato(peticion_asignar, sizeof(int), &linea);

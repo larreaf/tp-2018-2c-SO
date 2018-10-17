@@ -88,7 +88,7 @@ void* ejecutar_servidor(void *arg){
 
                 // para probar la capacidad de comunicacion bidireccional, le contestamos un "hola!"
                 // el header STRING_MDJ_DIEGO significa que le estamos mandando un string al diego desde MDJ
-                mensaje_respuesta = crear_mensaje(STRING_SAFA_DIEGO, mensaje->socket);
+                mensaje_respuesta = crear_mensaje(STRING_SAFA_DIEGO, mensaje->socket, 0);
                 agregar_string(mensaje_respuesta, "Hola!");
                 enviar_mensaje(mensaje_respuesta);
                 break;

@@ -75,6 +75,7 @@ int main(int argc, char **argv) {
     log_info(logger, "Listo");
 
     // cerrar todos los hilos
+    // TODO mover todo esto a cerrar_safa
     pthread_join(thread_consola, NULL);
     pthread_cancel(thread_plp);
     pthread_join(thread_plp, NULL);

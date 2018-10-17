@@ -109,6 +109,7 @@ tipo_accion_consola_safa string_to_accion(char* string){
 
 
 void con_ejecutar(char* ruta_escriptorio){
+	// TODO chequear que no este ya abierto el script
     DTB* nuevo_dtb = crear_dtb(contador_id_dtb++, 1);
 	log_info(plp->logger, "Creando DTB %d", nuevo_dtb->id);
 	string_append(&nuevo_dtb->path_script, ruta_escriptorio);

@@ -32,7 +32,7 @@ int conectar_como_cliente(ConexionesActivas conexiones_activas, char *ip_destino
  * @param socket numero de socket a cerrar
  */
 void cerrar_conexion(ConexionesActivas conexiones_activas, int socket){
-    int header = CONEXION_CERRADA;
+    MensajeDinamico* mensaje;
     ConexionCliente* cliente_seleccionado;
     CPU* cpu_seleccionado;
 
@@ -40,7 +40,8 @@ void cerrar_conexion(ConexionesActivas conexiones_activas, int socket){
 
         cliente_seleccionado = list_get(conexiones_activas.lista_clientes, i);
         if(cliente_seleccionado->socket == socket){
-            send(cliente_seleccionado->socket, &header, sizeof(CONEXION_CERRADA), 0);
+            mensaje = crear_mensaje(CONEXION_CERRADA, socket, 0);
+            enviar_mensaje(mensaje);
 
             if(cliente_seleccionado->t_proceso == t_cpu){
 
@@ -127,7 +128,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
     MensajeDinamico* retorno;
     Proceso cliente;
     CPU* cpu;
-    int header, retsel, ids_cpu = 0;
+    int retsel, ids_cpu = 0;
 
     if(servidor.inicializado != 1){
         log_error(servidor.logger, "Se intento utilizar un ConexionesActivas no inicializado");
@@ -178,9 +179,11 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                 cliente_seleccionado = list_get(servidor.lista_clientes, i);
 
                 if(FD_ISSET(cliente_seleccionado->socket, &descriptores_lectura)){
-                    if(recv(cliente_seleccionado->socket, &header, sizeof(int),0)>0){
-                        if(header==HANDSHAKE_CLIENTE){
-                            cliente = handshakeServidor(cliente_seleccionado->socket);
+                    retorno = recibir_mensaje(cliente_seleccionado->socket);
+
+                    if(retorno->header!=-1){
+                        if(retorno->header==HANDSHAKE_CLIENTE){
+                            recibir_int((int*)&cliente, retorno);
 
                             switch(cliente){
                                 case t_cpu:
@@ -306,12 +309,11 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     break;
                             }
                         }else{
-                            retorno = recibir_mensaje(header, cliente_seleccionado->socket);
                             retorno->t_proceso = cliente_seleccionado->t_proceso;
                             return retorno;
                         }
                     }else {
-                        // Este switch se ejecuta cuando el recv retorna -1, lo cual por ahora significa que alguien
+                        // Este switch se ejecuta cuando el mensaje tiene header -1, lo cual por ahora significa que alguien
                         // se desconecto
                         switch (cliente_seleccionado->t_proceso) {
                             case t_cpu:

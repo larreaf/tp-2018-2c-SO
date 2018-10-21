@@ -2,10 +2,10 @@
 #define PROTOCOLO_H_
 
 #include <sys/socket.h>
+#include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "com.h"
 
 
 typedef enum {
@@ -31,7 +31,14 @@ typedef enum {
     BORRAR_ARCHIVO_CPU_DIEGO,
     ASIGNAR_ARCHIVO_CPU_FM9,
     ABRIR_SCRIPT_CPU_DIEGO,
-    NUEVA_CONEXION_CPU
+    NUEVA_CONEXION_CPU,
+    ARCHIVO_TEST,
+    RESULTADO_OBTENER_DATOS,
+    ESCRIBIR_ARCHIVO_ELDIEGO_FM9,
+    LEER_LINEA_FM9,
+    STRING_FM9_CPU,
+    RESULTADO_CARGAR_ARCHIVO_FM9,
+    PASAR_DTB_A_READY
 }protocolo_header;
 
 typedef enum {
@@ -44,5 +51,12 @@ typedef struct{
     tipo_mensaje tipo;
     char detalle[200];
 }mensaje;
+
+/*
+ * @NAME: compruebaError
+ * @DESC: comprueba los errores en las funciones de sockets y emite un mensaje personalizado en caso de error.
+ * Tambien aborta el proceso.
+ */
+void comprobar_error(int variable, const char* mensajeError);
 
 #endif /* PROTOCOLO_H_ */

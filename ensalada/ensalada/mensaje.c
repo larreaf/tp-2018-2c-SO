@@ -196,18 +196,29 @@ int enviar_mensaje(MensajeDinamico* mensaje){
  * @param socket socket de donde recibir los datos
  * @return puntero a un MensajeDinamico
  */
-MensajeDinamico* recibir_mensaje(int header, int socket){
-	MensajeDinamico* mensaje = crear_mensaje(header, socket, 0);
+MensajeDinamico* recibir_mensaje(int socket){
+	MensajeDinamico* mensaje = crear_mensaje(0, socket, 0);
 	int longitud_mensaje_total = 0, particionado, recibido_particion = 0, recibido_total = 0, buffer_longitud_particion,
-	recibido;
+	recibido, header, resultado;
 	char* buffer;
 
+	resultado = recv(socket, &header, sizeof(int), MSG_WAITALL);
+
+	if(resultado<1){
+	    mensaje->header = -1;
+	    return mensaje;
+	}
+
     comprobar_error(recv(socket, &longitud_mensaje_total, sizeof(int), MSG_WAITALL), "Error al recibir longitud total"
-                                                                                     "de mensaje");
+                                                                                     " de mensaje");
 
     comprobar_error(recv(socket, &particionado, sizeof(int), MSG_WAITALL), "Error al recibir flag particionado");
 
-	longitud_mensaje_total -= sizeof(int)*3;
+    mensaje->header = header;
+    mensaje->longitud = longitud_mensaje_total;
+    mensaje->particionado = particionado;
+
+    longitud_mensaje_total -= sizeof(int)*3;
 
 	if(!particionado) {
         while (recibido_particion < longitud_mensaje_total) {

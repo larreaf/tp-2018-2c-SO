@@ -12,6 +12,21 @@
 
 void* puntero = NULL;
 void* comienzo_storage = NULL;
+void* datos_fm9 = NULL;
+
+//todo crear archivo .h y .c de funciones fm9
+typedef struct{
+    int id;
+    char* instruccion;
+    char* contenido;
+}DiegoAFM9;
+
+void desempaquetar_mensaje_diego_a_fm9(MensajeDinamico* mensaje, DiegoAFM9* DiegoAFM9){
+
+    recibir_int(&DiegoAFM9->id, mensaje);
+    recibir_string(&DiegoAFM9->instruccion, mensaje);
+    recibir_string(&DiegoAFM9->contenido, mensaje);
+}
 
 void destruir_storage(){
 	free(comienzo_storage);
@@ -82,15 +97,33 @@ int main(int argc, char **argv) {
 
         switch (mensaje->header) {
             case STRING_DIEGO_FM9:
-                str = recibir_string(mensaje->socket);
-                printf("Recibio: %s\n", str);
+            	//todo esta funcion datos_fm9->instruccion,datos_fm9->id
+            	desempaquetar_mensaje_diego_a_fm9(mensaje, &datos_fm9);
+            	log_info(logger, "Datos entrantes de Diego a fm9 %d...", datos_fm9.id);
+
+				switch(datos_fm9.instruccion){
+
+					case leer:
+					break;
+
+					case escribir:
+					break;
+
+					case modificar:
+					break;
+
+					default:
+					break;
+				}
+            	//str = recibir_string(mensaje->socket);
+                //printf("Recibio: %s\n", str);
 
                 //hay que cambiar esto ya que de el diego puede recibir porcion de codigo o puntero a espacio de memoria
 
                 if(!strcmp(str, "exit"))
                     cerrar_fm9(logger, configuracion, conexiones_activas);
 
-                break;
+            break;
 
             case CONEXION_CERRADA:
                 // ejemplo si se cierra elDiego y nos manda un header CONEXION_CERRADA, fm9 se cierra tambien

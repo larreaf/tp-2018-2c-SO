@@ -16,6 +16,8 @@
 	#include <commons/string.h>
 	#include <commons/log.h>
 	#include <commons/bitarray.h>
+	#include <commons/collections/dictionary.h>
+	#include <commons/collections/node.h>
 	#include <readline/readline.h>
 	#include <ensalada/protocolo.h>
 	#include <ensalada/servidor.h>
@@ -43,7 +45,7 @@
 		int cantidad_bloques;
 	}metadata_fifa;
 
-	void interface_mdj(MensajeDinamico* mensaje_dinamico);
+	t_mdj_interface* crear_data_mdj_operacion(MensajeDinamico* mensaje);
 
 	bool validar_archivo(t_mdj_interface* data_operacion);
 

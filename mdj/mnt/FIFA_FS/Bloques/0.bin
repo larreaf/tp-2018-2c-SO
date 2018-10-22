@@ -1,0 +1,5 @@
+crear /superliga/equipos/Racing.txt 11
+crear /bundesliga/equipos/Bayern Munich.txt 6
+crear /bundesliga/equipos/Borussia Dortmund.txt 10
+crear /premier league/equipos/Arsenal.txt 13
+abrir /premier league/equipos/Arsenal.txt

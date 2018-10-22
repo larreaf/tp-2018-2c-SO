@@ -63,7 +63,7 @@ MensajeDinamico* crear_mensaje_mdj_validar_archivo(int socket_destino, char* pat
  * @DESC: crea el mensaje para enviar request a mdj para crear un archivo
  * @ARG: socket de mdj + path del archivo
  */
-MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path, int* cantidad_lineas);
+MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path, int cantidad_lineas);
 
 /*
  * @NAME: crear_mensaje_mdj_obtener_datos

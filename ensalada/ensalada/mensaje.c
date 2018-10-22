@@ -276,10 +276,10 @@ MensajeDinamico* crear_mensaje_mdj_validar_archivo(int socket_destino, char* pat
 	return mensaje_dinamico;
 }
 
-MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path, int* cantidad_lineas){
+MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path, int cantidad_lineas){
 	MensajeDinamico* mensaje_dinamico = crear_mensaje(CREAR_ARCHIVO,socket_destino, 0);
 	agregar_string(mensaje_dinamico, path);
-	agregar_dato(mensaje_dinamico,sizeof(int),cantidad_lineas);
+	agregar_dato(mensaje_dinamico,sizeof(int),&cantidad_lineas);
 	return mensaje_dinamico;
 }
 

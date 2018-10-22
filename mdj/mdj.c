@@ -131,7 +131,8 @@ int main(int argc, char **argv) {
     bitmap = bitarray_create_with_mode(bitarray,SIZE_BITARRAY,LSB_FIRST);
     log_info(logger, "Bitmap mapeado a memoria");
 
-    bitmap_clean();
+    //bitmap_clean();
+
     /*
     t_mdj_interface* mdj = malloc(sizeof(t_mdj_interface));
 	mdj->path = string_new();

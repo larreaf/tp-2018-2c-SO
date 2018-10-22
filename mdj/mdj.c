@@ -181,6 +181,9 @@ int main(int argc, char **argv) {
             case OBTENER_DATOS:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
             	lineas_obtenidas = obtener_datos(data_operacion);
+            	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, 0);
+            	agregar_string(mensaje_respuesta, lineas_obtenidas);
+            	enviar_mensaje(mensaje_respuesta);
 				break;
             case GUARDAR_DATOS:
             	//TODO guardar_datos(data_operacion);

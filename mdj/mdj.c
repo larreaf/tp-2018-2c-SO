@@ -15,7 +15,7 @@
 #include <ensalada/validacion.h>
 
 
-
+//TODO ver tamanio de linea
 #define TAM_LINEA		35
 
 pthread_t thread_consola;
@@ -47,7 +47,7 @@ void* ejecutar_consola(void* arg){
 
     while(1) {
         // leemos linea y la mandamos al servidor (o sea al proceso MDJ porque somos la consola de MDJ)
-        mensaje_saliente = crear_mensaje(STRING_CONSOLA_PROPIA, socket);
+        mensaje_saliente = crear_mensaje(STRING_CONSOLA_PROPIA, socket,0);
 
         linea = readline("> ");
 
@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
 	t_log* logger;
 	ConexionesActivas conexiones_activas;
 
+	MensajeDinamico* mensaje_recibido;
 	MensajeDinamico* mensaje_respuesta;
 
     validar_parametros(argc);
@@ -109,6 +110,7 @@ int main(int argc, char **argv) {
     levantar_metadata();
 
     log_info(logger, "Archivo metadata leido");
+
     /**
      * BITMAP con mmap
      */
@@ -129,43 +131,63 @@ int main(int argc, char **argv) {
     bitmap = bitarray_create_with_mode(bitarray,SIZE_BITARRAY,LSB_FIRST);
     log_info(logger, "Bitmap mapeado a memoria");
 
+    //bitmap_clean();
+
+    /*
     t_mdj_interface* mdj = malloc(sizeof(t_mdj_interface));
 	mdj->path = string_new();
 	string_append(&mdj->path,"premierLeague/equipo/arsenal");
 	mdj->cantidad_lineas = 56;
 	//crear_archivo(mdj);
-	borrar_archivo(mdj);
+	//borrar_archivo(mdj);
 
     /**
      * WHILE
      */
     while (1){
+    	t_mdj_interface* data_operacion;
 
+    	//solo para obtener datos
+    	char* lineas_obtenidas;
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
         // sin retornar
-        mensaje_respuesta = esperar_mensajes(conexiones_activas);
+        mensaje_recibido = esperar_mensajes(conexiones_activas);
 
         // cuando esperar_mensajes retorna, devuelve un MensajeEntrante que tiene como campos el socket que lo envio,
         // el header que se envio y el tipo de proceso que lo envio
-        switch (mensaje_respuesta->header) {
+        switch (mensaje_recibido->header) {
 
             // en cada case del switch se puede manejar cada header como se desee
-            case STRING_DIEGO_MDJ:
-                // este header indica que el diego nos esta mandando un string
+            case CREAR_ARCHIVO:
+            	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+            	crear_archivo(data_operacion);
+            	//mensaje_respuesta = crear_mensaje(mensaje_recibido->header, mensaje_recibido->socket, 0);
 
-                // recibir_string recibe un stream de datos del socket del cual se envio el mensaje y los interpreta
-                // como string, agregando \0 al final y metiendo los datos en el array str
-               // str = recibir_string(mensaje_respuesta->socket);
-                printf("MDJ recibio: %s\n", str);
-                free(str);
-
-                // para probar la capacidad de comunicacion bidireccional, le contestamos un "hola!"
-                // el header STRING_MDJ_DIEGO significa que le estamos mandando un string al diego desde MDJ
-                mensaje_respuesta = crear_mensaje(STRING_MDJ_DIEGO, mensaje_respuesta->socket);
+            	/*
                 agregar_string(mensaje_respuesta, "Hola!");
                 enviar_mensaje(mensaje_respuesta);
-
+				*/
                 break;
+
+            case BORRAR_ARCHIVO:
+            	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+				borrar_archivo(data_operacion);
+
+            	break;
+            case VALIDAR_ARCHIVO:
+            	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+            	validar_archivo(data_operacion);
+				break;
+            case OBTENER_DATOS:
+            	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+            	lineas_obtenidas = obtener_datos(data_operacion);
+            	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, 0);
+            	agregar_string(mensaje_respuesta, lineas_obtenidas);
+            	enviar_mensaje(mensaje_respuesta);
+				break;
+            case GUARDAR_DATOS:
+            	//TODO guardar_datos(data_operacion);
+				break;
 
             case STRING_CONSOLA_PROPIA:
                 // este header indica que vamos a recibir un string leido de nuestra propia consola
@@ -187,7 +209,7 @@ int main(int argc, char **argv) {
                 // OPERACION_CONSOLA_TERMINADA que le indica que terminamos en este caso
                 // tambien le podriamos mandar un mensaje cualquiera dependiendo de lo que nos haya pedido
                 header = OPERACION_CONSOLA_TERMINADA;
-                retsocket = send(mensaje_respuesta->socket, &header, sizeof(OPERACION_CONSOLA_TERMINADA), 0);
+                retsocket = send(mensaje_recibido->socket, &header, sizeof(OPERACION_CONSOLA_TERMINADA), 0);
                 comprobar_error(retsocket, "Error en send a consola de MDJ");
                 break;
 

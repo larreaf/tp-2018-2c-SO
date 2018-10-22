@@ -278,25 +278,25 @@ MensajeDinamico* crear_mensaje_mdj_validar_archivo(int socket_destino, char* pat
 
 MensajeDinamico* crear_mensaje_mdj_crear_archivo(int socket_destino, char* path, int cantidad_lineas){
 	MensajeDinamico* mensaje_dinamico = crear_mensaje(CREAR_ARCHIVO,socket_destino, 0);
+	agregar_string(mensaje_dinamico, path);
 	agregar_dato(mensaje_dinamico,sizeof(int),&cantidad_lineas);
-	agregar_dato(mensaje_dinamico,strlen(path),path);
 	return mensaje_dinamico;
 }
 
 MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path, int offset,int size){
 	MensajeDinamico* mensaje_dinamico = crear_mensaje(OBTENER_DATOS,socket_destino, 0);
-	agregar_dato(mensaje_dinamico,sizeof(int),&size);
+	agregar_string(mensaje_dinamico, path);
 	agregar_dato(mensaje_dinamico,sizeof(int),&offset);
-	agregar_dato(mensaje_dinamico,strlen(path),path);
+	agregar_dato(mensaje_dinamico,sizeof(int),&size);
 	return mensaje_dinamico;
 }
 
 MensajeDinamico* crear_mensaje_mdj_guardar_datos(int socket_destino, char* path, int offset, int size, char* buffer){
 	MensajeDinamico* mensaje_dinamico = crear_mensaje(GUARDAR_DATOS,socket_destino, 0);
-	agregar_dato(mensaje_dinamico,strlen(buffer),buffer);
+	agregar_string(mensaje_dinamico, path);
 	agregar_dato(mensaje_dinamico,sizeof(int),&size);
 	agregar_dato(mensaje_dinamico,sizeof(int),&offset);
-	agregar_dato(mensaje_dinamico,strlen(path),path);
+	agregar_dato(mensaje_dinamico,strlen(buffer),buffer);
 	return mensaje_dinamico;
 }
 MensajeDinamico* crear_mensaje_mdj_borrar_archivo(int socket_destino, char* path){

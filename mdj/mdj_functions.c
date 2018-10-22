@@ -1,5 +1,5 @@
 #include "mdj_functions.h"
-#define TAM_LINEA		35
+#define TAM_LINEA		150// TODO corregir esto y recibirlo por el diego
 extern t_bitarray* bitmap;
 extern metadata_fifa metadata;
 extern cfg_mdj* configuracion;
@@ -230,87 +230,35 @@ char* obtener_datos(t_mdj_interface* mdj_interface){
 	return lineas_obtenidas;
 
 }
-/*
-char* obtener_path_archivo_fifa(char* pto_montaje, char* path_relativo){
-	char archivos[] = "Archivos";
-	char* path_fifa = malloc(strlen(pto_montaje)+strlen(path_relativo)+strlen(archivos)+3); // +2 por los '/' +1 por '\0'
-	sprintf(path_fifa,"%s/%s/%s", pto_montaje, archivos, path_relativo);
-
-	return path_fifa;
-}
-
-void validar_archivo(t_mdj_interface* data_operacion, char* pto_montaje){
-	char* path_fifa = obtener_path_archivo_fifa(pto_montaje,data_operacion->path);
-	FILE* ptr = fopen(path_fifa, "r");
-		if(ptr == NULL){
-			printf("Archivo no existe!\n");
-			exit(200);
-		}else{
-			fclose(ptr);
-		}
-}
-
-void crear_archivo(t_mdj_interface* data_operacion, char* pto_montaje){
-	char* path_fifa = obtener_path_archivo_fifa(pto_montaje,data_operacion->path);
-	char** directorios = string_split(data_operacion->path);
-	int index = 0;
-	int malloc_size = strlen(pto_montaje)+strlen("/");
-
-	char* aux = string_new();
-	string_append(&aux, pto_montaje);
-	string_append(&aux,"/");
-	while(directorios[index+1] != NULL){
-		string_append(&aux,directorios[index]);
-		mkdir(aux,0777);
-		index++;
-	}
-	FILE* f = fopen(path_fifa,"a");
 
 
-	fclose(f);
-	free(aux);
-
-
-}
-
-char* obtener_datos(t_mdj_interface* data_operacion){
-	char* datos = NULL;
-	return datos;
-}
-
-int guardar_datos(t_mdj_interface* data_operacion){
-	return 0;
-}
-
-void borrar_archivo(t_mdj_interface* data_operacion){
-
-}
 
 t_mdj_interface* crear_data_mdj_operacion(MensajeDinamico* mensaje){
 	t_mdj_interface* data_mdj_operacion = malloc(sizeof(t_mdj_interface));
-	NodoPayload* nodo_aux = queue_pop(mensaje->payload);
-	data_mdj_operacion->path = nodo_aux->datos;
+	//NodoPayload* nodo_aux = queue_pop(mensaje->payload);
+	//data_mdj_operacion->path = nodo_aux->datos;
 	data_mdj_operacion->t_operacion = mensaje->header;
-	 switch(mensaje->header){
+	 switch(data_mdj_operacion->t_operacion){
 		case VALIDAR_ARCHIVO:
+			recibir_string(&data_mdj_operacion->path,mensaje);
 			break;
 		case CREAR_ARCHIVO:
-			nodo_aux = queue_pop(mensaje->payload);
-			memcpy(&data_mdj_operacion->cantidad_lineas, nodo_aux->datos,nodo_aux->longitud);
+			recibir_string(&data_mdj_operacion->path, mensaje);
+			recibir_int(&data_mdj_operacion->cantidad_lineas, mensaje);
 			break;
 		case OBTENER_DATOS:
-			nodo_aux = queue_pop(mensaje->payload);
-			memcpy(&data_mdj_operacion->offset, nodo_aux->datos,nodo_aux->longitud);
-			nodo_aux = queue_pop(mensaje->payload);
-			memcpy(&data_mdj_operacion->size, nodo_aux->datos,nodo_aux->longitud);
+			recibir_string(&data_mdj_operacion->path,mensaje);
+			recibir_int(&data_mdj_operacion->offset, mensaje);
+			recibir_int(&data_mdj_operacion->size, mensaje);
 			break;
 		case GUARDAR_DATOS:
-			nodo_aux = queue_pop(mensaje->payload);
-			memcpy(&data_mdj_operacion->offset, nodo_aux->datos,nodo_aux->longitud);
-			nodo_aux = queue_pop(mensaje->payload);
-			memcpy(&data_mdj_operacion->size, nodo_aux->datos,nodo_aux->longitud);
-			nodo_aux = queue_pop(mensaje->payload);
-			memcpy(&data_mdj_operacion->buffer, nodo_aux->datos,nodo_aux->longitud);
+			//TODO guardar_datos
+			break;
+		case BORRAR_ARCHIVO:
+			recibir_string(&data_mdj_operacion->path,mensaje);
+			break;
+		default:
+			//TODO log_error();
 			break;
 
 	}
@@ -319,27 +267,27 @@ t_mdj_interface* crear_data_mdj_operacion(MensajeDinamico* mensaje){
 }
 
 void interface_mdj(MensajeDinamico* mensaje_dinamico){
-	pthread_t nuevo_hilo;
+
 	t_mdj_interface* data_operacion = crear_data_mdj_operacion(mensaje_dinamico);
 
 	switch(mensaje_dinamico->header){
 
 		case VALIDAR_ARCHIVO:
-			pthread_create(&nuevo_hilo, NULL,(void*)validar_archivo(),data_operacion);
+			validar_archivo(data_operacion);
 			break;
 		case CREAR_ARCHIVO:
-			pthread_create(&nuevo_hilo, NULL,(void*)crear_archivo(),data_operacion);
+			crear_archivo(data_operacion);
 			break;
 		case OBTENER_DATOS:
-			pthread_create(&nuevo_hilo, NULL,(void*)obtener_datos(),data_operacion);
+			obtener_datos(data_operacion);
 			break;
 		case GUARDAR_DATOS:
-			pthread_create(&nuevo_hilo, NULL,(void*)guardar_datos(),data_operacion);
+		//TODO	guardar_datos(data_operacion);
 			break;
 		case BORRAR_ARCHIVO:
-			pthread_create(&nuevo_hilo, NULL,(void*)borrar_archivo(),data_operacion);
+			borrar_archivo(data_operacion);
 			break;
 	}
-	pthread_detach(nuevo_hilo);
-}*/
+
+}
 

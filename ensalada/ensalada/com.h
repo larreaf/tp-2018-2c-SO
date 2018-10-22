@@ -1,7 +1,6 @@
 #ifndef REDISTINTO_COM_H_
 #define REDISTINTO_COM_H_
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -11,23 +10,10 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <commons/log.h>
-
+#include "mensaje.h"
 
 
 #define MY_IP "127.0.0.1"
-
-
-typedef enum {
-		t_safa,
-		t_elDiego,
-		t_fm9,
-		t_cpu,
-		t_mdj,
-		t_consola_mdj,
-		t_consola_safa,
-		t_consola_fm9,
-		cantidad_tipos_procesos // este tiene que ir ultimo en el enum SIEMPRE o hacemos quilombo
-} Proceso;
 
 
 /*
@@ -69,13 +55,6 @@ int escuchar_Conexion( struct sockaddr_in*);
 void conectar_Servidor(int fd_socket, struct sockaddr_in *addr_servidor, Proceso t_proceso);
 
 /*
- * @NAME: compruebaError
- * @DESC: comprueba los errores en las funciones de sockets y emite un mensaje personalizado en caso de error.
- * Tambien aborta el proceso.
- */
-void comprobar_error(int variable, const char* mensajeError);
-
-/*
  * @NAME: aceptar_conexion
  * @DESC: acepta la conexion proveniente del socket pasado por parametro.
  */
@@ -92,7 +71,7 @@ void handshakeCliente(Proceso cliente, int socket_destino);
  * @NAME: handshakeCliente
  * @DESC: Recibe en cliente el tipo de cliente.
  */
-Proceso handshakeServidor(int socket_origen);
+
 
 
 

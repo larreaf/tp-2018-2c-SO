@@ -51,30 +51,12 @@ void conectar_Servidor(int fd_socket, struct sockaddr_in *addr_servidor, Proceso
 	handshakeCliente(t_proceso,fd_socket);
 }
 
-void comprobar_error(int variable, const char* mensajeError){
-	// TODO incluir al logger
-
-	if(variable < 0){
-		perror(mensajeError);
-		exit(1);
-	}
-}
-
 
 void handshakeCliente(Proceso cliente, int socket_destino){
-	int header = HANDSHAKE_CLIENTE;
-	int error = send(socket_destino,&header,sizeof(int),0);
-	comprobar_error(error,"Error en send\n");
+	MensajeDinamico* mensaje = crear_mensaje(HANDSHAKE_CLIENTE, socket_destino, 0);
 
-	error = send(socket_destino,&cliente,sizeof(Proceso),0);
-	comprobar_error(error,"Error en send\n");
-}
-
-Proceso handshakeServidor(int socket_origen){
-	Proceso cliente = -1;
-	int error = recv(socket_origen, &cliente, sizeof(Proceso),0);
-	comprobar_error(error,"Error en recv\n");
-	return cliente;
+	agregar_dato(mensaje, sizeof(Proceso), &cliente);
+	enviar_mensaje(mensaje);
 }
 
 int aceptar_conexion(int socketEscucha)

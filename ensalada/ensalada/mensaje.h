@@ -10,6 +10,18 @@
 
 #define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
 
+typedef enum {
+    t_safa,
+    t_elDiego,
+    t_fm9,
+    t_cpu,
+    t_mdj,
+    t_consola_mdj,
+    t_consola_safa,
+    t_consola_fm9,
+    cantidad_tipos_procesos // este tiene que ir ultimo en el enum SIEMPRE o hacemos quilombo
+} Proceso;
+
 typedef struct {
     t_queue* cola_particiones_dato;
     int tamanio_cola_particiones_dato;
@@ -37,7 +49,7 @@ void recibir_string(char**, MensajeDinamico*);
 void agregar_string(MensajeDinamico*, char*);
 DatoParticionado particionar_dato(void*, int, int);
 int enviar_mensaje(MensajeDinamico*);
-MensajeDinamico* recibir_mensaje(int, int);
+MensajeDinamico* recibir_mensaje(int);
 
 /*
  * @NAME: crear_mensaje_mdj_validar_archivo

@@ -1,5 +1,5 @@
 #include "mdj_functions.h"
-#define TAM_LINEA		35
+#define TAM_LINEA		150// TODO corregir esto y recibirlo por el diego
 extern t_bitarray* bitmap;
 extern metadata_fifa metadata;
 extern cfg_mdj* configuracion;

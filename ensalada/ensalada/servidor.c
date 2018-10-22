@@ -199,10 +199,6 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                         cpu->cantidad_procesos_asignados = 0;
                                         list_add(servidor.lista_cpus, cpu);
 
-                                        retorno = crear_mensaje(NUEVA_CONEXION_CPU, cliente_seleccionado->socket, 0);
-                                        retorno->t_proceso = cliente_seleccionado->t_proceso;
-                                        return retorno;
-
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso CPU denegada");
                                         cerrar_conexion(servidor, i);
@@ -308,6 +304,9 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     log_error(servidor.logger, "Falla handshake, tipo de proceso invalido");
                                     break;
                             }
+                            retorno->header = NUEVA_CONEXION;
+                            retorno->t_proceso = cliente;
+                            return retorno;
                         }else{
                             retorno->t_proceso = cliente_seleccionado->t_proceso;
                             return retorno;

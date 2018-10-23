@@ -32,16 +32,17 @@ int conectar_como_cliente(ConexionesActivas conexiones_activas, char *ip_destino
  * @param socket numero de socket a cerrar
  */
 void cerrar_conexion(ConexionesActivas conexiones_activas, int socket){
-    MensajeDinamico* mensaje;
     ConexionCliente* cliente_seleccionado;
     CPU* cpu_seleccionado;
+
+    // TODO optimizar
 
     for(int i = 0; i<list_size(conexiones_activas.lista_clientes); i++) {
 
         cliente_seleccionado = list_get(conexiones_activas.lista_clientes, i);
         if(cliente_seleccionado->socket == socket){
-            mensaje = crear_mensaje(CONEXION_CERRADA, socket, 0);
-            enviar_mensaje(mensaje);
+            //mensaje = crear_mensaje(CONEXION_CERRADA, socket, 0);
+            //enviar_mensaje(mensaje);
 
             if(cliente_seleccionado->t_proceso == t_cpu){
 

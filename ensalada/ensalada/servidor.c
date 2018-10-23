@@ -32,16 +32,17 @@ int conectar_como_cliente(ConexionesActivas conexiones_activas, char *ip_destino
  * @param socket numero de socket a cerrar
  */
 void cerrar_conexion(ConexionesActivas conexiones_activas, int socket){
-    MensajeDinamico* mensaje;
     ConexionCliente* cliente_seleccionado;
     CPU* cpu_seleccionado;
+
+    // TODO optimizar
 
     for(int i = 0; i<list_size(conexiones_activas.lista_clientes); i++) {
 
         cliente_seleccionado = list_get(conexiones_activas.lista_clientes, i);
         if(cliente_seleccionado->socket == socket){
-            mensaje = crear_mensaje(CONEXION_CERRADA, socket, 0);
-            enviar_mensaje(mensaje);
+            //mensaje = crear_mensaje(CONEXION_CERRADA, socket, 0);
+            //enviar_mensaje(mensaje);
 
             if(cliente_seleccionado->t_proceso == t_cpu){
 
@@ -199,10 +200,6 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                         cpu->cantidad_procesos_asignados = 0;
                                         list_add(servidor.lista_cpus, cpu);
 
-                                        retorno = crear_mensaje(NUEVA_CONEXION_CPU, cliente_seleccionado->socket, 0);
-                                        retorno->t_proceso = cliente_seleccionado->t_proceso;
-                                        return retorno;
-
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso CPU denegada");
                                         cerrar_conexion(servidor, i);
@@ -308,6 +305,9 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     log_error(servidor.logger, "Falla handshake, tipo de proceso invalido");
                                     break;
                             }
+                            retorno->header = NUEVA_CONEXION;
+                            retorno->t_proceso = cliente;
+                            return retorno;
                         }else{
                             retorno->t_proceso = cliente_seleccionado->t_proceso;
                             return retorno;

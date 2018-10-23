@@ -1,3 +1,5 @@
+#include <funciones.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/log.h>
@@ -10,66 +12,7 @@
 #include <ensalada/servidor.h>
 #include <ensalada/validacion.h>
 
-void* puntero = NULL;
-void* comienzo_storage = NULL;
-void* datos_fm9 = NULL;
-
-//todo crear archivo .h y .c de funciones fm9
-typedef struct{
-    int id;
-    char* instruccion;
-    char* contenido;
-}DiegoAFM9;
-
-void desempaquetar_mensaje_diego_a_fm9(MensajeDinamico* mensaje, DiegoAFM9* DiegoAFM9){
-
-    recibir_int(&DiegoAFM9->id, mensaje);
-    recibir_string(&DiegoAFM9->instruccion, mensaje);
-    recibir_string(&DiegoAFM9->contenido, mensaje);
-}
-
-void destruir_storage(){
-	free(comienzo_storage);
-	free(puntero);
-}
-
-void* asignar_memoria(t_log *logger, int tamanioMemoria){
-	//esta funcion deberia estar en ensalada quiza
-	puntero = malloc(tamanioMemoria);
-
-	if(puntero == NULL)
-	{
-		log_info(logger, "No se puede asignar ese espacio de memoria...");
-	}
-	else
-	{
-		log_info(logger, "Se asigno correctamente el espacio de memoria necesario...");
-	}
-
-	return puntero;
-}
-
-void inicializar_storage(t_log *logger,int tamanioMemoria){
-
-	log_info(logger, "Inicializando storage según archivo de configuración...");
-
-	comienzo_storage = asignar_memoria(logger, tamanioMemoria);
-	//que hace si asigna_memoria devuelve 0 (no pudo asignar)
-	// para mi tendriamos que en este caso cerrar fm9 o volver a solicitarlo cada tanto tiempo con un tope de veces
-
-}
-
-void cerrar_fm9(t_log* logger, cfg_fm9* configuracion, ConexionesActivas server){
-    log_info(logger, "Cerrando FM9...");
-
-    // destruir_conexiones_activas manda headers CONEXION_CERRADA a todos los clientes conectados para que se enteren y despues
-    // cierra cada socket
-    destruir_conexiones_activas(server);
-    log_destroy(logger);
-    destroy_cfg(configuracion, t_fm9);
-    destruir_storage();
-    exit(0);
-}
+DiegoAFM9* datos_fm9;
 
 int main(int argc, char **argv) {
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0};
@@ -89,6 +32,7 @@ int main(int argc, char **argv) {
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_fm9);
 
     inicializar_storage(logger, configuracion->tamanio);
+    elegir_tipo_funcionamiento_memoria(logger, configuracion->modo);
 
     log_info(logger, "Listo");
 
@@ -97,22 +41,29 @@ int main(int argc, char **argv) {
 
         switch (mensaje->header) {
             case STRING_DIEGO_FM9:
-            	//todo esta funcion datos_fm9->instruccion,datos_fm9->id
-            	desempaquetar_mensaje_diego_a_fm9(mensaje, &datos_fm9);
-            	log_info(logger, "Datos entrantes de Diego a fm9 %d...", datos_fm9.id);
 
-				switch(datos_fm9.instruccion){
+            	desempaquetar_mensaje_diego_a_fm9(logger,mensaje, datos_fm9);
+            	log_info(logger, "Datos entrantes de Diego a fm9 %d...", datos_fm9->id);
 
-					case leer:
+				switch(datos_fm9->instruccion){
+
+					case "leer":
+						log_info(logger, "Buscando datos solicitados por el Diego...", datos_fm9->id);
+						return buscar_en_memoria(logger, datos_fm9);
 					break;
 
-					case escribir:
+					case "escribir":
+						log_info(logger, "Escribiendo datos solicitados por el Diego...", datos_fm9->id);
+						return escribir_en_memoria(logger, datos_fm9);
 					break;
 
-					case modificar:
+					case "modificar":
+						log_info(logger, "Modificando datos solicitados por el Diego...", datos_fm9->id);
+						return modificar_en_memoria(logger, datos_fm9);
 					break;
 
 					default:
+						log_info(logger, "Se desconoce esta instrucción...", datos_fm9->instruccion);
 					break;
 				}
             	//str = recibir_string(mensaje->socket);

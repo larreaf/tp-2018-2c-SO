@@ -122,13 +122,12 @@ int main(int argc, char **argv) {
     int fd = open(bitmap_file,O_RDWR);
     ftruncate(fd, SIZE_BITARRAY);
 
-    bitarray = mmap(0,
-    		SIZE_BITARRAY, PROT_WRITE, MAP_SHARED, fd, 0);
+    bitarray = mmap(0, (size_t)SIZE_BITARRAY, PROT_WRITE, MAP_SHARED, fd, 0);
 
     if(bitarray == MAP_FAILED){
     	exit(5);
     }
-    bitmap = bitarray_create_with_mode(bitarray,SIZE_BITARRAY,LSB_FIRST);
+    bitmap = bitarray_create_with_mode(bitarray,(size_t)SIZE_BITARRAY,LSB_FIRST);
     log_info(logger, "Bitmap mapeado a memoria");
 
     //bitmap_clean();
@@ -162,7 +161,7 @@ int main(int argc, char **argv) {
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
             	int cantidad_bloques_asignados = crear_archivo(data_operacion);
             	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-            	agregar_dato(mensaje_respuesta, sizeof(int) ,cantidad_bloques_asignados );
+            	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bloques_asignados );
 				enviar_mensaje(mensaje_respuesta);
                 break;
 
@@ -180,8 +179,13 @@ int main(int argc, char **argv) {
 				break;
 
             case OBTENER_DATOS:
+                log_info(logger, "Obteniendo data de operacion obtener datos...");
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+
+                log_info(logger, "Obteniendo lineas de archivo %s...", data_operacion->path);
             	lineas_obtenidas = obtener_datos(data_operacion);
+
+            	log_info(logger, "Enviando lineas...");
             	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
             	agregar_string(mensaje_respuesta, lineas_obtenidas);
             	enviar_mensaje(mensaje_respuesta);

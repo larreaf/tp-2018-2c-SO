@@ -63,16 +63,17 @@ bool validar_archivo(t_mdj_interface* mdj_interface){
 	return ret;
 }
 
-void crear_archivo(t_mdj_interface* mdj_interface){
+int crear_archivo(t_mdj_interface* mdj_interface){
 	t_config* config_nuevo_archivo;
 	char* path_fifa_archivos = obtener_path_archivo_fifa(mdj_interface->path);
 	char* path_absoluto = string_new();
 	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
 	char** directorios = string_split(mdj_interface->path,"/");
 	int index = 0;
-
+	int lineas_asignadas = 0;
 
 	int cantidad_bloques = mdj_interface->cantidad_lineas/metadata.tamanio_bloques;
+
 	if(mdj_interface->cantidad_lineas%metadata.tamanio_bloques){
 		cantidad_bloques++;
 	}
@@ -102,6 +103,7 @@ void crear_archivo(t_mdj_interface* mdj_interface){
 				string_append(&bloques,",");
 			}
 			cantidad_bloques--;
+			lineas_asignadas += metadata.tamanio_bloques;
 		}
 	}
 	//TODO index >= bitarray_get_max_bit(bitmap) no alcanza el espacio para guardar el archivo
@@ -129,7 +131,8 @@ void crear_archivo(t_mdj_interface* mdj_interface){
 	free(aux);
 	free(path_fifa_archivos);
 	free(path_absoluto);
-
+	//retorna las lineas asignadas
+	return ((cantidad_bloques == 0) ? mdj_interface->cantidad_lineas : lineas_asignadas);
 }
 
 void borrar_archivo(t_mdj_interface* mdj_interface){

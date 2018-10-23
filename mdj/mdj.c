@@ -160,31 +160,33 @@ int main(int argc, char **argv) {
             // en cada case del switch se puede manejar cada header como se desee
             case CREAR_ARCHIVO:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
-            	crear_archivo(data_operacion);
-            	//mensaje_respuesta = crear_mensaje(mensaje_recibido->header, mensaje_recibido->socket, 0);
-
-            	/*
-                agregar_string(mensaje_respuesta, "Hola!");
-                enviar_mensaje(mensaje_respuesta);
-				*/
+            	int cantidad_bloques_asignados = crear_archivo(data_operacion);
+            	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+            	agregar_dato(mensaje_respuesta, sizeof(int) ,cantidad_bloques_asignados );
+				enviar_mensaje(mensaje_respuesta);
                 break;
 
             case BORRAR_ARCHIVO:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
 				borrar_archivo(data_operacion);
-
             	break;
+
             case VALIDAR_ARCHIVO:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
-            	validar_archivo(data_operacion);
+            	bool respuesta = validar_archivo(data_operacion);
+            	mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
+            	agregar_dato(mensaje_respuesta,sizeof(bool),&respuesta);
+            	enviar_mensaje(mensaje_respuesta);
 				break;
+
             case OBTENER_DATOS:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
             	lineas_obtenidas = obtener_datos(data_operacion);
-            	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, 0);
+            	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
             	agregar_string(mensaje_respuesta, lineas_obtenidas);
             	enviar_mensaje(mensaje_respuesta);
 				break;
+
             case GUARDAR_DATOS:
             	//TODO guardar_datos(data_operacion);
 				break;

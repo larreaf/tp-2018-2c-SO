@@ -114,18 +114,18 @@ int main(int argc, char **argv) {
      */
     char* bitmap_file = string_new();
     char* bitarray;
-    off_t SIZE_BITARRAY = (metadata.cantidad_bloques%8) ? (metadata.cantidad_bloques/8)+1 : metadata.cantidad_bloques/8;
+    size_t SIZE_BITARRAY = (metadata.cantidad_bloques%8) ? (metadata.cantidad_bloques/8)+1 : metadata.cantidad_bloques/8;
 
     string_append_with_format(&bitmap_file,"%s/%s/%s",configuracion->punto_montaje,"Metadata","Bitmap.bin");
     int fd = open(bitmap_file,O_RDWR);
     ftruncate(fd, SIZE_BITARRAY);
 
-    bitarray = mmap(0, (size_t)SIZE_BITARRAY, PROT_WRITE, MAP_SHARED, fd, 0);
+    bitarray = mmap(0, SIZE_BITARRAY, PROT_WRITE, MAP_SHARED, fd, 0);
 
     if(bitarray == MAP_FAILED){
     	exit(5);
     }
-    bitmap = bitarray_create_with_mode(bitarray,(size_t)SIZE_BITARRAY,LSB_FIRST);
+    bitmap = bitarray_create_with_mode(bitarray,SIZE_BITARRAY,LSB_FIRST);
     log_info(logger, "Bitmap mapeado a memoria");
 
     //bitmap_clean();
@@ -158,21 +158,31 @@ int main(int argc, char **argv) {
 
             // en cada case del switch se puede manejar cada header como se desee
             case CREAR_ARCHIVO:
+
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+            	log_info(logger, "Creando archivo %s...", data_operacion->path);
             	int cantidad_bloques_asignados = crear_archivo(data_operacion);
+            	log_info(logger, "Bloques asignados al archivo: %d",cantidad_bloques_asignados);
             	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
             	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bloques_asignados );
+            	log_info(logger,"Enviando respuesta...");
 				enviar_mensaje(mensaje_respuesta);
                 break;
 
             case BORRAR_ARCHIVO:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+            	log_info(logger, "Borrando archivo %s...", data_operacion->path);
 				borrar_archivo(data_operacion);
+				log_info(logger,"Archivo %s Borrado", data_operacion->path);
             	break;
 
             case VALIDAR_ARCHIVO:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+            	log_info(logger, "Validando archivo %s...", data_operacion->path);
             	bool respuesta = validar_archivo(data_operacion);
+            	respuesta ?
+            			log_info(logger, "El archivo %s existe ", data_operacion->path) :
+						log_info(logger, "El archivo %s no existe ", data_operacion->path);
             	mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
             	agregar_dato(mensaje_respuesta,sizeof(bool),&respuesta);
             	enviar_mensaje(mensaje_respuesta);

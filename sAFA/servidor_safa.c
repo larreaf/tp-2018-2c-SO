@@ -8,7 +8,8 @@ extern ConexionesActivas conexiones_activas;
 extern t_log* logger;
 extern cfg_safa* configuracion;
 extern PCP* pcp;
-extern sem_t cantidad_cpus;
+extern PLP* plp;
+extern sem_t cantidad_cpus, arrancar_planificadores;
 extern bool correr;
 
 /*!
@@ -17,7 +18,7 @@ extern bool correr;
  * @return NULL cuando se recibe exit desde consola
  */
 void* ejecutar_servidor(void *arg){
-    int conexiones_permitidas[cantidad_tipos_procesos] = {0};
+    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb;
     MensajeDinamico* mensaje_respuesta, *mensaje;
     char* str = NULL;
     DTB datos_dtb;
@@ -53,11 +54,13 @@ void* ejecutar_servidor(void *arg){
                         // los datos actualizados del DTB indican que debe ser bloqueado
 
                         agregar_a_block(pcp, dtb_seleccionado);
+                        break;
 
                     case DTB_EXIT:
                         // los datos actualizados del DTB indican que debe ser pasado a exit
+                        log_info(logger, "DTB %d devolvio EXIT", datos_dtb.id);
 
-                        // TODO destruir DTB
+                        // TODO destruir DTB y signal multiprogramacion
                         break;
 
                     default:
@@ -70,10 +73,25 @@ void* ejecutar_servidor(void *arg){
                 }
                 break;
 
-            case NUEVA_CONEXION_CPU:
+            case PASAR_DTB_A_READY:
+                recibir_int(&id_dtb, mensaje);
+                log_info(logger, "Pasando DTB %d de NEW a READY", id_dtb);
+
+                pasar_new_a_ready(plp, id_dtb);
+
+                break;
+
+            case NUEVA_CONEXION:
                 // se conecto un CPU
 
-                sem_post(&cantidad_cpus);
+                if(mensaje->t_proceso == t_cpu) {
+                    log_info(logger, "Aumentando cantidad de CPUs disponibles...");
+                    sem_post(&cantidad_cpus);
+                }
+
+                if(conexiones_activas.procesos_conectados[t_elDiego] && conexiones_activas.procesos_conectados[t_cpu])
+                    sem_post(&arrancar_planificadores);
+
                 break;
 
             // en cada case del switch se puede manejar cada header como se desee
@@ -98,6 +116,11 @@ void* ejecutar_servidor(void *arg){
                 // procesos que cierran deberian mandar este header antes de hacerlo para que los procesos a los cuales
                 // estan conectados se enteren, de todas maneras esperar_mensaje se encarga internamente de cerrar
                 // su socket, liberar memoria, etc
+
+                if(mensaje->t_proceso == t_cpu) {
+                    log_info(logger, "Reduciendo cantidad de CPUs disponibles...");
+                    sem_wait(&cantidad_cpus);
+                }
                 break;
 
             default:

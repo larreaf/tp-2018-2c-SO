@@ -216,7 +216,6 @@ MensajeDinamico* recibir_mensaje(int socket){
 
     mensaje->header = header;
     mensaje->longitud = longitud_mensaje_total;
-    mensaje->particionado = particionado;
 
     longitud_mensaje_total -= sizeof(int)*3;
 

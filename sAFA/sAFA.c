@@ -8,7 +8,7 @@
 #include "pcp.h"
 
 pthread_t thread_consola, thread_plp, thread_pcp, thread_servidor;
-sem_t cantidad_cpus;
+sem_t cantidad_cpus, arrancar_planificadores;
 t_log *logger;
 ConexionesActivas conexiones_activas;
 cfg_safa *configuracion;
@@ -34,8 +34,7 @@ void sig_handler(int signo){
 }
 
 int main(int argc, char **argv) {
-    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, retsocket=0, err, header;
-    char* str;
+    int err;
 
     validar_parametros(argc);
     configuracion = asignar_config(argv[1], safa);
@@ -48,7 +47,10 @@ int main(int argc, char **argv) {
     signal(SIGTERM, sig_handler);
 
     err = sem_init(&cantidad_cpus, 0, 0);
-    comprobar_error(err, "Error al iniciar semaforo");
+    comprobar_error(err, "Error al iniciar semaforo cantidad_cpus");
+
+    err = sem_init(&arrancar_planificadores, 0, 0);
+    comprobar_error(err, "Error al iniciar semaforo arrancar_planificadores");
 
     // crear estructuras de planificadores
     plp = inicializar_plp(configuracion->multiprogramacion);
@@ -59,11 +61,15 @@ int main(int argc, char **argv) {
 
     //TODO esperar a conexion de CPU y elDiego
 
-    err = pthread_create(&thread_consola, NULL, &consola_safa, NULL);
-    comprobar_error(err, "Error al iniciar thread consola");
-
     err = pthread_create(&thread_servidor, NULL, &ejecutar_servidor, NULL);
     comprobar_error(err, "Error al iniciar thread servidor");
+
+    log_info(logger, "Esperando conexiones de elDiego y CPU...");
+    sem_wait(&arrancar_planificadores);
+    log_info(logger, "elDiego y CPU conectados, arrancando planificadores...");
+
+    err = pthread_create(&thread_consola, NULL, &consola_safa, NULL);
+    comprobar_error(err, "Error al iniciar thread consola");
 
     err = pthread_create(&thread_pcp, NULL, &ejecutar_pcp, pcp);
     comprobar_error(err, "Error al iniciar thread PCP");

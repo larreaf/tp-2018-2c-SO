@@ -350,9 +350,10 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                         cliente_seleccionado->socket);
                                 break;
                         }
-                        cerrar_conexion(servidor, cliente_seleccionado->socket);
+                        destruir_mensaje(retorno);
                         retorno = crear_mensaje(CONEXION_CERRADA, cliente_seleccionado->socket, 0);
                         retorno->t_proceso = cliente_seleccionado->t_proceso;
+                        cerrar_conexion(servidor, cliente_seleccionado->socket);
                         return retorno;
                     }
                 }

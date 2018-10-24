@@ -148,6 +148,8 @@ int main(int argc, char **argv) {
 
     	//solo para obtener datos
     	char* lineas_obtenidas;
+    	//solo para borrar_archivo
+
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
         // sin retornar
         mensaje_recibido = esperar_mensajes(conexiones_activas);
@@ -172,8 +174,13 @@ int main(int argc, char **argv) {
             case BORRAR_ARCHIVO:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
             	log_info(logger, "Borrando archivo %s...", data_operacion->path);
-				borrar_archivo(data_operacion);
-				log_info(logger,"Archivo %s Borrado", data_operacion->path);
+				int borrar = borrar_archivo(data_operacion);
+				(borrar == 0)?
+						log_info(logger,"Archivo %s Borrado", data_operacion->path) :
+						log_info(logger,"Error al intentar borrar el archivo %s, data_operacion->path");
+				mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
+				agregar_dato(mensaje_respuesta,sizeof(int),&borrar);
+				enviar_mensaje(mensaje_respuesta);
             	break;
 
             case VALIDAR_ARCHIVO:

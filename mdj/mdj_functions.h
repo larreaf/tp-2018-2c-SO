@@ -87,7 +87,7 @@
 	 * @DESC:	elimina un archivo de FIFA
 	 * @RET:	void
 	 */
-	void borrar_archivo(t_mdj_interface* mdj_interface);
+	int borrar_archivo(t_mdj_interface* mdj_interface);
 
 	/*
 	 * @NAME:	levantar_metadata

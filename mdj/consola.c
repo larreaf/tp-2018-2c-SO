@@ -5,6 +5,7 @@ char* dir_mdj;
 char* dir_fifa_abs;
 char* dir_fifa_rel;
 char* dir_actual;
+
 void consola_mdj(){
 	dir_fifa_rel = string_new();
 	string_append(&dir_fifa_rel,"mnt/FIFA_FS/Archivos");

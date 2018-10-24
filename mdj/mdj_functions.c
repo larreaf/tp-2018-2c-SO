@@ -135,7 +135,7 @@ int crear_archivo(t_mdj_interface* mdj_interface){
 	return ((cantidad_bloques == 0) ? mdj_interface->cantidad_lineas : lineas_asignadas);
 }
 
-void borrar_archivo(t_mdj_interface* mdj_interface){
+int borrar_archivo(t_mdj_interface* mdj_interface){
 	char* path_fifa_archivos = obtener_path_archivo_fifa();
 	char* path_absoluto = string_new();
 	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
@@ -166,9 +166,12 @@ void borrar_archivo(t_mdj_interface* mdj_interface){
 		index++;
 	}
 	free(bloques);
-	remove(path_absoluto);
+	//Borrar archivo {0: exito, -1: error}
+	int return_value = remove(path_absoluto);
+
 	free(path_fifa_archivos);
 	free(path_absoluto);
+	return return_value;
 
 }
 

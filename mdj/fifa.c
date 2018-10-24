@@ -19,7 +19,7 @@ void levantar_metadata(){
 	char metadata_ruta_relativa[] = "Metadata/Metadata.bin";
 	char* ruta = string_new();
 	string_append_with_format(&ruta,"%s/%s",configuracion->punto_montaje,metadata_ruta_relativa);
-	printf("\nruta: %s\n",ruta);
+//	printf("\nruta: %s\n",ruta);
 	t_config* metadata_cfg = config_create(ruta);
 
 	metadata.tamanio_bloques = config_get_int_value(metadata_cfg,"TAMANIO_BLOQUES");

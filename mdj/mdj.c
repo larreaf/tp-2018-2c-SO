@@ -1,4 +1,5 @@
 #include "mdj_functions.h"
+#include "consola.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +35,7 @@ void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, ConexionesActivas conexio
     destroy_cfg(configuracion, t_mdj);
     exit(0);
 }
-
+/*
 void* ejecutar_consola(void* arg){
     char *linea;
     MensajeDinamico* mensaje_saliente;
@@ -69,7 +70,7 @@ void* ejecutar_consola(void* arg){
         if(header==OPERACION_CONSOLA_TERMINADA)
             continue;
     }
-}
+}*/
 
 int main(int argc, char **argv) {
 	pthread_mutex_init(&mutex_bitmap,NULL);
@@ -85,6 +86,7 @@ int main(int argc, char **argv) {
     validar_parametros(argc);
     logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
     configuracion = asignar_config(argv[1],mdj);
+    log_info(logger, "Archivo de configuracion correcto");
     if(configuracion->punto_montaje[0] == '/'){
     	configuracion->punto_montaje[0] = ' ';
 		string_trim(&configuracion->punto_montaje);
@@ -100,10 +102,6 @@ int main(int argc, char **argv) {
 	conexiones_permitidas[t_consola_mdj] = 1;
 	conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
 
-    // intentamos arrancar el thread de la consola, que se va a bloquear hasta que esperemos mensajes mas abajo
-    err = pthread_create(&thread_consola, NULL, &ejecutar_consola, (void*)configuracion->puerto);
-    if (err != 0)
-        printf("\ncan't create thread :[%s]", strerror(err));
 
     log_info(logger, "Listo");
 
@@ -139,8 +137,10 @@ int main(int argc, char **argv) {
 	string_append(&mdj->path,"premierLeague/equipo/arsenal");
 	mdj->cantidad_lineas = 56;
 	//crear_archivo(mdj);
-	//borrar_archivo(mdj);
+	//borrar_archivo(mdj);*/
 
+	pthread_create(&thread_consola, NULL, (void*)consola_mdj, NULL);
+    pthread_detach(thread_consola);
     /**
      * WHILE
      */
@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
             	//TODO guardar_datos(data_operacion);
 				break;
 
-            case STRING_CONSOLA_PROPIA:
+            /*case STRING_CONSOLA_PROPIA:
                 // este header indica que vamos a recibir un string leido de nuestra propia consola
 
                 // entonces recibimos el string y lo imprimimos, y ademas si es "exit" cerramos el programa
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
 
                 if(!strcmp(str, "exit")) {
                     free(str);
-                    pthread_join(thread_consola, NULL);
+                  //  pthread_join(thread_consola, NULL);
                     cerrar_mdj(logger, configuracion, conexiones_activas);
                 }
                 free(str);
@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
                 header = OPERACION_CONSOLA_TERMINADA;
                 retsocket = send(mensaje_recibido->socket, &header, sizeof(OPERACION_CONSOLA_TERMINADA), 0);
                 comprobar_error(retsocket, "Error en send a consola de MDJ");
-                break;
+                break;*/
 
             case CONEXION_CERRADA:
                 // el header CONEXION_CERRADA indica que el que nos envio ese mensaje se desconecto, idealmente los

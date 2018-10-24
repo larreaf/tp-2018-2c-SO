@@ -294,3 +294,4 @@ void interface_mdj(MensajeDinamico* mensaje_dinamico){
 
 }
 
+

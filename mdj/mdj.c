@@ -159,7 +159,6 @@ int main(int argc, char **argv) {
 
             // en cada case del switch se puede manejar cada header como se desee
             case CREAR_ARCHIVO:
-
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
             	log_info(logger, "Creando archivo %s...", data_operacion->path);
             	int cantidad_bloques_asignados = crear_archivo(data_operacion);
@@ -168,6 +167,7 @@ int main(int argc, char **argv) {
             	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bloques_asignados );
             	log_info(logger,"Enviando respuesta...");
 				enviar_mensaje(mensaje_respuesta);
+				log_info(logger,"Respuesta enviada...");
                 break;
 
             case BORRAR_ARCHIVO:
@@ -176,10 +176,12 @@ int main(int argc, char **argv) {
 				int borrar = borrar_archivo(data_operacion);
 				(borrar == 0)?
 						log_info(logger,"Archivo %s Borrado", data_operacion->path) :
-						log_info(logger,"Error al intentar borrar el archivo %s, data_operacion->path");
+						log_error(logger,"Error al intentar borrar el archivo %s, data_operacion->path");
 				mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
 				agregar_dato(mensaje_respuesta,sizeof(int),&borrar);
+				log_info(logger,"Enviando respuesta...");
 				enviar_mensaje(mensaje_respuesta);
+				log_info(logger,"Respuesta enviada...");
             	break;
 
             case VALIDAR_ARCHIVO:
@@ -188,7 +190,7 @@ int main(int argc, char **argv) {
             	bool respuesta = validar_archivo(data_operacion);
             	respuesta ?
             			log_info(logger, "El archivo %s existe ", data_operacion->path) :
-						log_info(logger, "El archivo %s no existe ", data_operacion->path);
+						log_error(logger, "El archivo %s no existe ", data_operacion->path);
             	mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
             	agregar_dato(mensaje_respuesta,sizeof(bool),&respuesta);
             	enviar_mensaje(mensaje_respuesta);
@@ -199,19 +201,28 @@ int main(int argc, char **argv) {
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
             	log_info(logger, "Validando que el archivo exista");
             	if(validar_archivo(data_operacion) == true){
+            		/**
+					 * El Archivo si existe
+					 */
             		log_info(logger, "Obteniendo lineas de archivo %s...", data_operacion->path);
             		lineas_obtenidas = obtener_datos(data_operacion);
-			printf("%s\n", lineas_obtenidas);
+			//printf("%s\n", lineas_obtenidas);
 					log_info(logger, "Enviando lineas...");
 					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
 					agregar_string(mensaje_respuesta, lineas_obtenidas);
 					enviar_mensaje(mensaje_respuesta);
 					log_info(logger, "Lineas enviadas!");
             	}else{
-            		log_info(logger, "El archivo %s no existe",data_operacion->path);
+            		/**
+					 * El Archivo no existe
+					 */
+            		log_error(logger, "El archivo %s no existe",data_operacion->path);
 					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-					agregar_string(mensaje_respuesta,"Error");
+					int rta = 0;
+					agregar_dato(mensaje_respuesta,sizeof(int),&rta);
+					log_info(logger,"Enviando respuesta...");
 					enviar_mensaje(mensaje_respuesta);
+					log_info(logger,"Respuesta enviada...");
             	}
             	rl_restore_prompt();
 				break;
@@ -221,14 +232,28 @@ int main(int argc, char **argv) {
 				data_operacion = crear_data_mdj_operacion(mensaje_recibido);
 				log_info(logger, "Validando que el archivo exista");
 				if(validar_archivo(data_operacion) == true){
+					/**
+					 * El Archivo si existe
+					 */
 					log_info(logger, "Guardando bytes en el archivo %s...", data_operacion->path);
 					int bytes_guardados = guardar_datos(data_operacion);
 					log_info(logger, "Se guardaron %d bytes", bytes_guardados);
-				} else{
-					log_info(logger, "El archivo %s no existe",data_operacion->path);
-					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-					agregar_string(mensaje_respuesta,"Error");
+					mensaje_respuesta = crear_mensaje(GUARDAR_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+					agregar_dato(mensaje_respuesta, sizeof(int) ,&bytes_guardados);
+					log_info(logger,"Enviando respuesta...");
 					enviar_mensaje(mensaje_respuesta);
+					log_info(logger,"Respuesta enviada...");
+				} else{
+					/**
+					 * El Archivo no existe
+					 */
+					log_error(logger, "El archivo %s no existe",data_operacion->path);
+					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+					int rta = 0;
+					agregar_dato(mensaje_respuesta,sizeof(int),&rta);
+					log_info(logger,"Enviando respuesta...");
+					enviar_mensaje(mensaje_respuesta);
+					log_info(logger,"Respuesta enviada...");
 				}
 				break;
 

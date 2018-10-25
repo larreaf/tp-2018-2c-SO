@@ -298,7 +298,12 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 		/*
 		 * Moverse al offset en bytes
 		 */
-		for(i = 0; i < mdj_interface->offset && fseek(ptr_filebloque,1,SEEK_CUR) != EOF ; i++){	}//for (apuntar al offset)
+		if( i < mdj_interface->offset ){
+			for(i = 0; i < mdj_interface->offset && fseek(ptr_filebloque,1,SEEK_CUR) != EOF ; i++){	}//for (apuntar al offset)
+		}
+		/*
+		 * Guardar bytes
+		 */
 		while( (caracter = fgetc(ptr_filebloque)) != EOF && size > 0){
 			fseek(ptr_filebloque, -1, SEEK_CUR);
 			fprintf(ptr_filebloque,"%c",mdj_interface->buffer[buffer_index]);

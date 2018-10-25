@@ -3,7 +3,7 @@
 extern t_bitarray* bitmap;
 extern metadata_fifa metadata;
 extern cfg_mdj* configuracion;
-extern pthread_mutex_t mutex_bitmap;
+
 
 
 void bitmap_clean(){
@@ -48,10 +48,16 @@ bool validar_archivo(t_mdj_interface* mdj_interface){
 	bool ret;
 	char* path_fifa_archivos = obtener_path_archivo_fifa(mdj_interface->path);
 	char* path_absoluto = string_new();
+
+	if(mdj_interface->path[0] == '/'){
+		mdj_interface->path[0] = ' ';
+		string_trim(&mdj_interface->path);
+	}
+
 	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
 	FILE* ptr = fopen(path_absoluto, "r");
 	if(ptr == NULL){
-		printf("Archivo no existe!\n");
+	//	printf("Archivo no existe!\n");
 		ret = false;
 	}else{
 		fclose(ptr);
@@ -91,10 +97,7 @@ int crear_archivo(t_mdj_interface* mdj_interface){
 	char* bloques = string_new();
 	string_append(&bloques,"[");
 
-	/**
-	 * Comienza Región crítica
-	 */
-	pthread_mutex_lock(&mutex_bitmap);
+
 	for(index = 0; index < bitarray_get_max_bit(bitmap) && cantidad_bloques!=0 ; index++){
 		if(!bitarray_test_bit(bitmap,index)){
 			bitarray_set_bit(bitmap,index);
@@ -107,10 +110,7 @@ int crear_archivo(t_mdj_interface* mdj_interface){
 		}
 	}
 	//TODO index >= bitarray_get_max_bit(bitmap) no alcanza el espacio para guardar el archivo
-	pthread_mutex_unlock(&mutex_bitmap);
-	/**
-	 * Termina Región crítica
-	 */
+
 
 	string_append(&bloques,"]");
 	config_nuevo_archivo = config_create(path_absoluto);
@@ -144,18 +144,13 @@ int borrar_archivo(t_mdj_interface* mdj_interface){
 	char** bloques = obtener_bloques(toDelete_cfg);
 
 	int index = 0;
-	/**
-	 * Comienza Región crítica
-	 */
-	pthread_mutex_lock(&mutex_bitmap);
+
+
 	while(bloques[index]!=NULL){
 		bitarray_clean_bit(bitmap,atoi(bloques[index]));
 		index++;
 	}
-	pthread_mutex_unlock(&mutex_bitmap);
-	/**
-	* Termina Región crítica
-	*/
+
 	config_destroy(toDelete_cfg);
 
 
@@ -182,12 +177,22 @@ char* obtener_datos(t_mdj_interface* mdj_interface){
 	char* path_fifa_bloques = obtener_path_bloques_fifa();
 	char* path_fifa_archivos = obtener_path_archivo_fifa();
 
+	/**
+	 * Obtener path absoluto del archivo
+	 */
 	char* path_absoluto = string_new();
 	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
 
+	/*
+	 * Obtener los bloques que conforman el archivo
+	 */
+
 	t_config* toGet_cfg = config_create(path_absoluto);
 	char** bloques = obtener_bloques(toGet_cfg);
-	//TODO obtener_tamaño para leer
+
+	/**
+	 * Calculo del offset en términos de lineas
+	 */
 	int index = mdj_interface->offset/metadata.tamanio_bloques;
 	int desplazamiento = mdj_interface->offset%metadata.tamanio_bloques;
 
@@ -198,10 +203,19 @@ char* obtener_datos(t_mdj_interface* mdj_interface){
 	FILE* ptr_filebloque;
 	while(bloques[index]!=NULL && mdj_interface->size>0){
 		int jndex = 1;
+		/**
+		 * Obtener path de un bloque
+		 */
 		char* path_bloque = string_new();
 		string_append_with_format(&path_bloque,"%s%s.bin",path_fifa_bloques,bloques[index]);
+		/**
+		 * Abrir bloque
+		 */
 		ptr_filebloque = fopen(path_bloque,"r");
-		char* buffer = malloc(TAM_LINEA+1);
+		/**
+		 * Leer lineas
+		 */
+		char* buffer = malloc(TAM_LINEA+1);//TODO cambiar lineas por bytes
 		while(fgets(buffer, TAM_LINEA+1, ptr_filebloque) != NULL && mdj_interface->size>0){
 			if(jndex > desplazamiento && jndex <= metadata.tamanio_bloques){
 				string_append_with_format(&lineas_obtenidas,"%s",buffer);
@@ -210,12 +224,16 @@ char* obtener_datos(t_mdj_interface* mdj_interface){
 			jndex++;
 
 		}
+		/**
+		 * Esto es porque ya se leyó a partir del offset y desplazamiento debe ser menor que (jndex = 1)
+		 */
 		desplazamiento = -999;
 		if(lineas_obtenidas[string_length(lineas_obtenidas)-1] != '\n'){
 			string_append(&lineas_obtenidas,"\n");
 		}
-
-
+		/*
+		 * Cerrar bloque y liberar memoria
+		 */
 		fclose(ptr_filebloque);
 		free(buffer);
 		free(path_bloque);
@@ -237,6 +255,81 @@ char* obtener_datos(t_mdj_interface* mdj_interface){
 
 }
 
+int guardar_datos(t_mdj_interface* mdj_interface){
+	char* path_fifa_bloques = obtener_path_bloques_fifa();
+	char* path_fifa_archivos = obtener_path_archivo_fifa();
+
+	/**
+	 * Obtener path absoluto del archivo
+	 */
+	char* path_absoluto = string_new();
+	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
+
+	/*
+	 * Obtener los bloques que conforman el archivo
+	 */
+	t_config* toGet_cfg = config_create(path_absoluto);
+	char** bloques = obtener_bloques(toGet_cfg);
+
+	/**
+	 * Calculo del offset en términos de lineas
+	 * index = bloque (con el calculo se define el bloque inicial)
+	 * desplazamiento = offset dentro del bloque
+	 */
+	int index = mdj_interface->offset/metadata.tamanio_bloques;
+	int desplazamiento = mdj_interface->offset%metadata.tamanio_bloques;
+
+	if(mdj_interface->size <= 0){
+		mdj_interface->size = 10000;
+	}
+
+	FILE* ptr_filebloque;
+	while(bloques[index]!=NULL && mdj_interface->size>0){
+		int jndex = 1;
+		/**
+		 * Obtener path de un bloque
+		 */
+		char* path_bloque = string_new();
+		string_append_with_format(&path_bloque,"%s%s.bin",path_fifa_bloques,bloques[index]);
+		/**
+		 * Abrir bloque y apuntar al inicio
+		 */
+		ptr_filebloque = fopen(path_bloque,"a");
+		fseek(ptr_filebloque,0,SEEK_SET);
+
+		/**
+		 *	Leer lineas hasta llegar al offset deseado o EOF
+		 */
+		char* buffer = malloc(TAM_LINEA+1);
+		while(fgets(buffer, TAM_LINEA+1, ptr_filebloque) != NULL && jndex <= desplazamiento){
+			free(buffer);
+			jndex++;
+
+		}
+		/*
+		 * Mientras que no llegue al EOF escribir una linea del buffer
+		 */
+		while(ptr_filebloque != EOF){
+			if(jndex <= metadata.tamanio_bloques){
+				fprintf(ptr_filebloque,"%s",mdj_interface->buffer);
+				mdj_interface->size--;
+			}
+			jndex++;
+
+		}
+		/**
+		 * Esto es porque ya se leyó a partir del offset y desplazamiento debe ser menor que (jndex = 1) para comenzar desde el inicio
+		 */
+		desplazamiento = -999;
+		/*
+		 * Cerrar bloque y liberar memoria
+		 */
+		fclose(ptr_filebloque);
+
+		free(path_bloque);
+		index++;
+	}
+}
 
 
 t_mdj_interface* crear_data_mdj_operacion(MensajeDinamico* mensaje){

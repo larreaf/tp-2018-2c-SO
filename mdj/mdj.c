@@ -21,7 +21,6 @@
 
 pthread_t thread_consola;
 t_bitarray* bitmap;
-pthread_mutex_t mutex_bitmap;
 cfg_mdj* configuracion;
 metadata_fifa metadata;
 
@@ -73,7 +72,7 @@ void* ejecutar_consola(void* arg){
 }*/
 
 int main(int argc, char **argv) {
-	pthread_mutex_init(&mutex_bitmap,NULL);
+
 
 	char* str;
 	int conexiones_permitidas[cantidad_tipos_procesos]={0}, err, header, retsocket=0;
@@ -198,14 +197,23 @@ int main(int argc, char **argv) {
             case OBTENER_DATOS:
                 log_info(logger, "Obteniendo data de operacion obtener datos...");
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
-
-                log_info(logger, "Obteniendo lineas de archivo %s...", data_operacion->path);
-            	lineas_obtenidas = obtener_datos(data_operacion);
-
-            	log_info(logger, "Enviando lineas...");
-            	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-            	agregar_string(mensaje_respuesta, lineas_obtenidas);
-            	enviar_mensaje(mensaje_respuesta);
+            	log_info(logger, "Validando que el archivo exista");
+            	if(validar_archivo(data_operacion) == true){
+            		log_info(logger, "Obteniendo lineas de archivo %s...", data_operacion->path);
+            		lineas_obtenidas = obtener_datos(data_operacion);
+			printf("%s\n", lineas_obtenidas);
+					log_info(logger, "Enviando lineas...");
+					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+					agregar_string(mensaje_respuesta, lineas_obtenidas);
+					enviar_mensaje(mensaje_respuesta);
+					log_info(logger, "Lineas enviadas!");
+            	}else{
+            		log_info(logger, "El archivo %s no existe",data_operacion->path);
+					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+					agregar_string(mensaje_respuesta,"Error");
+					enviar_mensaje(mensaje_respuesta);
+            	}
+            	rl_restore_prompt();
 				break;
 
             case GUARDAR_DATOS:

@@ -217,7 +217,19 @@ int main(int argc, char **argv) {
 				break;
 
             case GUARDAR_DATOS:
-            	//TODO guardar_datos(data_operacion);
+            	log_info(logger, "Obteniendo data de operacion obtener datos...");
+				data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+				log_info(logger, "Validando que el archivo exista");
+				if(validar_archivo(data_operacion) == true){
+					log_info(logger, "Guardando bytes en el archivo %s...", data_operacion->path);
+					int bytes_guardados = guardar_datos(data_operacion);
+					log_info(logger, "Se guardaron %d bytes", bytes_guardados);
+				} else{
+					log_info(logger, "El archivo %s no existe",data_operacion->path);
+					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+					agregar_string(mensaje_respuesta,"Error");
+					enviar_mensaje(mensaje_respuesta);
+				}
 				break;
 
             /*case STRING_CONSOLA_PROPIA:

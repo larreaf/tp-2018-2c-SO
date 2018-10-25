@@ -129,6 +129,9 @@ int main(int argc, char **argv) {
 
     //bitmap_clean();
 
+    char* bitmap_string = get_bitmap_to_string();
+    log_info(logger,"Bitmap: %s",bitmap_string);
+    free(bitmap_string);
     /*
     t_mdj_interface* mdj = malloc(sizeof(t_mdj_interface));
 	mdj->path = string_new();

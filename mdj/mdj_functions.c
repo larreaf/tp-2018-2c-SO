@@ -16,6 +16,25 @@ void bitmap_clean(){
 		bitarray_clean_bit(bitmap,i);
 	}
 }
+char* get_bitmap_to_string(){
+	int i = 0;
+	char* bitmap_string = string_new();
+	string_append(&bitmap_string,"[");
+	bool valor_bit;
+	int max = bitarray_get_max_bit(bitmap);
+	for(i = 0 ; i < max; i++ ){
+		valor_bit = bitarray_test_bit(bitmap,i);
+		(valor_bit) ?
+				string_append(&bitmap_string,"1"):
+				string_append(&bitmap_string,"0");
+		if(i < (max-1)){
+			string_append(&bitmap_string,",");
+		}
+
+	}
+	string_append(&bitmap_string,"]");
+	return bitmap_string;
+}
 
 char* obtener_path_archivo_fifa(){
 	char archivos[] = "Archivos";

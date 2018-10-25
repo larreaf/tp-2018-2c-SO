@@ -7,6 +7,9 @@ char* dir_fifa_rel;
 char* dir_actual;
 
 void consola_mdj(){
+	t_log* log_consola;
+	log_consola = log_create("mdj.log", "consola", true, log_level_from_string("info"));
+
 	dir_fifa_rel = string_new();
 	string_append(&dir_fifa_rel,"mnt/FIFA_FS/Archivos");
 	dir_mdj = get_current_dir_name();
@@ -61,6 +64,7 @@ void ejecutar_linea(char* linea){
 			break;
 
 		case EXIT:
+			exit(0);
 			break;
 
 		default:

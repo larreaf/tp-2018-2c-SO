@@ -5,10 +5,9 @@ char* dir_mdj;
 char* dir_fifa_abs;
 char* dir_fifa_rel;
 char* dir_actual;
+t_log* log_consola;
 
 void consola_mdj(){
-	t_log* log_consola;
-	log_consola = log_create("mdj.log", "consola", true, log_level_from_string("info"));
 
 	dir_fifa_rel = string_new();
 	string_append(&dir_fifa_rel,"mnt/FIFA_FS/Archivos");
@@ -44,11 +43,13 @@ void ejecutar_linea(char* linea){
 	operacionConsolaMDJ* op_consola = parsear_linea(linea);
 	switch (op_consola->accion){
 		case LS:
+
 			con_ls(op_consola->argumento);
 			destroy_operacion(op_consola);
 			break;
 
 		case CD:
+		//	log_info(log_consola,"cd %s",op_consola->argumento);
 			con_cd(op_consola->argumento);
 			destroy_operacion(op_consola);
 			break;
@@ -134,7 +135,7 @@ void con_ls(char* linea){
 
 void mover_dir(char* dir){
 
-	if(string_contains(dir,"..")){
+	if(string_equals_ignore_case(dir,"..")){
 		char** aux = string_split(dir_actual,"/");
 
 		int i = 0;
@@ -156,6 +157,8 @@ void mover_dir(char* dir){
 			index++;
 		}
 		free(aux);
+	}else if(string_equals_ignore_case(dir,".")){
+
 	}else{
 		char* arg = string_new();
 		string_append_with_format(&arg,"%s/%s%s", dir_fifa_rel, dir_actual, dir);
@@ -266,7 +269,7 @@ void con_cat(char* linea){
 		printf("%s",lineas_leidas);
 		free(lineas_leidas);
 	}else {
-		printf("El archivo no existe\n");
+		log_error(log_consola,"[cat] el archivo no existe");
 	}
 
 

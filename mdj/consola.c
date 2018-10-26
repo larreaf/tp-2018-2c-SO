@@ -5,7 +5,7 @@ char* dir_mdj;
 char* dir_fifa_abs;
 char* dir_fifa_rel;
 char* dir_actual;
-t_log* log_consola;
+
 
 void consola_mdj(){
 
@@ -43,13 +43,11 @@ void ejecutar_linea(char* linea){
 	operacionConsolaMDJ* op_consola = parsear_linea(linea);
 	switch (op_consola->accion){
 		case LS:
-
 			con_ls(op_consola->argumento);
 			destroy_operacion(op_consola);
 			break;
 
 		case CD:
-		//	log_info(log_consola,"cd %s",op_consola->argumento);
 			con_cd(op_consola->argumento);
 			destroy_operacion(op_consola);
 			break;
@@ -269,7 +267,7 @@ void con_cat(char* linea){
 		printf("%s",lineas_leidas);
 		free(lineas_leidas);
 	}else {
-		log_error(log_consola,"[cat] el archivo no existe");
+		printf("El archivo no existe\n");
 	}
 
 

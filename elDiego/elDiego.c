@@ -2,12 +2,16 @@
 #include <stdlib.h>
 #include <readline/readline.h>
 #include <string.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <commons/log.h>
 #include <ensalada/validacion.h>
 #include <ensalada/protocolo.h>
 #include <ensalada/servidor.h>
 #include <ensalada/mensaje.h>
 #include <ensalada/com.h>
+#include "mensajes_mdj.h"
 
 t_log* logger;
 
@@ -26,8 +30,10 @@ int main(int argc, char **argv) {
     int socket_mdj, socket_fm9, socket_safa, conexiones_permitidas[cantidad_tipos_procesos]={0};
     MensajeDinamico* nuevo_mensaje;
     ConexionesActivas conexiones_activas;
-    int id_dtb;
+    int id_dtb, resultado;
     char* path;
+    char* archivo;
+    MensajeDinamico* mensaje_dinamico;
 
 	validar_parametros(argc);
 	cfg_elDiego* configuracion = asignar_config(argv[1],elDiego);
@@ -53,25 +59,72 @@ int main(int argc, char **argv) {
 
         switch(nuevo_mensaje->header){
             case ABRIR_SCRIPT_CPU_DIEGO:
+                // CPU pide abrir un script
+                // aca habria que hacer un diccionario para asociar el path del script con el id del DTB que lo pidio
+
                 recibir_int(&id_dtb, nuevo_mensaje);
                 recibir_string(&path, nuevo_mensaje);
 
-                printf("Pedido abrir script de DTB %d\n", id_dtb);
-                printf("Path %s\n", path);
+                // enviar pedido a MDJ de abrir script
+                mensaje_dinamico = crear_mensaje_mdj_obtener_datos(socket_mdj, path, 0, 0, configuracion->transfer_size);
+
+                log_info(logger, "Enviando mensaje para abrir script %s para el DTB %d (%d bytes)", path, id_dtb,
+                        mensaje_dinamico->longitud);
+                enviar_mensaje(mensaje_dinamico);
+
+                // recibir respuesta de MDJ
+                mensaje_dinamico = recibir_mensaje(socket_mdj);
+                if(mensaje_dinamico->header != OBTENER_DATOS){
+                    log_error(logger, "Falla al recibir respuesta de obtener datos de MDJ");
+                    cerrar_elDiego(logger, configuracion, conexiones_activas);
+                }
+                recibir_string(&archivo, mensaje_dinamico);
+                destruir_mensaje(mensaje_dinamico);
+
+                log_info(logger, "Recibido script %s de MDJ para DTB %d, enviando datos a FM9", path, id_dtb);
+
+                // enviar mensaje a FM9 para cargar el script
+                mensaje_dinamico = crear_mensaje(CARGAR_SCRIPT,socket_fm9, 64);
+                agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                agregar_string(mensaje_dinamico, archivo);
+                enviar_mensaje(mensaje_dinamico);
+
+                // recibir respuesta de FM9
+                mensaje_dinamico = recibir_mensaje(socket_mdj);
+                if(mensaje_dinamico->header != RESULTADO_CARGAR_SCRIPT){
+                    log_error(logger, "Falla al recibir respuesta de cargar script en FM9");
+                    cerrar_elDiego(logger, configuracion, conexiones_activas);
+                }
+
+                recibir_int(&resultado, mensaje_dinamico);
+                destruir_mensaje(mensaje_dinamico);
+
+                // si da respuesta ok, notificar a safa para que desbloquee el dtb
+                if(resultado==1){
+                    log_info(logger, "Script para el DTB %d abierto con exito, notificando a SAFA...", id_dtb);
+
+                    mensaje_dinamico = crear_mensaje(PASAR_DTB_A_READY, socket_safa, 0);
+                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                    enviar_mensaje(mensaje_dinamico);
+                }else{
+                    log_warning(logger, "Error al cargar script %s para DTB %d", path, id_dtb);
+                    // TODO enviar error a SAFA para que aborte el DTB
+                }
+
                 break;
 
             case CONEXION_CERRADA:
                 switch(nuevo_mensaje->t_proceso){
                     case t_safa:
-                        log_warning(logger, "elDiego perdio conexion con SAFA, cerrando elDiego");
+                        log_error(logger, "elDiego perdio conexion con SAFA, cerrando elDiego");
                         cerrar_elDiego(logger, configuracion, conexiones_activas);
 
                     case t_fm9:
-                        log_warning(logger, "elDiego perdio conexion con FM9, cerrando elDiego");
+                        log_error(logger, "elDiego perdio conexion con FM9, cerrando elDiego");
                         cerrar_elDiego(logger, configuracion, conexiones_activas);
 
                     case t_mdj:
-                        log_warning(logger, "elDiego perdio conexion con MDJ, cerrando elDiego");
+                        log_error(logger, "elDiego perdio conexion con MDJ, cerrando elDiego");
                         cerrar_elDiego(logger, configuracion, conexiones_activas);
 
                     default:

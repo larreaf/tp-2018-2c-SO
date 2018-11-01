@@ -38,7 +38,7 @@
 		int offset;
 		int size;
 		char* buffer;
-		int cantidad_lineas;
+		int cantidad_bytes;
 	} t_mdj_interface;
 
 	typedef struct{
@@ -102,6 +102,13 @@
 	 * @RET:	void
 	 */
 	void bitmap_clean();
+
+	/*
+	 * @NAME:	get_bitmap_to_string
+	 * @DESC:	genera un string para visualizar el bitmap
+	 * @RET:	char*
+	 */
+	char* get_bitmap_to_string();
 
 
 #endif /* MDJ_FUNCTIONS_C_ */

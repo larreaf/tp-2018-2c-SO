@@ -61,10 +61,10 @@ algoritmo_planificacion string_to_alg(char* string){
 modo_memoria string_to_memory(char* string){
 	if(!strcmp(string,"SEG"))
 		return SEG;
-	if(!strcmp(string,"PAGINV"))
-		return PAGINV;
-	if(!strcmp(string,"SEGPAG"))
-		return SEGPAG;
+	if(!strcmp(string,"TPI"))
+		return TPI;
+	if(!strcmp(string,"SPA"))
+		return SPA;
 	return -1;
 }
 

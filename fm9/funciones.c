@@ -8,6 +8,7 @@ char string_inicializar_config_fm9[] = "Inicializando config de fm9...";
 char string_inicializar_conexiones_activas[] = "Inicializando conexiones_activas...";
 char string_inicializar_storage[] = "Inicializando storage según archivo de configuración...";
 char string_reinicializar_storage[] = "Error inicialización memoria, reintento de inicialización de storage...";
+char string_inicializar_diccionario_estado_lineas_storage[] = "Inicializando diccionario estado de lineas storage...";
 char string_reinicializar_storage_error[] = "Error inicialización memoria, se acabaron los intentos...";
 char string_desempaquetar_mje_diego_buscar[] = "Desempaquetando mensaje tipo buscar de Diego a FM9...";
 char string_datos_entrantes_diego_fm9_tipo_buscar[] = "Datos entrantes de Diego a fm9 tipo buscar %d...";
@@ -47,11 +48,26 @@ void inicializar_storage(){
 
 	log_info(logger, string_inicializar_storage);
 	base_storage = malloc(config_general_fm9->tamanio);
-
+	crear_diccionario_estado_lineas_storage();
 	if(base_storage == 0 && reintentar_inicializar_storage_ok){
 		reintentar_inicializar_storage();
 	}
 
+}
+
+void crear_diccionario_estado_lineas_storage(){
+	log_info(logger, string_inicializar_diccionario_estado_lineas_storage);
+	diccionario_estado_lineas_storage = dictionary_create();
+
+	incializar_diccionario_estado_lineas_storage();
+}
+
+void incializar_diccionario_estado_lineas_storage(){
+	int total_de_lineas_storage = (config_general_fm9->tamanio / config_general_fm9->max_linea);
+
+	for(int nro_linea = 0; nro_linea < total_de_lineas_storage; nro_linea ++){
+		dictionary_put(diccionario_estado_lineas_storage, nro_linea, 0);
+	}
 }
 
 void reintentar_inicializar_storage(){
@@ -188,8 +204,11 @@ char** modificar_en_memoria(data_mje_buscar* data){
 }
 
 char** buscar_en_memoria_seg(data_mje_buscar* data){
+	/*list_get(tabla_de_segmentos,data->idproceso);
+	// con la direccion fisica busco en memoria y retorno el valor que hay*/
 	return "hola";
 }
+
 char** buscar_en_memoria_tpi(data_mje_buscar* data){
 	return "hola";
 }
@@ -197,23 +216,32 @@ char** buscar_en_memoria_spa(data_mje_buscar* data){
 	return "hola";
 }
 
-char** escribir_en_memoria_seg(data_mje_buscar* data){
+char** escribir_en_memoria_seg(data_mje_escribir* data){
+	//todo agregar en memoria princial y obtener direccion del segmento
+	/*int idsegmento = 1;
+	int base_segmento = 100;
+	int desplazamiento = 50;
+	t_list *tabla_de_segmentos_por_proceso;
+	//todo estructura direccion fisica
+	list_add(tabla_de_segmentos_por_proceso, direccion_fisica(idsegmento, desplazamiento, base_segmento));
+	list_add(tabla_de_segmentos, data->idproceso, tabla_de_segmentos_por_proceso);*/
+	return 1;
+}
+
+char** escribir_en_memoria_tpi(data_mje_escribir* data){
 	return "hola";
 }
-char** escribir_en_memoria_tpi(data_mje_buscar* data){
-	return "hola";
-}
-char** escribir_en_memoria_spa(data_mje_buscar* data){
+char** escribir_en_memoria_spa(data_mje_escribir* data){
 	return "hola";
 }
 
-char** modificar_en_memoria_seg(data_mje_buscar* data){
+char** modificar_en_memoria_seg(data_mje_modificar* data){
 	return "hola";
 }
-char** modificar_en_memoria_tpi(data_mje_buscar* data){
+char** modificar_en_memoria_tpi(data_mje_modificar* data){
 	return "hola";
 }
-char** modificar_en_memoria_spa(data_mje_buscar* data){
+char** modificar_en_memoria_spa(data_mje_modificar* data){
 	return "hola";
 }
 

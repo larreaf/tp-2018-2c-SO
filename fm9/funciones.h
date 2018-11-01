@@ -39,14 +39,21 @@
 		char** contenido;
 	}data_mje_modificar;
 
+	typedef struct {
+		int idproceso;
+		t_list *direccion_fisica;
+	}segmento;
+
 /*
 	Variables globales
 */
 
 char *base_storage;
+t_dictionary *diccionario_estado_lineas_storage;
 t_log *logger;
 cfg_fm9 *config_general_fm9;
 ConexionesActivas conexiones_activas;
+t_list *tabla_de_segmentos;
 
 /*
 	Cabeceras funciones
@@ -101,6 +108,33 @@ void inicializar_storage();
 */
 
 void reintentar_inicializar_storage();
+
+/*
+	Creada: 02/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 02/11/2018
+	Usuario mod.: Julieta Ona
+
+	Crea un diccionario del estado de las lineas del storage con el par (nro_linea -> estado)
+	El estado puede ser 1 para ocupado y 0 para libre
+*/
+
+void crear_diccionario_estado_lineas_storage();
+
+/*
+	Creada: 02/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 02/11/2018
+	Usuario mod.: Julieta Ona
+
+	Crea un diccionario del estado de las lineas del storage con 0
+	Toma el tamaño total de la memoria y la divide en el valor de max de linea
+	que esta en el archivo config de fm9
+*/
+
+void incializar_diccionario_estado_lineas_storage();
 
 /*
 	Creada: 01/11/2018

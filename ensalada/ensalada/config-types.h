@@ -29,8 +29,8 @@
 
 	typedef enum{
 		SEG,
-		PAGINV,
-		SEGPAG
+		TPI,
+		SPA
 
 	}modo_memoria;
 

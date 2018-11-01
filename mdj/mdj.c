@@ -168,7 +168,9 @@ int main(int argc, char **argv) {
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
             	log_info(logger, "Creando archivo %s...", data_operacion->path);
             	int cantidad_bloques_asignados = crear_archivo(data_operacion);
-            	log_info(logger, "Bloques asignados al archivo: %d",cantidad_bloques_asignados);
+            	(cantidad_bloques_asignados > 0)?
+            			log_info(logger, "Bloques asignados al archivo: %d",cantidad_bloques_asignados):
+						log_error(logger,"Espacio insuficiente para crear el archivo");
             	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
             	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bloques_asignados );
             	log_info(logger,"Enviando respuesta...");

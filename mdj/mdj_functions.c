@@ -207,14 +207,14 @@ int crear_archivo(t_mdj_interface* mdj_interface){
 		if(!bitarray_test_bit(bitmap,index)){
 			bitarray_set_bit(bitmap,index);
 			string_append_with_format(&bloques,"%d",index);
-			if(cantidad_bloques!=1){
+			if(cantidad_bloques!=1 && index+1 < bitarray_get_max_bit(bitmap)){
 				string_append(&bloques,",");
 			}
 			cantidad_bloques--;
 			bytes_asignados += metadata.tamanio_bloques;
 		}
 	}
-	//TODO index >= bitarray_get_max_bit(bitmap) no alcanza el espacio para guardar el archivo
+
 	string_append(&bloques,"]");
 
 	/*
@@ -230,7 +230,13 @@ int crear_archivo(t_mdj_interface* mdj_interface){
 	/*
 	 * Inicializar los bloques
 	 */
-	inicializar_bloque(mdj_interface);
+	//TODO index >= bitarray_get_max_bit(bitmap) no alcanza el espacio para guardar el archivo
+	if(index >= bitarray_get_max_bit(bitmap)){
+		borrar_archivo(mdj_interface);
+		bytes_asignados = -1;
+	}else {
+		inicializar_bloque(mdj_interface);
+	}
 	/*
 	 * Liberar la memoria
 	 */

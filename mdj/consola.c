@@ -67,6 +67,9 @@ void ejecutar_linea(char* linea){
 			 /*
 			 * Visualizar bitmap
 			 */
+			if(string_equals_ignore_case(op_consola->argumento,"-c")){
+				 bitmap_clean();
+			 }
 			bitmap_string = get_bitmap_to_string();
 			printf("Bitmap: %s\n",bitmap_string);
 			free(bitmap_string);

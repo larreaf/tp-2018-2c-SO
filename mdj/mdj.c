@@ -73,9 +73,7 @@ void* ejecutar_consola(void* arg){
 
 int main(int argc, char **argv) {
 
-
-	char* str;
-	int conexiones_permitidas[cantidad_tipos_procesos]={0}, err, header, retsocket=0;
+	int conexiones_permitidas[cantidad_tipos_procesos]={0}, header, retsocket=0;
 	t_log* logger;
 	ConexionesActivas conexiones_activas;
 
@@ -117,18 +115,23 @@ int main(int argc, char **argv) {
 
     string_append_with_format(&bitmap_file,"%s/%s/%s",configuracion->punto_montaje,"Metadata","Bitmap.bin");
     int fd = open(bitmap_file,O_RDWR);
-    ftruncate(fd, SIZE_BITARRAY);
+//	ftruncate(fd, SIZE_BITARRAY);
 
     bitarray = mmap(0, SIZE_BITARRAY, PROT_WRITE, MAP_SHARED, fd, 0);
 
     if(bitarray == MAP_FAILED){
     	exit(5);
     }
-    bitmap = bitarray_create_with_mode(bitarray,SIZE_BITARRAY,LSB_FIRST);
+    /*
+     * El bitmap entregado para las pruebas intermedias es en MSB_FIRST
+     */
+    bitmap = bitarray_create_with_mode(bitarray,SIZE_BITARRAY,MSB_FIRST);
     log_info(logger, "Bitmap mapeado a memoria");
 
     //bitmap_clean();
-
+    /*
+     * Visualizar bitmap
+     */
     char* bitmap_string = get_bitmap_to_string();
     log_info(logger,"Bitmap: %s",bitmap_string);
     free(bitmap_string);

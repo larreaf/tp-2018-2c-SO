@@ -16,6 +16,7 @@
 		CD,
 		MD5_CONSOLA,
 		CAT,
+		BITMAP,
 		EXIT
 	} tipo_accion_consola_mdj;
 

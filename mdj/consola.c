@@ -41,6 +41,7 @@ void consola_mdj(){
 
 void ejecutar_linea(char* linea){
 	operacionConsolaMDJ* op_consola = parsear_linea(linea);
+	char* bitmap_string;
 	switch (op_consola->accion){
 		case LS:
 			con_ls(op_consola->argumento);
@@ -60,6 +61,15 @@ void ejecutar_linea(char* linea){
 		case CAT:
 			con_cat(op_consola->argumento);
 			destroy_operacion(op_consola);
+			break;
+
+		case BITMAP:
+			 /*
+			 * Visualizar bitmap
+			 */
+			bitmap_string = get_bitmap_to_string();
+			printf("Bitmap: %s\n",bitmap_string);
+			free(bitmap_string);
 			break;
 
 		case EXIT:
@@ -118,6 +128,8 @@ tipo_accion_consola_mdj string_to_accion(char* string){
 		retorno = MD5_CONSOLA;
 	if(!strcmp(string,"cat"))
 		retorno = CAT;
+	if(!strcmp(string,"bitmap"))
+		retorno = BITMAP;
 	if(!strcmp(string,"exit"))
 		retorno = EXIT;
 	return retorno;

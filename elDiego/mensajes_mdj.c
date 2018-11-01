@@ -29,8 +29,8 @@ MensajeDinamico* crear_mensaje_mdj_obtener_datos(int socket_destino, char* path,
 MensajeDinamico* crear_mensaje_mdj_guardar_datos(int socket_destino, char* path, int offset, int size, char* buffer, int particion){
     MensajeDinamico* mensaje_dinamico = crear_mensaje(GUARDAR_DATOS,socket_destino, particion);
     agregar_string(mensaje_dinamico, path);
-    agregar_dato(mensaje_dinamico,sizeof(int),&size);
     agregar_dato(mensaje_dinamico,sizeof(int),&offset);
+    agregar_dato(mensaje_dinamico,sizeof(int),&size);
     agregar_dato(mensaje_dinamico,strlen(buffer),buffer);
     return mensaje_dinamico;
 }

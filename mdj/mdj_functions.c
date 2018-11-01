@@ -246,8 +246,8 @@ char* obtener_datos(t_mdj_interface* mdj_interface){
 			size--;
 		}//while (lectura de bytes de un bloque)
 		if(i >= mdj_interface->offset && caracter == EOF){
-			string_append(&lineas_obtenidas,"\n");
-		}//if (agregar \n cuando es EOF)
+			//string_append(&lineas_obtenidas,"\n");
+		}//if (agregar \n cuando es EOF) TODO por ahora está comentado
 		/*
 		 * Cerrar bloque y liberar memoria
 		 */

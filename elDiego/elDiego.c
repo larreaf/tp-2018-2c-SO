@@ -65,11 +65,11 @@ int main(int argc, char **argv) {
                 recibir_int(&id_dtb, nuevo_mensaje);
                 recibir_string(&path, nuevo_mensaje);
 
+                log_info(logger, "Enviando mensaje para abrir script %s para el DTB %d (%d bytes)", path, id_dtb,
+                         nuevo_mensaje->longitud);
+
                 // enviar pedido a MDJ de abrir script
                 mensaje_dinamico = crear_mensaje_mdj_obtener_datos(socket_mdj, path, 0, 0, configuracion->transfer_size);
-
-                log_info(logger, "Enviando mensaje para abrir script %s para el DTB %d (%d bytes)", path, id_dtb,
-                        mensaje_dinamico->longitud);
                 enviar_mensaje(mensaje_dinamico);
 
                 // recibir respuesta de MDJ
@@ -79,9 +79,9 @@ int main(int argc, char **argv) {
                     cerrar_elDiego(logger, configuracion, conexiones_activas);
                 }
                 recibir_string(&archivo, mensaje_dinamico);
-                destruir_mensaje(mensaje_dinamico);
 
                 log_info(logger, "Recibido script %s de MDJ para DTB %d, enviando datos a FM9", path, id_dtb);
+                printf("Contenidos script:\n%s", archivo);
 
                 // enviar mensaje a FM9 para cargar el script
                 mensaje_dinamico = crear_mensaje(CARGAR_SCRIPT,socket_fm9, 64);

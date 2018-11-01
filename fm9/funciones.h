@@ -1,13 +1,3 @@
-/*
- * FM9_functions.h
- *
- *  Created on: 23/10/2018
- *
- */
-
-#ifndef FM9_FUNCIONES_C_
-#define FM9_FUNCIONES_C_
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/log.h>
@@ -16,42 +6,197 @@
 #include <signal.h>
 #include <string.h>
 #include <ensalada/com.h>
+#include <ensalada/config-types.h>
+#include <ensalada/mensaje.h>
 #include <ensalada/protocolo.h>
 #include <ensalada/servidor.h>
 #include <ensalada/validacion.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
-//Estructuras
+#ifndef FM9_FUNCIONES_H
+#define FM9_FUNCIONES_H
 
-typedef struct{
-    int id;
-    char* instruccion;
-    char* contenido;
-}DiegoAFM9;
+/*
+	Estructuras de datos
+*/
+	typedef struct {
+		int idmensaje;
+		int idproceso;
+		int direccion_logica;
+	}data_mje_buscar;
 
-//Funciones
+	typedef struct {
+		int idmensaje;
+		int idproceso;
+		char** contenido;
+	}data_mje_escribir;
 
-void inicializar_storage(t_log *logger,int tamanioMemoria);
+	typedef struct {
+		int idmensaje;
+		int idproceso;
+		int direccion_logica;
+		char** contenido;
+	}data_mje_modificar;
 
-void* asignar_memoria(t_log *logger, int tamanioMemoria);
+/*
+	Variables globales
+*/
 
-void desempaquetar_mensaje_diego_a_fm9(t_log *logger, MensajeDinamico* mensaje, DiegoAFM9* DiegoAFM9);
+char *base_storage;
+t_log *logger;
+cfg_fm9 *config_general_fm9;
+ConexionesActivas conexiones_activas;
 
-void segmentacion_pura();
+/*
+	Cabeceras funciones
+*/
 
-void tabla_de_paginas_invertidas();
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
 
-void segmentacion_paginada();
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
 
-void elegir_tipo_funcionamiento_memoria(t_log *logger,char unTipoFuncionamiento);
+	Inicializa la configuración de fm9 asociando arch de config
+*/
 
-char* buscar_en_memoria(t_log *logger, DiegoAFM9* datos_fm9);
+void inicializar_config_fm9(int argc, char **argv);
 
-int escribir_en_memoria(t_log *logger, DiegoAFM9* datos_fm9);
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
 
-int modificar_en_memoria(t_log *logger, DiegoAFM9* datos_fm9);
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Inicializa las conexiones activas con fm9
+*/
+
+void inicializar_conexiones_activas_fm9();
+
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Inicializa el storage (memoria real) según el arch de config
+*/
+
+void inicializar_storage();
+
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Realiza reintentos de inicialización de storage según
+	la variable "cantidad_de_reintentos_ini_storage"
+	Dice si hay error de asignación de memoria para el storage
+*/
+
+void reintentar_inicializar_storage();
+
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Ejecuta todas las inicializaciones de FM9, crea el log e informa como se
+	desarrollo la inicialización
+*/
+
+void inicializar_fm9(int argc, char **argv);
+
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Desempaqueta y retorna mensaje del tipo buscar
+*/
+
+data_mje_buscar* desempaquetar_mensaje_buscar(MensajeDinamico* mensaje);
+
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Desempaqueta y retorna mensaje del tipo escribir
+*/
+
+data_mje_buscar* desempaquetar_mensaje_escribir(MensajeDinamico* mensaje);
+
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Desempaqueta y retorna mensaje del tipo modificar
+*/
+
+data_mje_buscar* desempaquetar_mensaje_modificar(MensajeDinamico* mensaje);
+
+char** buscar_en_memoria(data_mje_buscar* data);
+
+char** escribir_en_memoria(data_mje_buscar* data);
+
+char** modificar_en_memoria(data_mje_buscar* data);
+
+char** buscar_en_memoria_seg(data_mje_buscar* data){
+	return "hola";
+}
+char** buscar_en_memoria_tpi(data_mje_buscar* data){
+	return "hola";
+}
+char** buscar_en_memoria_spa(data_mje_buscar* data){
+	return "hola";
+}
+
+char** escribir_en_memoria_seg(data_mje_buscar* data);
+char** escribir_en_memoria_tpi(data_mje_buscar* data);
+char** escribir_en_memoria_spa(data_mje_buscar* data);
+char** modificar_en_memoria_seg(data_mje_buscar* data);
+char** modificar_en_memoria_tpi(data_mje_buscar* data);
+char** modificar_en_memoria_spa(data_mje_buscar* data);
+
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
+
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Destruye variables del storage
+*/
 
 void destruir_storage();
 
-void cerrar_fm9(t_log* logger, cfg_fm9* configuracion, ConexionesActivas server);
+/*
+	Creada: 01/11/2018
+	Autor: Julieta Ona
 
-#endif /* FM9_FUNCIONES_C_ */
+	Ult.mod: 01/11/2018
+	Usuario mod.: Julieta Ona
+
+	Se encarga de cerrar las conexiones y de destruir todas las variables
+	en memoria de fm9
+*/
+
+void cerrar_fm9();
+
+#endif //FM9_FUNCIONES_H

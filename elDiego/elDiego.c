@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     int socket_mdj, socket_fm9, socket_safa, conexiones_permitidas[cantidad_tipos_procesos]={0};
     MensajeDinamico* nuevo_mensaje;
     ConexionesActivas conexiones_activas;
-    int id_dtb, resultado;
+    int id_dtb, resultado, cant_lineas;
     char* path;
     char* archivo;
     MensajeDinamico* mensaje_dinamico;
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
                 recibir_string(&archivo, mensaje_dinamico);
 
                 log_info(logger, "Recibido script %s de MDJ para DTB %d, enviando datos a FM9", path, id_dtb);
-                printf("Contenidos script:\n%s", archivo);
+                printf("Contenido script:\n%s", archivo);
 
                 // enviar mensaje a FM9 para cargar el script
                 mensaje_dinamico = crear_mensaje(CARGAR_SCRIPT,socket_fm9, 64);
@@ -90,7 +90,8 @@ int main(int argc, char **argv) {
                 enviar_mensaje(mensaje_dinamico);
 
                 // recibir respuesta de FM9
-                mensaje_dinamico = recibir_mensaje(socket_mdj);
+                log_info(logger, "Esperando respuesta de FM9...");
+                mensaje_dinamico = recibir_mensaje(socket_fm9);
                 if(mensaje_dinamico->header != RESULTADO_CARGAR_SCRIPT){
                     log_error(logger, "Falla al recibir respuesta de cargar script en FM9");
                     cerrar_elDiego(logger, configuracion, conexiones_activas);
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
                 destruir_mensaje(mensaje_dinamico);
 
                 // si da respuesta ok, notificar a safa para que desbloquee el dtb
-                if(resultado==1){
+                if(!resultado){
                     log_info(logger, "Script para el DTB %d abierto con exito, notificando a SAFA...", id_dtb);
 
                     mensaje_dinamico = crear_mensaje(PASAR_DTB_A_READY, socket_safa, 0);
@@ -110,6 +111,88 @@ int main(int argc, char **argv) {
                     log_warning(logger, "Error al cargar script %s para DTB %d", path, id_dtb);
                     // TODO enviar error a SAFA para que aborte el DTB
                 }
+
+                break;
+
+            case CREAR_ARCHIVO_CPU_DIEGO:
+                recibir_int(&id_dtb, nuevo_mensaje);
+                recibir_string(&path, nuevo_mensaje);
+                recibir_int(&cant_lineas, nuevo_mensaje);
+
+                log_info(logger, "Enviando mensaje a MDJ para crear archivo %s", path);
+                mensaje_dinamico = crear_mensaje_mdj_crear_archivo(socket_mdj, path, cant_lineas,
+                        configuracion->transfer_size);
+                enviar_mensaje(mensaje_dinamico);
+
+                log_info(logger, "Esperando respuesta de MDJ para crear archivo %s", path);
+                mensaje_dinamico = recibir_mensaje(socket_mdj);
+                if(mensaje_dinamico->header != CREAR_ARCHIVO){
+                    log_error(logger, "Falla al recibir respuesta de crear archivo en MDJ");
+                    cerrar_elDiego(logger, configuracion, conexiones_activas);
+                }
+                recibir_int(&cant_lineas, mensaje_dinamico);
+                destruir_mensaje(mensaje_dinamico);
+
+                if(cant_lineas) {
+                    mensaje_dinamico = crear_mensaje(DESBLOQUEAR_DTB, socket_safa, 0);
+                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                    enviar_mensaje(mensaje_dinamico);
+                }else{
+                    log_warning(logger, "Error al crear archivo para DTB %d", id_dtb);
+                    // TODO enviar error a SAFA para que aborte el DTB
+                }
+
+                break;
+
+            case ABRIR_ARCHIVO_CPU_DIEGO:
+                recibir_int(&id_dtb, nuevo_mensaje);
+                recibir_string(&path, nuevo_mensaje);
+
+                // enviar pedido a MDJ de abrir archivo
+                mensaje_dinamico = crear_mensaje_mdj_obtener_datos(socket_mdj, path, 0, 0, configuracion->transfer_size);
+                enviar_mensaje(mensaje_dinamico);
+
+                // recibir respuesta de MDJ
+                mensaje_dinamico = recibir_mensaje(socket_mdj);
+                if(mensaje_dinamico->header != OBTENER_DATOS){
+                    log_error(logger, "Falla al recibir respuesta de obtener datos de MDJ");
+                    cerrar_elDiego(logger, configuracion, conexiones_activas);
+                }
+                recibir_string(&archivo, mensaje_dinamico);
+
+                log_info(logger, "Recibido archivo %s de MDJ para DTB %d, enviando datos a FM9", path, id_dtb);
+                printf("Contenido archivo:\n%s", archivo);
+
+                // enviar mensaje a FM9 para cargar el archivo
+                mensaje_dinamico = crear_mensaje(CARGAR_ARCHIVO,socket_fm9, 64);
+                agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                agregar_string(mensaje_dinamico, archivo);
+                enviar_mensaje(mensaje_dinamico);
+
+                // recibir respuesta de FM9
+                log_info(logger, "Esperando respuesta de FM9...");
+                mensaje_dinamico = recibir_mensaje(socket_fm9);
+                if(mensaje_dinamico->header != RESULTADO_CARGAR_ARCHIVO){
+                    log_error(logger, "Falla al recibir respuesta de cargar archivo en FM9");
+                    cerrar_elDiego(logger, configuracion, conexiones_activas);
+                }
+
+                recibir_int(&resultado, mensaje_dinamico);
+                destruir_mensaje(mensaje_dinamico);
+
+                // si da respuesta ok, notificar a safa para que desbloquee el dtb y mandar direccion del archivo abierto
+                if(resultado>=0){
+                    log_info(logger, "Archivo para el DTB %d abierto con exito, notificando a SAFA...", id_dtb);
+                }else{
+                    log_warning(logger, "Error al abrir archivo %s para DTB %d", path, id_dtb);
+                    // TODO enviar error a SAFA para que aborte el DTB
+                }
+
+                mensaje_dinamico = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, socket_safa, 0);
+                agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                agregar_string(mensaje_dinamico, path);
+                agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
+                enviar_mensaje(mensaje_dinamico);
 
                 break;
 

@@ -158,9 +158,13 @@ int main(int argc, char **argv) {
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
         // sin retornar
         mensaje_recibido = esperar_mensajes(conexiones_activas);
-
+        /*
+         * Retardo convertido a microsegundos
+         */
+        usleep(configuracion->retardo * 1000);
         // cuando esperar_mensajes retorna, devuelve un MensajeEntrante que tiene como campos el socket que lo envio,
         // el header que se envio y el tipo de proceso que lo envio
+
         switch (mensaje_recibido->header) {
 
             // en cada case del switch se puede manejar cada header como se desee

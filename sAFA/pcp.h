@@ -37,6 +37,7 @@ void destruir_dtb(void*);
 DTB* crear_dtb(int, int);
 void resetear_dtb_dummy(DTB*);
 void desbloquear_dtb(PCP*, int);
+void desbloquear_dtb_cargando_archivo(PCP*, int, char*, int);
 void desbloquear_dtb_dummy(PCP*, int, char*);
 void agregar_a_ready(PCP*, DTB*);
 void agregar_a_block(PCP*, DTB*);

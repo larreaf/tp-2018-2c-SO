@@ -18,9 +18,9 @@ extern bool correr;
  * @return NULL cuando se recibe exit desde consola
  */
 void* ejecutar_servidor(void *arg){
-    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb;
+    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, direccion_archivo;
     MensajeDinamico* mensaje_respuesta, *mensaje;
-    char* str = NULL;
+    char* str = NULL, *path;
     DTB datos_dtb;
     DTB* dtb_seleccionado;
 
@@ -67,18 +67,30 @@ void* ejecutar_servidor(void *arg){
                         // los datos actualizados del DTB indican que produjo un error
                         // TODO abortar el DTB/GDT
 
-                        log_error(logger, "El DTB  %d (Path: %s) produjo un error (codigo %d), abortando",
-                                datos_dtb.id, datos_dtb.path_script, datos_dtb.status);
+                        log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando",
+                                datos_dtb.id, dtb_seleccionado->path_script, datos_dtb.status);
                         break;
                 }
                 break;
 
             case PASAR_DTB_A_READY:
                 recibir_int(&id_dtb, mensaje);
-                log_info(logger, "Pasando DTB %d de NEW a READY", id_dtb);
-
                 pasar_new_a_ready(plp, id_dtb);
 
+                break;
+
+            case DESBLOQUEAR_DTB:
+                recibir_int(&id_dtb, mensaje);
+                desbloquear_dtb(pcp, id_dtb);
+
+                break;
+
+            case RESULTADO_CARGAR_ARCHIVO:
+                recibir_int(&id_dtb, mensaje);
+                recibir_string(&path, mensaje);
+                recibir_int(&direccion_archivo, mensaje);
+
+                desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo);
                 break;
 
             case NUEVA_CONEXION:

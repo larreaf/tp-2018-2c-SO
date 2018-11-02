@@ -151,6 +151,32 @@ void desbloquear_dtb(PCP* pcp, int id_DTB){
     pthread_mutex_unlock(&(pcp->mutex_block));
 }
 
+void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int direccion_archivo){
+    DTB* dtb_seleccionado;
+    ArchivoAbierto* archivo_a_cargar = malloc(sizeof(ArchivoAbierto));
+
+    archivo_a_cargar->path = string_new();
+    string_append(&archivo_a_cargar->path, path);
+    archivo_a_cargar->direccion_memoria = direccion_archivo;
+
+    pthread_mutex_lock(&(pcp->mutex_block));
+    for(int i = 0; i<list_size(pcp->lista_block); i++){
+        dtb_seleccionado = list_get(pcp->lista_block, i);
+
+        if(dtb_seleccionado->id == id_DTB){
+            log_info(pcp->logger, "Cargando archivo %s en lista de archivos de DTB %d (direccion %d)",
+                    archivo_a_cargar->path, id_DTB, direccion_archivo);
+
+            list_add(dtb_seleccionado->archivos_abiertos, archivo_a_cargar);
+            log_info(pcp->logger, "Pasando DTB %d a READY", id_DTB);
+            agregar_a_ready(pcp, dtb_seleccionado);
+            list_remove(pcp->lista_block, i);
+            sem_post(&(pcp->semaforo_ready));
+        }
+    }
+    pthread_mutex_unlock(&(pcp->mutex_block));
+}
+
 /*!
  * Carga datos de un DTB en DTB dummy y lo pasa de block a ready
  * @param pcp PCP que contiene las listas block/ready y el DTB dummy

@@ -8,11 +8,13 @@
 Instruccion* parsear_linea(char* linea){
     Instruccion* retorno = malloc(sizeof(Instruccion));
     int argc;
-    char* word;
+    char* word, *copia_linea, *linea_final;
 
+    copia_linea = string_new();
+    string_append(&copia_linea, linea);
     retorno->argv = list_create();
 
-    for(argc = 0; (word = strsep(&linea, " ")) != NULL; argc++){
+    for(argc = 0; (word = strsep(&copia_linea, " ")) != NULL; argc++){
 
         if(!argc) {
             retorno->opcode = str_a_opcode(word);
@@ -21,6 +23,20 @@ Instruccion* parsear_linea(char* linea){
         list_add(retorno->argv, word);
     }
     retorno->argc = argc-1;
+
+    if(retorno->opcode == OP_ASIGNAR && retorno->argc > 3){
+        linea_final = string_new();
+
+        for(int i = 2; i<retorno->argc; i++){
+            string_append(&linea_final, (char*)list_get(retorno->argv, 2));
+            string_append(&linea_final, " ");
+            list_remove(retorno->argv, 2);
+        }
+        list_add(retorno->argv, linea_final);
+        retorno->argc = 3;
+    }
+
+    free(copia_linea);
     return retorno;
 }
 
@@ -29,12 +45,12 @@ Instruccion* parsear_linea(char* linea){
  * @param instruccion instruccion a destruir
  */
 void destruir_instruccion(Instruccion* instruccion){
-    list_destroy_and_destroy_elements(instruccion->argv, free);
+    list_destroy(instruccion->argv);
     free(instruccion);
 }
 
 int validar_cant_argumentos(Instruccion* instruccion){
-    if(instruccion->argc != cant_argumentos_instruccion[instruccion->opcode])
+    if(instruccion->argc == cant_argumentos_instruccion[instruccion->opcode])
         return 0;
     else
         return -1;

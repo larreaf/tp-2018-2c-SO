@@ -2,6 +2,7 @@
 #define CONFIG_TYPES_H_
 
 	#include <commons/collections/list.h>
+    #include <commons/config.h>
 	#define TAMANIO_STRING 25 // Tamanio maximo de los strings de los archivos de configuracion
 
 	typedef enum {

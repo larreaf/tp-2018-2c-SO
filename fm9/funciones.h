@@ -53,7 +53,9 @@ t_dictionary *diccionario_estado_lineas_storage;
 t_log *logger;
 cfg_fm9 *config_general_fm9;
 ConexionesActivas conexiones_activas;
-t_list *tabla_de_segmentos;
+t_dictionary *tabla_de_segmentos;
+
+tabla_de_segmentos = dictionary_create();
 
 /*
 	Cabeceras funciones

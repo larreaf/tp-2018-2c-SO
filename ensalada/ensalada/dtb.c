@@ -56,4 +56,3 @@ void enviar_datos_dtb(int socket_cpu, DTB* dtb){
     resultado = enviar_mensaje(mensaje);
     comprobar_error(resultado, "Error al enviar datos DTB al CPU");
 }
-

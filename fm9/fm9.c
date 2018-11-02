@@ -71,8 +71,8 @@ int main(int argc, char **argv) {
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_SCRIPT, mensaje->socket, 0);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
-                enviar_mensaje(mensaje_respuesta);
-                log_trace(logger, "Mensaje respuesta enviado correctamente");
+                if(enviar_mensaje(mensaje_respuesta)==1)
+                    log_trace(logger, "Mensaje respuesta enviado correctamente");
 
                 break;
 
@@ -85,7 +85,8 @@ int main(int argc, char **argv) {
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_LEER_LINEA, mensaje->socket, 0);
                 agregar_string(mensaje_respuesta, linea);
-                enviar_mensaje(mensaje_respuesta);
+                if(enviar_mensaje(mensaje_respuesta)==1)
+                    log_trace(logger, "Mensaje respuesta enviado correctamente");
 
                 break;
 
@@ -133,7 +134,11 @@ int main(int argc, char **argv) {
                     log_error(memoria->logger, "Falla en flush archivo");
                 }
 
-                printf("%s\n", string_archivo);
+                mensaje_respuesta = crear_mensaje(RESULTADO_FLUSH_ARCHIVO, mensaje->socket, 0);
+                agregar_string(mensaje_respuesta, string_archivo);
+
+                if(enviar_mensaje(mensaje_respuesta)==1)
+                    log_trace(logger, "Mensaje respuesta enviado correctamente");
 
                 break;
 

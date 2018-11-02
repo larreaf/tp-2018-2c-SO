@@ -5,12 +5,13 @@
 #include "consola.h"
 
 extern Memoria* memoria;
+extern int correr;
 
 void ejecutar_consola_fm9(void){
     char* linea_leida;
     int id_dtb;
 
-    while(1){
+    while(correr){
 
         linea_leida = readline(">");
 
@@ -25,4 +26,6 @@ void ejecutar_consola_fm9(void){
 
         free(linea_leida);
     }
+
+    return NULL;
 }

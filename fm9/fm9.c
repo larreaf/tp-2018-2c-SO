@@ -18,6 +18,8 @@
 #include "consola.h"
 
 Memoria* memoria;
+int correr = 1;
+pthread_t thread_consola;
 
 void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_activas, Memoria* memoria){
     log_info(logger, "Cerrando FM9...");
@@ -25,6 +27,9 @@ void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_act
     // destruir_conexiones_activas manda headers CONEXION_CERRADA a todos los clientes conectados para que se enteren y despues
     // cierra cada socket
     destruir_conexiones_activas(conexiones_activas);
+    correr = 0;
+    pthread_cancel(thread_consola);
+    pthread_join(thread_consola, NULL);
     log_destroy(logger);
     destroy_cfg(config, t_fm9);
     destruir_memoria(memoria);
@@ -38,7 +43,6 @@ int main(int argc, char **argv) {
     MensajeDinamico* mensaje, *mensaje_respuesta;
     ConexionesActivas conexiones_activas;
     MemoriaReal* storage;
-    pthread_t thread_consola;
 
     remove("fm9.log");
     t_log *logger = log_create("fm9.log", "fm9", true, log_level_from_string("info"));
@@ -56,7 +60,6 @@ int main(int argc, char **argv) {
     memoria = inicializar_memoria(storage, configuracion->modo);
 
     pthread_create(&thread_consola, NULL, (void*)ejecutar_consola_fm9, NULL);
-    pthread_detach(thread_consola);
 
     log_info(logger, "Listo");
 
@@ -77,7 +80,7 @@ int main(int argc, char **argv) {
                 else
                     log_error(logger, "Falla al cargar script en memoria (codigo error %d)", abs(resultado));
 
-                mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_SCRIPT, mensaje->socket, 0);
+                mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_SCRIPT, mensaje->socket, mensaje->particionado);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
                 if(enviar_mensaje(mensaje_respuesta)==1)
                     log_trace(logger, "Mensaje respuesta enviado correctamente");
@@ -91,7 +94,7 @@ int main(int argc, char **argv) {
                 linea = string_new();
                 string_append(&linea, leer_linea(memoria, id_dtb, numero_linea));
 
-                mensaje_respuesta = crear_mensaje(RESULTADO_LEER_LINEA, mensaje->socket, 0);
+                mensaje_respuesta = crear_mensaje(RESULTADO_LEER_LINEA, mensaje->socket, mensaje->particionado);
                 agregar_string(mensaje_respuesta, linea);
                 if(enviar_mensaje(mensaje_respuesta)==1)
                     log_trace(logger, "Mensaje respuesta enviado correctamente");
@@ -110,7 +113,7 @@ int main(int argc, char **argv) {
                 else
                     log_error(logger, "Falla al cargar archivo en memoria (codigo error %d)", abs(resultado));
 
-                mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, mensaje->socket, 0);
+                mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, mensaje->socket, mensaje->particionado);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
                 enviar_mensaje(mensaje_respuesta);
                 log_trace(logger, "Mensaje respuesta enviado correctamente");
@@ -142,7 +145,7 @@ int main(int argc, char **argv) {
                     log_error(memoria->logger, "Falla en flush archivo");
                 }
 
-                mensaje_respuesta = crear_mensaje(RESULTADO_FLUSH_ARCHIVO, mensaje->socket, 0);
+                mensaje_respuesta = crear_mensaje(RESULTADO_FLUSH_ARCHIVO, mensaje->socket, mensaje->particionado);
                 agregar_string(mensaje_respuesta, string_archivo);
 
                 if(enviar_mensaje(mensaje_respuesta)==1)

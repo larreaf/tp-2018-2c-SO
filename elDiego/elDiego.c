@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
                 printf("Contenido script:\n%s", archivo);
 
                 // enviar mensaje a FM9 para cargar el script
-                mensaje_dinamico = crear_mensaje(CARGAR_SCRIPT,socket_fm9, 64);
+                mensaje_dinamico = crear_mensaje(CARGAR_SCRIPT,socket_fm9, configuracion->transfer_size);
                 agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                 agregar_string(mensaje_dinamico, archivo);
                 enviar_mensaje(mensaje_dinamico);
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
                 printf("Contenido archivo:\n%s", archivo);
 
                 // enviar mensaje a FM9 para cargar el archivo
-                mensaje_dinamico = crear_mensaje(CARGAR_ARCHIVO,socket_fm9, 64);
+                mensaje_dinamico = crear_mensaje(CARGAR_ARCHIVO,socket_fm9, configuracion->transfer_size);
                 agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                 agregar_string(mensaje_dinamico, archivo);
                 enviar_mensaje(mensaje_dinamico);

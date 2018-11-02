@@ -59,8 +59,6 @@ int main(int argc, char **argv) {
     plp->cola_ready = pcp->cola_ready;
     plp->mutex_ready = pcp->mutex_ready;
 
-    //TODO esperar a conexion de CPU y elDiego
-
     err = pthread_create(&thread_servidor, NULL, &ejecutar_servidor, NULL);
     comprobar_error(err, "Error al iniciar thread servidor");
 

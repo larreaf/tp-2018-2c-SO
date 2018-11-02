@@ -398,7 +398,6 @@ void* ejecutar_pcp(void* arg){
     CPU* cpu_seleccionado;
 
     while(correr){
-        // TODO switch algoritmo planificador, por ahora es FIFO
 
         sem_wait(&(pcp->semaforo_ready));
         if(errno == EINTR)

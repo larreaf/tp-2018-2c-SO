@@ -85,8 +85,7 @@ int main(int argc, char **argv) {
 	                    // es un DTB comun
 
 	                    while(datos_dtb.quantum && resultado_instruccion == READY) {
-                            // TODO ir a buscar la linea indicada por el program counter y ejecutarla
-                            //linea = "";
+
                             mensaje_respuesta = crear_mensaje(LEER_LINEA, socket_fm9, 0);
                             agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.id));
                             agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.program_counter));

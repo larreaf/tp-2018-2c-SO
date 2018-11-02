@@ -73,8 +73,6 @@ void* ejecutar_servidor(void *arg){
 
                     default:
                         // los datos actualizados del DTB indican que produjo un error
-                        // TODO abortar el DTB/GDT
-
                         log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando",
                                 datos_dtb.id, dtb_seleccionado->path_script, datos_dtb.status);
                         destruir_dtb(dtb_seleccionado);

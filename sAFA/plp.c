@@ -135,7 +135,6 @@ void* ejecutar_plp(void* arg){
             break;
 
         pthread_mutex_lock(&(plp->mutex_new));
-        // TODO arreglar
         dtb_seleccionado = list_get(plp->lista_new, list_size(plp->lista_new)-1);
         pthread_mutex_unlock(&(plp->mutex_new));
 

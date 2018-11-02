@@ -1,5 +1,6 @@
 #include "consola.h"
 #include "mdj_functions.h"
+#include <unistd.h>
 
 char* dir_mdj;
 char* dir_fifa_abs;
@@ -12,7 +13,7 @@ void consola_mdj(){
     dir_fifa_rel = string_new();
     string_append(&dir_fifa_rel,"mnt/FIFA_FS/Archivos");
     dir_mdj = get_current_dir_name();
-    printf("%s\n", dir_mdj);
+    //printf("%s\n", dir_mdj);
     dir_fifa_abs = strdup(dir_mdj);
     string_append_with_format(&dir_fifa_abs,"/%s",dir_fifa_rel);
     dir_actual = string_new();
@@ -84,6 +85,7 @@ void ejecutar_linea(char* linea){
 			printf("Operacion incorrecta\n");
 			break;
 	}
+}
 
 operacionConsolaMDJ* parsear_linea(char* linea){
     operacionConsolaMDJ* retorno = malloc(sizeof(operacionConsolaMDJ));
@@ -283,7 +285,6 @@ void con_cat(char* linea){
     }else {
         printf("El archivo no existe\n");
     }
-
 
     free(mdj_interface->path);
     free(mdj_interface);

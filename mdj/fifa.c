@@ -14,20 +14,23 @@ void crear_bloques(char* pto_montaje, int cantidad_bloques){
 	}
 }
 
-void levantar_metadata(){
+void levantar_metadata(t_log* logger){
 
 	char metadata_ruta_relativa[] = "Metadata/Metadata.bin";
 	char* ruta = string_new();
 	string_append_with_format(&ruta,"%s/%s",configuracion->punto_montaje,metadata_ruta_relativa);
 //	printf("\nruta: %s\n",ruta);
 	t_config* metadata_cfg = config_create(ruta);
+	if(metadata_cfg == NULL){
+		log_error(logger, "No se encontró el archivo %s", ruta);
+		exit(-1);
+	}else{
+		metadata.tamanio_bloques = config_get_int_value(metadata_cfg,"TAMANIO_BLOQUES");
 
-	metadata.tamanio_bloques = config_get_int_value(metadata_cfg,"TAMANIO_BLOQUES");
+		metadata.cantidad_bloques = config_get_int_value(metadata_cfg,"CANTIDAD_BLOQUES");
 
-	metadata.cantidad_bloques = config_get_int_value(metadata_cfg,"CANTIDAD_BLOQUES");
-
-	crear_bloques(configuracion->punto_montaje, metadata.cantidad_bloques);
-
+		crear_bloques(configuracion->punto_montaje, metadata.cantidad_bloques);
+	}
 	//config_destroy(metadata_cfg);
 	free(ruta);
 

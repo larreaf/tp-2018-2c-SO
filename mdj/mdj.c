@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 
     log_info(logger, "Listo");
 
-    levantar_metadata();
+    levantar_metadata(logger);
 
     log_info(logger, "Archivo metadata leido");
 
@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
             	(cantidad_bloques_asignados > 0)?
             			log_info(logger, "Bloques asignados al archivo: %d",cantidad_bloques_asignados):
 						log_error(logger,"Espacio insuficiente para crear el archivo");
-            	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+            	mensaje_respuesta = crear_mensaje(CREAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
             	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bloques_asignados );
             	log_info(logger,"Enviando respuesta...");
 				enviar_mensaje(mensaje_respuesta);
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
                 (borrar == 0)?
                 log_info(logger,"Archivo %s Borrado", data_operacion->path) :
                 log_error(logger,"Error al intentar borrar el archivo %s, data_operacion->path");
-                mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
+                mensaje_respuesta = crear_mensaje(BORRAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
                 agregar_dato(mensaje_respuesta,sizeof(int),&borrar);
                 log_info(logger,"Enviando respuesta...");
                 enviar_mensaje(mensaje_respuesta);
@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
                      * El Archivo no existe
                      */
                     log_error(logger, "El archivo %s no existe",data_operacion->path);
-                    mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+                    mensaje_respuesta = crear_mensaje(GUARDAR_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
                     int rta = 0;
                     agregar_dato(mensaje_respuesta,sizeof(int),&rta);
                     log_info(logger,"Enviando respuesta...");
@@ -300,7 +300,9 @@ int main(int argc, char **argv) {
             default:
                 // TODO aca habria que programar que pasa si se manda un header invalido
                 break;
+
         }
+       destruir_mensaje(mensaje_recibido);
     }
 }
 

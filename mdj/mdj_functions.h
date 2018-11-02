@@ -94,7 +94,7 @@ int borrar_archivo(t_mdj_interface* mdj_interface);
  * @DESC:	lee el archivo Metadata.bin de fifa y lo guarda en una variable global
  * @RET:	void
  */
-void levantar_metadata();
+void levantar_metadata(t_log* logger);
 
 /*
  * @NAME:	bitmap_clean

@@ -14,6 +14,7 @@ void desempaquetar_dtb(MensajeDinamico* mensaje, DTB* dtb){
     recibir_int(&dtb->program_counter, mensaje);
     recibir_int(&dtb->inicializado, mensaje);
     recibir_int((int*)&dtb->status, mensaje);
+    recibir_int(&dtb->quantum, mensaje);
     recibir_string(&dtb->path_script, mensaje);
     recibir_int(&size_lista_archivos, mensaje);
 
@@ -42,6 +43,7 @@ void enviar_datos_dtb(int socket_cpu, DTB* dtb){
     agregar_dato(mensaje, sizeof(int), &(dtb->program_counter));
     agregar_dato(mensaje, sizeof(int), &(dtb->inicializado));
     agregar_dato(mensaje, sizeof(int), &(dtb->status));
+    agregar_dato(mensaje, sizeof(int), &(dtb->quantum));
     agregar_string(mensaje, dtb->path_script);
 
     agregar_dato(mensaje, sizeof(int), &tamanio_lista_archivos_abiertos);

@@ -83,8 +83,6 @@ void pasar_new_a_ready(PLP* plp, int id_dtb){
             log_info(logger, "Pasando DTB %d de NEW a READY...", id_dtb);
             agregar_a_ready(pcp, dtb_seleccionado);
             eliminar_de_new(plp, id_dtb);
-            // TODO semaforo ready
-            sem_post(&(pcp->semaforo_ready));
         }
     }
 }
@@ -93,11 +91,14 @@ void pasar_new_a_ready(PLP* plp, int id_dtb){
  * Imprime el estado de la lista NEW
  * @param plp PLP que contiene la lista NEW
  */
-void imprimir_estado(PLP* plp){
-    pthread_mutex_lock(&(plp->mutex_new));
-    int lista_size = list_size(plp->lista_new);
+void imprimir_estado_plp(PLP* plp){
     DTB* dtb_seleccionado;
+    int lista_size;
 
+    pthread_mutex_lock(&(plp->mutex_new));
+    lista_size = list_size(plp->lista_new);
+
+    printf("----------------\n");
     printf("Estado cola NEW: %d DTBs\n", lista_size);
 
     if(lista_size) {
@@ -109,6 +110,7 @@ void imprimir_estado(PLP* plp){
         }
         printf("\n");
     }
+    printf("----------------\n");
     pthread_mutex_unlock(&(plp->mutex_new));
 }
 
@@ -133,12 +135,11 @@ void* ejecutar_plp(void* arg){
             break;
 
         pthread_mutex_lock(&(plp->mutex_new));
-        dtb_seleccionado = list_get(plp->lista_new, 0);
+        // TODO arreglar
+        dtb_seleccionado = list_get(plp->lista_new, list_size(plp->lista_new)-1);
         pthread_mutex_unlock(&(plp->mutex_new));
 
         desbloquear_dtb_dummy(pcp, dtb_seleccionado->id, dtb_seleccionado->path_script);
-
-        // TODO sacar esto y codear logica para elegir dtb de NEW y pasarlo a READY
     }
 
     return NULL;

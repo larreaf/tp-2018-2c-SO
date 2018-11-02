@@ -77,7 +77,6 @@ int main(int argc, char **argv) {
     err = pthread_create(&thread_plp, NULL, &ejecutar_plp, plp);
     comprobar_error(err, "Error al iniciar thread PLP");
 
-    sleep(1);
     log_info(logger, "Listo");
 
     // cerrar todos los hilos

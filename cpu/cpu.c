@@ -35,6 +35,7 @@ int main(int argc, char **argv) {
 	MensajeDinamico *peticion_abrir_script, *mensaje, *mensaje_respuesta;
     char* linea = "";
 
+    remove("cpu.log");
     logger = log_create("cpu.log", "cpu", true, log_level_from_string("info"));
 
     validar_parametros(argc);
@@ -77,16 +78,14 @@ int main(int argc, char **argv) {
                         else
                             log_error(logger, "Fallo al enviar peticion de abrir script");
 
-                        datos_dtb.status = BLOQUEAR;
-                        enviar_datos_dtb(socket_safa, &datos_dtb);
+                        resultado_instruccion = BLOQUEAR;
                         break;
 
 	                case 1:
 	                    // es un DTB comun
 
-	                    while(resultado_instruccion == READY) {
-                            // TODO ir a buscar la linea indicada por el program counter y ejecutarla
-                            //linea = "";
+	                    while(datos_dtb.quantum && resultado_instruccion == READY) {
+
                             mensaje_respuesta = crear_mensaje(LEER_LINEA, socket_fm9, 0);
                             agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.id));
                             agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.program_counter));
@@ -97,7 +96,6 @@ int main(int argc, char **argv) {
                             mensaje_respuesta = recibir_mensaje(socket_fm9);
                             recibir_string(&linea, mensaje_respuesta);
 
-                            log_info(logger, "Linea leida: %s", linea);
                             datos_dtb.program_counter++;
 
                             // los comentarios comienzan con #
@@ -108,9 +106,11 @@ int main(int argc, char **argv) {
                                 break;
                             }
 
-
+                            log_info(logger, "Quantum restante: %d | Ejecutando linea: %s", datos_dtb.quantum, linea);
                             resultado_instruccion = ejecutar_linea(&datos_dtb, linea,
                                     (unsigned int) configuracion->retardo);
+
+                            datos_dtb.quantum--;
                         }
 
                         if(resultado_instruccion == -1){
@@ -125,9 +125,7 @@ int main(int argc, char **argv) {
 
                             resultado_instruccion = DTB_EXIT;
                         }
-                            
-	                    datos_dtb.status = resultado_instruccion;
-	                    enviar_datos_dtb(socket_safa, &datos_dtb);
+
                         break;
 
                     default:
@@ -135,6 +133,10 @@ int main(int argc, char **argv) {
                         resultado_instruccion = DTB_EXIT;
                         break;
 	            }
+	            log_info(logger, "Volviendo DTB %d a CPU con quantum restante %d y status %d", datos_dtb.id,
+	                    datos_dtb.quantum, datos_dtb.status);
+                datos_dtb.status = resultado_instruccion;
+                enviar_datos_dtb(socket_safa, &datos_dtb);
 
 	            break;
 

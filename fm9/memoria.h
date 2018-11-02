@@ -41,7 +41,10 @@ typedef struct {
 }NodoListaTablasSegmentos;
 
 MemoriaReal* inicializar_memoria_real(int, int);
+void destruir_memoria_real(MemoriaReal*);
+void destruir_tabla_segmentos(void*);
 Memoria* inicializar_memoria(MemoriaReal*, int);
+void destruir_memoria(Memoria*);
 void escribir_linea(MemoriaReal*, char*, int);
 void escribir_archivo_en_storage(MemoriaReal*, char*, int);
 void modificar_linea_storage(MemoriaReal*, int, int, char*);
@@ -54,5 +57,6 @@ char* leer_linea(Memoria*, int, int);
 int modificar_linea_archivo(Memoria*, int, int, char*);
 char* flush_archivo(Memoria*, int, int);
 int cerrar_archivo(Memoria*, int, int);
+void dump(Memoria*, int);
 
 #endif //FM9_MEMORIA_H

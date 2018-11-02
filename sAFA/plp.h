@@ -26,7 +26,7 @@ void destruir_plp(PLP*);
 void eliminar_de_new(PLP *, int);
 void agregar_a_new(PLP*, DTB*);
 void pasar_new_a_ready(PLP*, int);
-void imprimir_estado(PLP*);
+void imprimir_estado_plp(PLP*);
 void* ejecutar_plp(void*);
 
 #endif //SAFA_PLP_H

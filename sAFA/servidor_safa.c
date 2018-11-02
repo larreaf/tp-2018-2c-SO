@@ -18,7 +18,7 @@ extern bool correr;
  * @return NULL cuando se recibe exit desde consola
  */
 void* ejecutar_servidor(void *arg){
-    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, direccion_archivo;
+    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, direccion_archivo, codigo_error;
     MensajeDinamico* mensaje_respuesta, *mensaje;
     char* str = NULL, *path;
     DTB datos_dtb;
@@ -42,13 +42,21 @@ void* ejecutar_servidor(void *arg){
                 // un CPU termino de ejecutar instrucciones y manda los datos del DTB actualizados
 
                 desempaquetar_dtb(mensaje, &datos_dtb);
-                log_info(logger, "Recibidos datos de DTB %d", datos_dtb.id);
+
+                if(datos_dtb.inicializado)
+                    log_info(logger, "Recibidos datos de DTB %d", datos_dtb.id);
+                else
+                    log_info(logger, "Recibidos datos de DTB DUMMY");
+
                 dtb_seleccionado = conseguir_y_actualizar_dtb(pcp, &datos_dtb);
                 free(datos_dtb.path_script);
                 decrementar_procesos_asignados_cpu(conexiones_activas, mensaje->socket);
                 sem_post(&cantidad_cpus);
 
                 switch(datos_dtb.status){
+                    case READY:
+                        agregar_a_ready(pcp, dtb_seleccionado);
+                        break;
 
                     case BLOQUEAR:
                         // los datos actualizados del DTB indican que debe ser bloqueado
@@ -58,17 +66,17 @@ void* ejecutar_servidor(void *arg){
 
                     case DTB_EXIT:
                         // los datos actualizados del DTB indican que debe ser pasado a exit
-                        log_info(logger, "DTB %d devolvio EXIT", datos_dtb.id);
-
-                        // TODO destruir DTB y signal multiprogramacion
+                        log_info(logger, "DTB %d devolvio EXIT, cerrando DTB", datos_dtb.id);
+                        destruir_dtb(dtb_seleccionado);
+                        sem_post(&plp->semaforo_multiprogramacion);
                         break;
 
                     default:
                         // los datos actualizados del DTB indican que produjo un error
-                        // TODO abortar el DTB/GDT
-
                         log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando",
                                 datos_dtb.id, dtb_seleccionado->path_script, datos_dtb.status);
+                        destruir_dtb(dtb_seleccionado);
+                        sem_post(&plp->semaforo_multiprogramacion);
                         break;
                 }
                 break;
@@ -83,6 +91,42 @@ void* ejecutar_servidor(void *arg){
                 recibir_int(&id_dtb, mensaje);
                 desbloquear_dtb(pcp, id_dtb);
 
+                break;
+
+            case ABORTAR_DTB_DE_NEW:
+                recibir_int(&id_dtb, mensaje);
+                recibir_int(&codigo_error, mensaje);
+                dtb_seleccionado = NULL;
+
+                pthread_mutex_lock(&(plp->mutex_new));
+                for(int i = 0; i<list_size(plp->lista_new); i++) {
+                    dtb_seleccionado = list_get(plp->lista_new, i);
+
+                    if (dtb_seleccionado->id == id_dtb){
+                        list_remove(plp->lista_new, i);
+                        break;
+                    }
+                }
+                if(dtb_seleccionado == NULL) {
+                    log_error(logger, "Error al abortar DTB %d de NEW", id_dtb);
+                    break;
+                }
+                pthread_mutex_unlock(&(plp->mutex_new));
+
+                log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando", id_dtb,
+                          dtb_seleccionado->path_script, abs(codigo_error));
+                destruir_dtb(dtb_seleccionado);
+                break;
+
+            case ABORTAR_DTB:
+                recibir_int(&id_dtb, mensaje);
+                recibir_int(&codigo_error, mensaje);
+
+                dtb_seleccionado = tomar_de_exec(pcp, id_dtb);
+                log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando", id_dtb,
+                        dtb_seleccionado->path_script, codigo_error);
+                destruir_dtb(dtb_seleccionado);
+                sem_post(&plp->semaforo_multiprogramacion);
                 break;
 
             case RESULTADO_CARGAR_ARCHIVO:

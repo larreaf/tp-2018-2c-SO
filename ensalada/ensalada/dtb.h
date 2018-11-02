@@ -20,6 +20,7 @@ typedef struct{
     char* path_script;
     int program_counter;
     int inicializado;
+    int quantum;
     t_accion_post_instruccion status;
     t_list* archivos_abiertos;
 }DTB;

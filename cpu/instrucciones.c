@@ -97,6 +97,7 @@ int in_flush(DTB* dtb, char* path){
     peticion_flush = crear_mensaje(FLUSH_ARCHIVO, socket_elDiego, 0);
     agregar_dato(peticion_flush, sizeof(int), &dtb->id);
     agregar_dato(peticion_flush, sizeof(int), &nodo_aux->direccion_memoria);
+    agregar_string(peticion_flush, nodo_aux->path);
     enviar_mensaje(peticion_flush);
 
     return READY;

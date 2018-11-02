@@ -43,7 +43,8 @@ typedef enum {
 	LEER_LINEA,
 	RESULTADO_LEER_LINEA,
 	CARGAR_ARCHIVO,
-	FLUSH_ARCHIVO
+	FLUSH_ARCHIVO,
+	RESULTADO_FLUSH_ARCHIVO
 }protocolo_header;
 
 typedef enum {

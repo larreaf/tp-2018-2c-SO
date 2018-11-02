@@ -1,6 +1,7 @@
 #!/bin/bash
-cd ../../..
+cd ../..
 git clone https://github.com/sisoputnfrba/so-commons-library
+cd so-commons-library
 make
 sudo make install
 ls -l /usr/include/commons

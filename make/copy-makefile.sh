@@ -1,6 +1,4 @@
 #!/bin/bash
-dir = $PWD
-
 
 declare -a arr=("mdj" "fm9" "cpu" "elDiego" "sAFA")
 

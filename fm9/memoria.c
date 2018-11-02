@@ -31,9 +31,9 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo){
 
     if(modo == SEG)
         memoria->logger = log_create("fm9.log", "MemoriaSegmentada", true, log_level_from_string("info"));
-    else if(modo == SEGPAG)
+    else if(modo == SPA)
         memoria->logger = log_create("fm9.log", "MemoriaSegmentacionPaginada", true, log_level_from_string("info"));
-    else if(modo == PAGINV)
+    else if(modo == TPI)
         memoria->logger = log_create("fm9.log", "MemoriaPaginacionInvertida", true, log_level_from_string("info"));
 
     log_info(memoria->logger, "Memoria inicializada correctamente");

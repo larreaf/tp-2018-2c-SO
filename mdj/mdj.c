@@ -73,31 +73,31 @@ void* ejecutar_consola(void* arg){
 
 int main(int argc, char **argv) {
 
-	int conexiones_permitidas[cantidad_tipos_procesos]={0}, header, retsocket=0;
-	t_log* logger;
-	ConexionesActivas conexiones_activas;
+    int conexiones_permitidas[cantidad_tipos_procesos]={0}, header, retsocket=0;
+    t_log* logger;
+    ConexionesActivas conexiones_activas;
 
-	MensajeDinamico* mensaje_recibido;
-	MensajeDinamico* mensaje_respuesta;
+    MensajeDinamico* mensaje_recibido;
+    MensajeDinamico* mensaje_respuesta;
 
     validar_parametros(argc);
     logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
     configuracion = asignar_config(argv[1],mdj);
     log_info(logger, "Archivo de configuracion correcto");
     if(configuracion->punto_montaje[0] == '/'){
-    	configuracion->punto_montaje[0] = ' ';
-		string_trim(&configuracion->punto_montaje);
+        configuracion->punto_montaje[0] = ' ';
+        string_trim(&configuracion->punto_montaje);
     }
     if(configuracion->punto_montaje[string_length(configuracion->punto_montaje)-1] == '/'){
-        	configuracion->punto_montaje[string_length(configuracion->punto_montaje)-1] = ' ';
-    		string_trim(&configuracion->punto_montaje);
-	}
-	// conexiones_permitidas es un array de ints que indica que procesos se pueden conectar, o en el caso de t_cpu,
-	// cuantas conexiones de cpu se van a aceptar
-	// en este caso permitimos que se nos conecte el diego y nuestra propia consola
-	conexiones_permitidas[t_elDiego] = 1;
-	conexiones_permitidas[t_consola_mdj] = 1;
-	conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
+        configuracion->punto_montaje[string_length(configuracion->punto_montaje)-1] = ' ';
+        string_trim(&configuracion->punto_montaje);
+    }
+    // conexiones_permitidas es un array de ints que indica que procesos se pueden conectar, o en el caso de t_cpu,
+    // cuantas conexiones de cpu se van a aceptar
+    // en este caso permitimos que se nos conecte el diego y nuestra propia consola
+    conexiones_permitidas[t_elDiego] = 1;
+    conexiones_permitidas[t_consola_mdj] = 1;
+    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
 
 
     log_info(logger, "Listo");
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     bitarray = mmap(0, SIZE_BITARRAY, PROT_WRITE, MAP_SHARED, fd, 0);
 
     if(bitarray == MAP_FAILED){
-    	exit(5);
+        exit(5);
     }
     /*
      * El bitmap entregado para las pruebas intermedias es en MSB_FIRST
@@ -143,17 +143,17 @@ int main(int argc, char **argv) {
 	//crear_archivo(mdj);
 	//borrar_archivo(mdj);*/
 
-	pthread_create(&thread_consola, NULL, (void*)consola_mdj, NULL);
+    pthread_create(&thread_consola, NULL, (void*)consola_mdj, NULL);
     pthread_detach(thread_consola);
     /**
      * WHILE
      */
     while (1){
-    	t_mdj_interface* data_operacion;
+        t_mdj_interface* data_operacion;
 
-    	//solo para obtener datos
-    	char* lineas_obtenidas;
-    	//solo para borrar_archivo
+        //solo para obtener datos
+        char* lineas_obtenidas;
+        //solo para borrar_archivo
 
         // bloquea hasta recibir un MensajeEntrante y lo retorna, ademas internamente maneja handshakes y desconexiones
         // sin retornar
@@ -165,127 +165,127 @@ int main(int argc, char **argv) {
 
             // en cada case del switch se puede manejar cada header como se desee
             case CREAR_ARCHIVO:
-            	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
-            	log_info(logger, "Creando archivo %s...", data_operacion->path);
-            	int cantidad_bloques_asignados = crear_archivo(data_operacion);
-            	log_info(logger, "Bloques asignados al archivo: %d",cantidad_bloques_asignados);
-            	mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-            	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bloques_asignados );
-            	log_info(logger,"Enviando respuesta...");
-				enviar_mensaje(mensaje_respuesta);
-				log_info(logger,"Respuesta enviada...");
+                data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+                log_info(logger, "Creando archivo %s...", data_operacion->path);
+                int cantidad_bloques_asignados = crear_archivo(data_operacion);
+                log_info(logger, "Bloques asignados al archivo: %d",cantidad_bloques_asignados);
+                mensaje_respuesta = crear_mensaje(CREAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
+                agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bloques_asignados );
+                log_info(logger,"Enviando respuesta...");
+                enviar_mensaje(mensaje_respuesta);
+                log_info(logger,"Respuesta enviada...");
                 break;
 
             case BORRAR_ARCHIVO:
-            	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
-            	log_info(logger, "Borrando archivo %s...", data_operacion->path);
-				int borrar = borrar_archivo(data_operacion);
-				(borrar == 0)?
-						log_info(logger,"Archivo %s Borrado", data_operacion->path) :
-						log_error(logger,"Error al intentar borrar el archivo %s, data_operacion->path");
-				mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
-				agregar_dato(mensaje_respuesta,sizeof(int),&borrar);
-				log_info(logger,"Enviando respuesta...");
-				enviar_mensaje(mensaje_respuesta);
-				log_info(logger,"Respuesta enviada...");
-            	break;
+                data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+                log_info(logger, "Borrando archivo %s...", data_operacion->path);
+                int borrar = borrar_archivo(data_operacion);
+                (borrar == 0)?
+                log_info(logger,"Archivo %s Borrado", data_operacion->path) :
+                log_error(logger,"Error al intentar borrar el archivo %s, data_operacion->path");
+                mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
+                agregar_dato(mensaje_respuesta,sizeof(int),&borrar);
+                log_info(logger,"Enviando respuesta...");
+                enviar_mensaje(mensaje_respuesta);
+                log_info(logger,"Respuesta enviada...");
+                break;
 
             case VALIDAR_ARCHIVO:
-            	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
-            	log_info(logger, "Validando archivo %s...", data_operacion->path);
-            	bool respuesta = validar_archivo(data_operacion);
-            	respuesta ?
-            			log_info(logger, "El archivo %s existe ", data_operacion->path) :
-						log_error(logger, "El archivo %s no existe ", data_operacion->path);
-            	mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
-            	agregar_dato(mensaje_respuesta,sizeof(bool),&respuesta);
-            	enviar_mensaje(mensaje_respuesta);
-				break;
+                data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+                log_info(logger, "Validando archivo %s...", data_operacion->path);
+                bool respuesta = validar_archivo(data_operacion);
+                respuesta ?
+                log_info(logger, "El archivo %s existe ", data_operacion->path) :
+                log_error(logger, "El archivo %s no existe ", data_operacion->path);
+                mensaje_respuesta = crear_mensaje(VALIDAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
+                agregar_dato(mensaje_respuesta,sizeof(bool),&respuesta);
+                enviar_mensaje(mensaje_respuesta);
+                break;
 
             case OBTENER_DATOS:
                 log_info(logger, "Obteniendo data de operacion obtener datos...");
-            	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
-            	log_info(logger, "Validando que el archivo exista");
-            	if(validar_archivo(data_operacion) == true){
-            		/**
-					 * El Archivo si existe
-					 */
-            		log_info(logger, "Obteniendo lineas de archivo %s...", data_operacion->path);
-            		lineas_obtenidas = obtener_datos(data_operacion);
-			//printf("%s\n", lineas_obtenidas);
-					log_info(logger, "Enviando lineas...");
-					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-					agregar_string(mensaje_respuesta, lineas_obtenidas);
-					enviar_mensaje(mensaje_respuesta);
-					log_info(logger, "Lineas enviadas!");
-            	}else{
-            		/**
-					 * El Archivo no existe
-					 */
-            		log_error(logger, "El archivo %s no existe",data_operacion->path);
-					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-					int rta = 0;
-					agregar_dato(mensaje_respuesta,sizeof(int),&rta);
-					log_info(logger,"Enviando respuesta...");
-					enviar_mensaje(mensaje_respuesta);
-					log_info(logger,"Respuesta enviada...");
-            	}
-            	rl_restore_prompt();
-				break;
+                data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+                log_info(logger, "Validando que el archivo exista");
+                if(validar_archivo(data_operacion) == true){
+                    /**
+                     * El Archivo si existe
+                     */
+                    log_info(logger, "Obteniendo lineas de archivo %s...", data_operacion->path);
+                    lineas_obtenidas = obtener_datos(data_operacion);
+                    //printf("%s\n", lineas_obtenidas);
+                    log_info(logger, "Enviando lineas...");
+                    mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+                    agregar_string(mensaje_respuesta, lineas_obtenidas);
+                    enviar_mensaje(mensaje_respuesta);
+                    log_info(logger, "Lineas enviadas!");
+                }else{
+                    /**
+                     * El Archivo no existe
+                     */
+                    log_error(logger, "El archivo %s no existe",data_operacion->path);
+                    mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+                    int rta = 0;
+                    agregar_dato(mensaje_respuesta,sizeof(int),&rta);
+                    log_info(logger,"Enviando respuesta...");
+                    enviar_mensaje(mensaje_respuesta);
+                    log_info(logger,"Respuesta enviada...");
+                }
+                rl_restore_prompt();
+                break;
 
             case GUARDAR_DATOS:
-            	log_info(logger, "Obteniendo data de operacion obtener datos...");
-				data_operacion = crear_data_mdj_operacion(mensaje_recibido);
-				log_info(logger, "Validando que el archivo exista");
-				if(validar_archivo(data_operacion) == true){
-					/**
-					 * El Archivo si existe
-					 */
-					log_info(logger, "Guardando bytes en el archivo %s...", data_operacion->path);
-					int bytes_guardados = guardar_datos(data_operacion);
-					log_info(logger, "Se guardaron %d bytes", bytes_guardados);
-					mensaje_respuesta = crear_mensaje(GUARDAR_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-					agregar_dato(mensaje_respuesta, sizeof(int) ,&bytes_guardados);
-					log_info(logger,"Enviando respuesta...");
-					enviar_mensaje(mensaje_respuesta);
-					log_info(logger,"Respuesta enviada...");
-				} else{
-					/**
-					 * El Archivo no existe
-					 */
-					log_error(logger, "El archivo %s no existe",data_operacion->path);
-					mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-					int rta = 0;
-					agregar_dato(mensaje_respuesta,sizeof(int),&rta);
-					log_info(logger,"Enviando respuesta...");
-					enviar_mensaje(mensaje_respuesta);
-					log_info(logger,"Respuesta enviada...");
-				}
-				break;
-
-            /*case STRING_CONSOLA_PROPIA:
-                // este header indica que vamos a recibir un string leido de nuestra propia consola
-
-                // entonces recibimos el string y lo imprimimos, y ademas si es "exit" cerramos el programa
-                //str = recibir_string(mensaje_respuesta->socket);
-                comprobar_error(retsocket, "Error en recv de consola de MDJ");
-                printf("MDJ recibio de su propia consola: %s\n", str);
-
-                if(!strcmp(str, "exit")) {
-                    free(str);
-                  //  pthread_join(thread_consola, NULL);
-                    cerrar_mdj(logger, configuracion, conexiones_activas);
+                log_info(logger, "Obteniendo data de operacion obtener datos...");
+                data_operacion = crear_data_mdj_operacion(mensaje_recibido);
+                log_info(logger, "Validando que el archivo exista");
+                if(validar_archivo(data_operacion) == true){
+                    /**
+                     * El Archivo si existe
+                     */
+                    log_info(logger, "Guardando bytes en el archivo %s...", data_operacion->path);
+                    int bytes_guardados = guardar_datos(data_operacion);
+                    log_info(logger, "Se guardaron %d bytes", bytes_guardados);
+                    mensaje_respuesta = crear_mensaje(GUARDAR_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+                    agregar_dato(mensaje_respuesta, sizeof(int) ,&bytes_guardados);
+                    log_info(logger,"Enviando respuesta...");
+                    enviar_mensaje(mensaje_respuesta);
+                    log_info(logger,"Respuesta enviada...");
+                } else{
+                    /**
+                     * El Archivo no existe
+                     */
+                    log_error(logger, "El archivo %s no existe",data_operacion->path);
+                    mensaje_respuesta = crear_mensaje(OBTENER_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
+                    int rta = 0;
+                    agregar_dato(mensaje_respuesta,sizeof(int),&rta);
+                    log_info(logger,"Enviando respuesta...");
+                    enviar_mensaje(mensaje_respuesta);
+                    log_info(logger,"Respuesta enviada...");
                 }
-                free(str);
+                break;
 
-                // TODO parsear string para interpretar comandos
-                // cuando terminamos de ejecutar lo que nos pidio la consola le mandamos un header
-                // OPERACION_CONSOLA_TERMINADA que le indica que terminamos en este caso
-                // tambien le podriamos mandar un mensaje cualquiera dependiendo de lo que nos haya pedido
-                header = OPERACION_CONSOLA_TERMINADA;
-                retsocket = send(mensaje_recibido->socket, &header, sizeof(OPERACION_CONSOLA_TERMINADA), 0);
-                comprobar_error(retsocket, "Error en send a consola de MDJ");
-                break;*/
+                /*case STRING_CONSOLA_PROPIA:
+                    // este header indica que vamos a recibir un string leido de nuestra propia consola
+    
+                    // entonces recibimos el string y lo imprimimos, y ademas si es "exit" cerramos el programa
+                    //str = recibir_string(mensaje_respuesta->socket);
+                    comprobar_error(retsocket, "Error en recv de consola de MDJ");
+                    printf("MDJ recibio de su propia consola: %s\n", str);
+    
+                    if(!strcmp(str, "exit")) {
+                        free(str);
+                      //  pthread_join(thread_consola, NULL);
+                        cerrar_mdj(logger, configuracion, conexiones_activas);
+                    }
+                    free(str);
+    
+                    // TODO parsear string para interpretar comandos
+                    // cuando terminamos de ejecutar lo que nos pidio la consola le mandamos un header
+                    // OPERACION_CONSOLA_TERMINADA que le indica que terminamos en este caso
+                    // tambien le podriamos mandar un mensaje cualquiera dependiendo de lo que nos haya pedido
+                    header = OPERACION_CONSOLA_TERMINADA;
+                    retsocket = send(mensaje_recibido->socket, &header, sizeof(OPERACION_CONSOLA_TERMINADA), 0);
+                    comprobar_error(retsocket, "Error en send a consola de MDJ");
+                    break;*/
 
             case CONEXION_CERRADA:
                 // el header CONEXION_CERRADA indica que el que nos envio ese mensaje se desconecto, idealmente los
@@ -301,7 +301,6 @@ int main(int argc, char **argv) {
         }
     }
 }
-
 
 
 

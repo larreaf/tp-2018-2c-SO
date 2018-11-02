@@ -25,8 +25,8 @@ char* get_bitmap_to_string(){
 	for(i = 0 ; i < max; i++ ){
 		valor_bit = bitarray_test_bit(bitmap,i);
 		(valor_bit) ?
-				string_append(&bitmap_string,"1"):
-				string_append(&bitmap_string,"0");
+		string_append(&bitmap_string,"1"):
+		string_append(&bitmap_string,"0");
 		if(i < (max-1)){
 			string_append(&bitmap_string,",");
 		}
@@ -68,73 +68,73 @@ void inicializar_bloque(t_mdj_interface* mdj_interface){
 	mdj_interface->size = mdj_interface->cantidad_bytes;
 	mdj_interface->offset = 0;
 	char* path_fifa_bloques = obtener_path_bloques_fifa();
-		char* path_fifa_archivos = obtener_path_archivo_fifa();
+	char* path_fifa_archivos = obtener_path_archivo_fifa();
 
-		int size = mdj_interface->size;
+	int size = mdj_interface->size;
+	/**
+     * Obtener path absoluto del archivo
+     */
+	char* path_absoluto = string_new();
+	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
+
+	/*
+     * Obtener los bloques que conforman el archivo
+     */
+	t_config* toGet_cfg = config_create(path_absoluto);
+	char** bloques = obtener_bloques(toGet_cfg);
+	char* path_bloque;
+
+	if(mdj_interface->size <= 0){
+		mdj_interface->size = 10000;
+	}
+
+	/*
+     * Leer de a bytes
+     */
+	FILE* ptr_filebloque;
+	int index = 0;
+
+	while(bloques[index]!=NULL){
 		/**
-		 * Obtener path absoluto del archivo
-		 */
-		char* path_absoluto = string_new();
-		string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
-
+         * Obtener path de un bloque
+         */
+		path_bloque = string_new();
+		string_append_with_format(&path_bloque,"%s%s.bin",path_fifa_bloques,bloques[index]);
+		/**
+         * Abrir bloque
+         */
+		ptr_filebloque = fopen(path_bloque,"r+");
+		fseek(ptr_filebloque,0,SEEK_SET);
+		int lineas = 0;
 		/*
-		 * Obtener los bloques que conforman el archivo
-		 */
-		t_config* toGet_cfg = config_create(path_absoluto);
-		char** bloques = obtener_bloques(toGet_cfg);
-		char* path_bloque;
-
-		if(mdj_interface->size <= 0){
-			mdj_interface->size = 10000;
+         * Guardar bytes
+         */
+		while( lineas < metadata.tamanio_bloques && size > 0){
+			fprintf(ptr_filebloque,"%c",'\n');
+			lineas++;
+			size--;
 		}
 
 		/*
-		 * Leer de a bytes
-		 */
-		FILE* ptr_filebloque;
-		int index = 0;
-
-		while(bloques[index]!=NULL){
-			/**
-			 * Obtener path de un bloque
-			 */
-			path_bloque = string_new();
-			string_append_with_format(&path_bloque,"%s%s.bin",path_fifa_bloques,bloques[index]);
-			/**
-			 * Abrir bloque
-			 */
-			ptr_filebloque = fopen(path_bloque,"r+");
-			fseek(ptr_filebloque,0,SEEK_SET);
-			int lineas = 0;
-			/*
-			 * Guardar bytes
-			 */
-			while( lineas < metadata.tamanio_bloques && size > 0){
-				fprintf(ptr_filebloque,"%c",'\n');
-				lineas++;
-				size--;
-			}
-
-			/*
-			 * Cerrar bloque y liberar memoria
-			 */
-			fclose(ptr_filebloque);
-			free(path_bloque);
-			index++;
-		}//while (para recorrer bloque por bloque)
-		index = 0;
-		while(bloques[index]!=NULL){
-			free(bloques[index]);
-			index++;
-		}//while (liberar memoria de char** bloques)
-		free(bloques);
-		free(path_fifa_archivos);
-		free(path_fifa_bloques);
-		free(path_absoluto);
-		config_destroy(toGet_cfg);
-		/*if(lineas_obtenidas[string_length(lineas_obtenidas)-1] != '\n'){
-			string_append(&lineas_obtenidas,"\n");
-		}*/
+         * Cerrar bloque y liberar memoria
+         */
+		fclose(ptr_filebloque);
+		free(path_bloque);
+		index++;
+	}//while (para recorrer bloque por bloque)
+	index = 0;
+	while(bloques[index]!=NULL){
+		free(bloques[index]);
+		index++;
+	}//while (liberar memoria de char** bloques)
+	free(bloques);
+	free(path_fifa_archivos);
+	free(path_fifa_bloques);
+	free(path_absoluto);
+	config_destroy(toGet_cfg);
+	/*if(lineas_obtenidas[string_length(lineas_obtenidas)-1] != '\n'){
+        string_append(&lineas_obtenidas,"\n");
+    }*/
 
 }
 
@@ -151,7 +151,7 @@ bool validar_archivo(t_mdj_interface* mdj_interface){
 	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
 	FILE* ptr = fopen(path_absoluto, "r");
 	if(ptr == NULL){
-	//	printf("Archivo no existe!\n");
+		//	printf("Archivo no existe!\n");
 		ret = false;
 	}else{
 		fclose(ptr);
@@ -456,7 +456,7 @@ t_mdj_interface* crear_data_mdj_operacion(MensajeDinamico* mensaje){
 	//NodoPayload* nodo_aux = queue_pop(mensaje->payload);
 	//data_mdj_operacion->path = nodo_aux->datos;
 	data_mdj_operacion->t_operacion = mensaje->header;
-	 switch(data_mdj_operacion->t_operacion){
+	switch(data_mdj_operacion->t_operacion){
 		case VALIDAR_ARCHIVO:
 			recibir_string(&data_mdj_operacion->path,mensaje);
 			break;
@@ -483,7 +483,7 @@ t_mdj_interface* crear_data_mdj_operacion(MensajeDinamico* mensaje){
 			break;
 
 	}
-	 return data_mdj_operacion;
+	return data_mdj_operacion;
 
 }
 
@@ -503,7 +503,7 @@ void interface_mdj(MensajeDinamico* mensaje_dinamico){
 			obtener_datos(data_operacion);
 			break;
 		case GUARDAR_DATOS:
-		//TODO	guardar_datos(data_operacion);
+			//TODO	guardar_datos(data_operacion);
 			break;
 		case BORRAR_ARCHIVO:
 			borrar_archivo(data_operacion);
@@ -511,5 +511,4 @@ void interface_mdj(MensajeDinamico* mensaje_dinamico){
 	}
 
 }
-
 

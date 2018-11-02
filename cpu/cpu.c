@@ -13,6 +13,8 @@
 
 ConexionesActivas conexiones_activas;
 t_log* logger;
+int socket_elDiego;
+int socket_fm9;
 
 void cerrar_cpu(t_log* logger, cfg_cpu* configuracion, ConexionesActivas conexiones_activas){
     log_info(logger, "Cerrando CPU...");
@@ -26,11 +28,11 @@ void cerrar_cpu(t_log* logger, cfg_cpu* configuracion, ConexionesActivas conexio
 }
 
 int main(int argc, char **argv) {
-	int socket_fm9, socket_safa, socket_elDiego;
+	int socket_safa, header;
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0};
     t_accion_post_instruccion resultado_instruccion;
 	DTB datos_dtb;
-	MensajeDinamico *peticion_abrir_script, *mensaje;
+	MensajeDinamico *peticion_abrir_script, *mensaje, *mensaje_respuesta;
     char* linea = "";
 
     logger = log_create("cpu.log", "cpu", true, log_level_from_string("info"));
@@ -84,16 +86,31 @@ int main(int argc, char **argv) {
 
 	                    while(resultado_instruccion == READY) {
                             // TODO ir a buscar la linea indicada por el program counter y ejecutarla
-                            linea = "";
+                            //linea = "";
+                            mensaje_respuesta = crear_mensaje(LEER_LINEA, socket_fm9, 0);
+                            agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.id));
+                            agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.program_counter));
+                            enviar_mensaje(mensaje_respuesta);
+
+                            log_info(logger, "Esperando respuesta de FM9...");
+
+                            mensaje_respuesta = recibir_mensaje(socket_fm9);
+                            recibir_string(&linea, mensaje_respuesta);
+
+                            log_info(logger, "Linea leida: %s", linea);
+                            datos_dtb.program_counter++;
 
                             // los comentarios comienzan con #
                             if(string_starts_with(linea, "#"))
                                 continue;
+                            else if(string_starts_with(linea, "\n") || string_is_empty(linea)){
+                                resultado_instruccion = DTB_EXIT;
+                                break;
+                            }
+
 
                             resultado_instruccion = ejecutar_linea(&datos_dtb, linea,
                                     (unsigned int) configuracion->retardo);
-
-                            datos_dtb.program_counter++;
                         }
 
                         if(resultado_instruccion == -1){
@@ -124,15 +141,15 @@ int main(int argc, char **argv) {
             case CONEXION_CERRADA:
                 switch(mensaje->t_proceso){
                     case t_safa:
-                        log_warning(logger, "CPU perdio conexion con SAFA, cerrando CPU");
+                        log_error(logger, "CPU perdio conexion con SAFA, cerrando CPU");
                         cerrar_cpu(logger, configuracion, conexiones_activas);
 
                     case t_elDiego:
-                        log_warning(logger, "CPU perdio conexion con elDiego, cerrando CPU");
+                        log_error(logger, "CPU perdio conexion con elDiego, cerrando CPU");
                         cerrar_cpu(logger, configuracion, conexiones_activas);
 
                     case t_fm9:
-                        log_warning(logger, "CPU perdio conexion con FM9, cerrando CPU");
+                        log_error(logger, "CPU perdio conexion con FM9, cerrando CPU");
                         cerrar_cpu(logger, configuracion, conexiones_activas);
 
                     default:

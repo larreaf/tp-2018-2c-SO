@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <pthread.h>
 #include <ensalada/com.h>
 #include <ensalada/config-types.h>
 #include <ensalada/mensaje.h>
@@ -14,8 +15,11 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "memoria.h"
+#include "consola.h"
 
-void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_activas){
+Memoria* memoria;
+
+void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_activas, Memoria* memoria){
     log_info(logger, "Cerrando FM9...");
 
     // destruir_conexiones_activas manda headers CONEXION_CERRADA a todos los clientes conectados para que se enteren y despues
@@ -23,19 +27,20 @@ void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_act
     destruir_conexiones_activas(conexiones_activas);
     log_destroy(logger);
     destroy_cfg(config, t_fm9);
+    destruir_memoria(memoria);
     exit(0);
 }
 
-
 int main(int argc, char **argv) {
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, resultado, numero_linea, direccion;
-    char* str, *linea;
+    char* linea;
     char* string_archivo;
     MensajeDinamico* mensaje, *mensaje_respuesta;
     ConexionesActivas conexiones_activas;
     MemoriaReal* storage;
-    Memoria* memoria;
+    pthread_t thread_consola;
 
+    remove("fm9.log");
     t_log *logger = log_create("fm9.log", "fm9", true, log_level_from_string("info"));
 
     log_info(logger, "Inicializando config...");
@@ -49,6 +54,9 @@ int main(int argc, char **argv) {
 
     storage = inicializar_memoria_real(configuracion->tamanio, configuracion->max_linea);
     memoria = inicializar_memoria(storage, configuracion->modo);
+
+    pthread_create(&thread_consola, NULL, (void*)ejecutar_consola_fm9, NULL);
+    pthread_detach(thread_consola);
 
     log_info(logger, "Listo");
 
@@ -67,7 +75,7 @@ int main(int argc, char **argv) {
                 if (!resultado)
                     log_info(logger, "Script cargado en memoria correctamente, enviando mensaje respuesta");
                 else
-                    log_error(logger, "Falla al cargar script en memoria (codigo error %d)", resultado);
+                    log_error(logger, "Falla al cargar script en memoria (codigo error %d)", abs(resultado));
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_SCRIPT, mensaje->socket, 0);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
@@ -100,7 +108,7 @@ int main(int argc, char **argv) {
                 if (resultado >= 0)
                     log_info(logger, "Archivo cargado en memoria correctamente, enviando mensaje respuesta");
                 else
-                    log_error(logger, "Falla al cargar archivo en memoria (codigo error %d)", resultado);
+                    log_error(logger, "Falla al cargar archivo en memoria (codigo error %d)", abs(resultado));
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, mensaje->socket, 0);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
@@ -157,7 +165,7 @@ int main(int argc, char **argv) {
 
             case CONEXION_CERRADA:
                 if (mensaje->t_proceso == t_elDiego)
-                    cerrar_fm9(logger, configuracion, conexiones_activas);
+                    cerrar_fm9(logger, configuracion, conexiones_activas, memoria);
                 break;
 
             default:

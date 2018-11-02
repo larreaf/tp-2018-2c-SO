@@ -1,12 +1,15 @@
 #!/bin/bash
 
-declare -a arr=("mdj" "fm9" "cpu" "elDiego" "sAFA")
+declare -a arr=("ensalada" "mdj" "fm9" "cpu" "elDiego" "sAFA")
 
 for i in "${arr[@]}"
 do
-     
-   cp -r ./"$i" ../"$i"/Debug
-   cd ../"$i"/Debug
-   make
-   cd ../../make   
+    cd ../"$1"
+    mkdir Debug
+    cd ../make
+    cp -r ./"$i"/Debug ../"$i"
+    cd ../"$i"/Debug
+    make
+    cd ../../make 
 done
+

@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
 	validar_parametros(argc);
 	cfg_elDiego* configuracion = asignar_config(argv[1],elDiego);
 
+	remove("elDiego.log");
 	logger = log_create("elDiego.log", "elDiego", true, log_level_from_string("info"));
 
 	conexiones_permitidas[t_cpu] = 3;
@@ -109,7 +110,11 @@ int main(int argc, char **argv) {
                     enviar_mensaje(mensaje_dinamico);
                 }else{
                     log_warning(logger, "Error al cargar script %s para DTB %d", path, id_dtb);
-                    // TODO enviar error a SAFA para que aborte el DTB
+
+                    mensaje_dinamico = crear_mensaje(ABORTAR_DTB_DE_NEW, socket_safa, 0);
+                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                    agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
+                    enviar_mensaje(mensaje_dinamico);
                 }
 
                 break;

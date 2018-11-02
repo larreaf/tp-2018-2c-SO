@@ -4,10 +4,20 @@
 
 #include "memoria.h"
 
+/*!
+ * Inicializa la memoria real (storage)
+ * @param tamanio Tamanio en bytes del storage
+ * @param tamanio_linea Tamanio de linea en bytes
+ * @return struct MemoriaReal*
+ */
 MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea){
     MemoriaReal* memoria_real = malloc(sizeof(MemoriaReal));
 
     memoria_real->logger = log_create("fm9.log", "MemoriaReal", true, log_level_from_string("info"));
+
+    if(tamanio % tamanio_linea == 1)
+        log_warning(memoria_real->logger, "Tamanio (%d) no divisible por tamanio de linea (%d)", tamanio, tamanio_linea);
+
     memoria_real->tamanio = tamanio;
     memoria_real->tamanio_linea = tamanio_linea;
     memoria_real->cant_lineas = tamanio / tamanio_linea;
@@ -18,10 +28,28 @@ MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea){
     if(memoria_real->inicio == NULL)
         return NULL;
 
-    log_info(memoria_real->logger, "Storage inicializado correctamente");
+    log_info(memoria_real->logger, "Storage inicializado correctamente: Tamanio %d lineas de %d bytes cada una"
+                                   " (total %d bytes)",
+            memoria_real->cant_lineas, memoria_real->tamanio_linea, memoria_real->tamanio);
     return memoria_real;
 }
 
+/*!
+ * Destruye el storage y libera memoria
+ * @param storage
+ */
+void destruir_memoria_real(MemoriaReal* storage){
+    free(storage->inicio);
+    log_destroy(storage->logger);
+    free(storage);
+}
+
+/*!
+ * Inicializa memoria sobre el storage con un modo de ejecucion
+ * @param storage MemoriaReal* ya inicializado
+ * @param modo Modo de ejecucion
+ * @return Memoria* inicializado
+ */
 Memoria* inicializar_memoria(MemoriaReal* storage, int modo){
     Memoria* memoria = malloc(sizeof(Memoria));
 
@@ -40,6 +68,32 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo){
     return memoria;
 }
 
+/*!
+ * Destruye tabla de segmentos
+ * @param arg
+ */
+void destruir_tabla_segmentos(void* arg){
+    NodoListaTablasSegmentos* tabla = (NodoListaTablasSegmentos*)arg;
+    list_destroy_and_destroy_elements(tabla->tabla_de_segmentos, free);
+}
+
+/*!
+ * Destruye memoria y storage
+ * @param memoria
+ */
+void destruir_memoria(Memoria* memoria){
+    list_destroy_and_destroy_elements(memoria->lista_tablas_de_segmentos, destruir_tabla_segmentos);
+    log_destroy(memoria->logger);
+    destruir_memoria_real(memoria->storage);
+    free(memoria);
+}
+
+/*!
+ * Encuentra la tabla de segmentos de un DTB
+ * @param lista Lista de tabla de segmentos
+ * @param id_dtb ID del DTB
+ * @return NodoListaTablasSegmentos* que contiene la tabla de segmentos del proceso y metadata
+ */
 NodoListaTablasSegmentos* encontrar_tabla_segmentos_por_id_dtb(t_list* lista, int id_dtb){
 
     int _is_the_one(NodoListaTablasSegmentos*nodo) {
@@ -49,13 +103,32 @@ NodoListaTablasSegmentos* encontrar_tabla_segmentos_por_id_dtb(t_list* lista, in
     return list_find(lista, (void*) _is_the_one);
 }
 
+/*!
+ * Escribe linea de storage
+ * @param storage
+ * @param linea datos a escribir
+ * @param numero_linea numero de linea a escribir
+ */
 void escribir_linea(MemoriaReal* storage, char* linea, int numero_linea){
+    if(strlen(linea)>storage->tamanio_linea){
+        log_error(storage->logger, "Se intento escribir una linea mas grande del tamanio maximo de linea"
+                                   " (linea %d, datos %s)", numero_linea, linea);
+        return;
+    }
+
     if(!storage->estado_lineas[numero_linea]) {
         strcpy(storage->inicio + (numero_linea * storage->tamanio_linea), linea);
         storage->estado_lineas[numero_linea] = 1;
     }
 }
 
+/*!
+ * Lee una linea de storage y retorna el contenido
+ * @param storage
+ * @param base numero de linea base
+ * @param offset
+ * @return char* con contenido de la linea
+ */
 char* leer_linea_storage(MemoriaReal* storage, int base, int offset){
     char* linea = string_new();
     string_append(&linea, (storage->inicio+(base*storage->tamanio_linea)+(offset*storage->tamanio_linea)));
@@ -63,10 +136,22 @@ char* leer_linea_storage(MemoriaReal* storage, int base, int offset){
     return linea;
 }
 
+/*!
+ * Modifica una linea del storage
+ * @param storage
+ * @param base numero de linea base
+ * @param offset
+ * @param datos datos a escribir
+ */
 void modificar_linea_storage(MemoriaReal* storage, int base, int offset, char* datos){
     strcpy(storage->inicio+(base*storage->tamanio_linea)+(offset*storage->tamanio_linea), datos);
 }
 
+/*!
+ * Cuenta la cantidad de \n en un string
+ * @param string
+ * @return cantidad de \n
+ */
 int contar_lineas(char* string){
     int i = 0;
     char* copia_string = string_new();
@@ -80,6 +165,12 @@ int contar_lineas(char* string){
     return i;
 }
 
+/*!
+ * Escribe un archivo entero en storage en posiciones contiguas
+ * @param storage
+ * @param script string con el archivo
+ * @param base numero de linea base
+ */
 void escribir_archivo_en_storage(MemoriaReal *storage, char *script, int base){
     int i = 0;
     char* word;
@@ -91,6 +182,12 @@ void escribir_archivo_en_storage(MemoriaReal *storage, char *script, int base){
     }
 }
 
+/*!
+ * Encuentra espacio suficiente para almacenar un segmento
+ * @param storage
+ * @param cant_lineas_segmento
+ * @return Posicion real en donde se puede almacenar el segmento
+ */
 int encontrar_espacio_para_segmento(MemoriaReal* storage, int cant_lineas_segmento){
     int j;
 
@@ -117,6 +214,13 @@ int encontrar_espacio_para_segmento(MemoriaReal* storage, int cant_lineas_segmen
     return -1;
 }
 
+/*!
+ * Carga un escriptorio en memoria
+ * @param memoria
+ * @param id_dtb ID del DTB para el cual se esta cargando el script
+ * @param string string que contiene al script
+ * @return 0 si se realizo de manera correcta (en segmentacion), -10002 si hubo error
+ */
 int cargar_script(Memoria* memoria, int id_dtb, char* string){
     t_list* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento_script;
@@ -155,6 +259,13 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
     }
 }
 
+/*!
+ * Carga un archivo en memoria
+ * @param memoria
+ * @param id_dtb ID del DTB para cual se esta cargando el archivo
+ * @param string string con el archivo entero
+ * @return direccion logica al archivo si se cargo de manera correcta, -10002 si hubo error
+ */
 int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento_script, *nodo_aux;
@@ -192,6 +303,13 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
     }
 }
 
+/*!
+ * Encuentra y lee una linea
+ * @param memoria
+ * @param id_dtb
+ * @param numero_linea
+ * @return char* con la linea leida
+ */
 char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;
@@ -216,6 +334,14 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     }
 }
 
+/*!
+ * Modifica una linea de un archivo
+ * @param memoria
+ * @param id_dtb
+ * @param direccion direccion logica de la linea
+ * @param datos char* a escribir
+ * @return 0 si se realizo correctamente, 20001 si hubo error
+ */
 int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* datos){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;
@@ -242,6 +368,13 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
     return 20001;
 }
 
+/*!
+ * Flushea un archivo
+ * @param memoria
+ * @param id_dtb
+ * @param direccion direccion logica del archivo
+ * @return los contenidos del archivo o un string vacio si hubo error
+ */
 char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;
@@ -272,6 +405,13 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
     }
 }
 
+/*!
+ * Libera memoria de un archivo
+ * @param memoria
+ * @param id_dtb
+ * @param direccion direccion logica del archivo
+ * @return 0 si se realizo correctamente, 40002 si hubo error
+ */
 int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;
@@ -289,6 +429,7 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
                          id_dtb);
 
                 for(int j = 0; j<segmento->longitud_segmento; j++){
+                    escribir_linea(memoria->storage, "", segmento->inicio_segmento+j);
                     memoria->storage->estado_lineas[segmento->inicio_segmento+j] = 0;
                 }
                 break;
@@ -300,4 +441,51 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
     }
 
     return 40002;
+}
+
+/*!
+ * Imprime contenidos de un DTB en memoria y el estado del storage
+ * @param memoria
+ * @param id_dtb
+ */
+void dump(Memoria* memoria, int id_dtb){
+    NodoListaTablasSegmentos* tabla_segmentos_proceso;
+    NodoTablaSegmentos* segmento;
+    int cantidad_segmentos;
+    char* linea;
+
+    printf("-------DUMP DTB %d-------\n", id_dtb);
+
+    if(memoria->modo == SEG){
+        tabla_segmentos_proceso = encontrar_tabla_segmentos_por_id_dtb(memoria->lista_tablas_de_segmentos, id_dtb);
+
+        if(tabla_segmentos_proceso == NULL){
+            printf("No se encuentran datos del DTB %d en memoria\n", id_dtb);
+        }else {
+            cantidad_segmentos = list_size(tabla_segmentos_proceso->tabla_de_segmentos);
+            printf("Cantidad de segmentos: %d\n", cantidad_segmentos);
+
+            for (int i = 0; i < cantidad_segmentos; i++) {
+                segmento = list_get(tabla_segmentos_proceso->tabla_de_segmentos, i);
+                printf("Contenidos de segmento %d (longitud segmento %d):\n", segmento->id_segmento,
+                       segmento->longitud_segmento);
+
+                for (int j = 0; j < segmento->longitud_segmento; j++) {
+                    printf("%s\n", leer_linea_storage(memoria->storage, segmento->inicio_segmento, j));
+                }
+
+            }
+        }
+    }
+
+    printf("------------------------\n");
+    printf("------DUMP STORAGE------\n");
+
+    for(int i = 0; i<memoria->storage->cant_lineas; i++){
+        linea = string_new();
+
+        string_append(&linea, leer_linea_storage(memoria->storage, i, 0));
+        printf("Linea %d: %s\n", i, linea);
+        free(linea);
+    }
 }

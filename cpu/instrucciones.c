@@ -100,7 +100,7 @@ int in_flush(DTB* dtb, char* path){
     agregar_string(peticion_flush, nodo_aux->path);
     enviar_mensaje(peticion_flush);
 
-    return READY;
+    return BLOQUEAR;
 }
 
 /*!

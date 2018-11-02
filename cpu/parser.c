@@ -74,7 +74,7 @@ int ejecutar_linea(DTB* dtb, char* linea, unsigned int retardo){
     if(resultado == -1)
         return resultado;
 
-    sleep(retardo/1000);
+    usleep(retardo*1000);
 
     switch (instruccion->opcode){
 

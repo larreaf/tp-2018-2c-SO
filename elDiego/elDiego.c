@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     int socket_mdj, socket_fm9, socket_safa, conexiones_permitidas[cantidad_tipos_procesos]={0};
     MensajeDinamico* nuevo_mensaje;
     ConexionesActivas conexiones_activas;
-    int id_dtb, resultado, cant_lineas;
+    int id_dtb, resultado, cant_lineas, direccion_memoria,codigo_error;
     char* path;
     char* archivo;
     MensajeDinamico* mensaje_dinamico;
@@ -200,6 +200,62 @@ int main(int argc, char **argv) {
                 enviar_mensaje(mensaje_dinamico);
 
                 break;
+            case FLUSH_ARCHIVO:
+                        	recibir_int(&id_dtb, nuevo_mensaje);
+                        	recibir_int(&direccion_memoria, nuevo_mensaje);
+                        	recibir_string(&path, nuevo_mensaje);
+
+                        	//pedir archivo a FM9
+                        	mensaje_dinamico = crear_mensaje(FLUSH_ARCHIVO, socket_fm9, 0);
+                        	agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                        	agregar_dato(mensaje_dinamico, sizeof(int), &direccion_memoria);
+
+                        	enviar_mensaje(mensaje_dinamico);
+
+                            // recibir respuesta de FM9
+                            mensaje_dinamico = recibir_mensaje(socket_fm9);
+                            if(mensaje_dinamico->header != RESULTADO_FLUSH_ARCHIVO){
+                                log_error(logger, "Falla al recibir respuesta de obtener datos de FM9");
+                                cerrar_elDiego(logger, configuracion, conexiones_activas);
+                            }
+                            recibir_string(&archivo, mensaje_dinamico);
+
+                            if (string_is_empty(archivo)) {
+                            	codigo_error=4002;
+                                log_error(logger, "Falla en flush archivo");
+                            	mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
+                            	agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                            	agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
+                            	enviar_mensaje(mensaje_dinamico);
+                            }else{
+                            	int size = strlen(archivo)+1;
+
+                            	//guardar en mdj
+                            	mensaje_dinamico = crear_mensaje_mdj_guardar_datos(socket_mdj, path, 0, size, archivo, configuracion->transfer_size);
+                            	enviar_mensaje(mensaje_dinamico);
+                            	//recibir rta de mdj
+                            	mensaje_dinamico = recibir_mensaje(socket_mdj);
+                            	if(mensaje_dinamico->header != GUARDAR_DATOS){
+                            		log_error(logger, "Falla al recibir respuesta de obtener datos de FM9");
+                            	    cerrar_elDiego(logger, configuracion, conexiones_activas);
+                            	}
+                            	recibir_int(&resultado, nuevo_mensaje);
+                            	if (resultado==-1){
+                            		codigo_error=4001;
+                            		log_error(logger, "Falla en flush archivo guardar datos en mdj para id_dtb %d- Error %d",id_dtb,codigo_error);
+                            		mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
+                            		agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                            		agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
+                            		enviar_mensaje(mensaje_dinamico);
+                            	}else{
+                            		log_error(logger, "Flush archivo guardar datos en mdj - OK");
+                            		mensaje_dinamico = crear_mensaje(DESBLOQUEAR_DTB, socket_safa, 0);
+                            		agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                            		enviar_mensaje(mensaje_dinamico);
+                            	}
+                            }
+
+                        	break;
 
             case CONEXION_CERRADA:
                 switch(nuevo_mensaje->t_proceso){

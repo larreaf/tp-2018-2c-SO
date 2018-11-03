@@ -261,8 +261,8 @@ int main(int argc, char **argv) {
                      */
                     log_error(logger, "El archivo %s no existe",data_operacion->path);
                     mensaje_respuesta = crear_mensaje(GUARDAR_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-                    int rta = 0;
-                    agregar_dato(mensaje_respuesta,sizeof(int),&rta);
+
+                    agregar_string(mensaje_respuesta,"");
                     log_info(logger,"Enviando respuesta...");
                     enviar_mensaje(mensaje_respuesta);
                     log_info(logger,"Respuesta enviada...");

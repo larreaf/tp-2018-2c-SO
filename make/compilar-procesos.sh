@@ -11,5 +11,5 @@ do
 done
 cd ~
 git clone https://github.com/sisoputnfrba/fifa-examples
-"export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/workspace/tp-2018-2c-Ensalada-C-sar/ensalada/Debug" >> ~/.bashrc
+"export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/tp-2018-2c-Ensalada-C-sar/ensalada/Debug" >> ~/.bashrc
 source ~/.bashrc

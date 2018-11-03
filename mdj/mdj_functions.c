@@ -109,7 +109,7 @@ void inicializar_bloque(t_mdj_interface* mdj_interface){
 		/*
          * Guardar bytes
          */
-		while( lineas < metadata.tamanio_bloques && size > 0){
+		while( lineas < metadata.tamanio_bloques-1 && size > 0){
 			fprintf(ptr_filebloque,"%c",'\n');
 			lineas++;
 			size--;
@@ -380,7 +380,7 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 	char* path_fifa_bloques = obtener_path_bloques_fifa();
 	char* path_fifa_archivos = obtener_path_archivo_fifa();
 
-	int size = mdj_interface->size;
+	int size;
 	/**
 	 * Obtener path absoluto del archivo
 	 */
@@ -391,11 +391,15 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 	 * Obtener los bloques que conforman el archivo
 	 */
 	t_config* toGet_cfg = config_create(path_absoluto);
+	int tamanio_archivo = config_get_int_value(toGet_cfg,"TAMANIO");
 	char** bloques = obtener_bloques(toGet_cfg);
 	char* path_bloque;
 
 	if(mdj_interface->size <= 0){
-		mdj_interface->size = 10000;
+		size = string_length(mdj_interface->buffer);
+		mdj_interface->size = size;
+	}else{
+		size = mdj_interface->size;
 	}
 
 	FILE* ptr_filebloque;
@@ -406,7 +410,9 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 	int index = 0;
 	int buffer_index = 0;
 	int caracter = 0;
+
 	while(bloques[index]!=NULL){
+		int saltos_de_linea_bloque_totales = 0;
 		/**
 		 * Obtener path de un bloque
 		 */
@@ -418,21 +424,42 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 		ptr_filebloque = fopen(path_bloque,"r+");
 		fseek(ptr_filebloque,0,SEEK_SET);
 		/*
+		 * Contar saltos de linea del bloque
+		 */
+		while( (caracter = fgetc(ptr_filebloque)) != EOF ){
+			if(caracter == '\n'){
+				saltos_de_linea_bloque_totales++;
+			}
+		}
+		fseek(ptr_filebloque,0,SEEK_SET);
+		/*
 		 * Moverse al offset en bytes
 		 */
+		int saltos_de_linea_buffer = 0;
 		if( i < mdj_interface->offset ){
-			for(i = 0; i < mdj_interface->offset && fseek(ptr_filebloque,1,SEEK_CUR) != EOF ; i++){	}//for (apuntar al offset)
+			for(i = 0; i < mdj_interface->offset && (caracter = fgetc(ptr_filebloque)) != EOF ; i++){
+				if(caracter == '\n'){
+					saltos_de_linea_buffer++;
+				}
+			}//for (apuntar al offset)
 		}
 		/*
 		 * Guardar bytes
 		 */
-		while( (caracter = fgetc(ptr_filebloque)) != EOF && size > 0){
-			fseek(ptr_filebloque, -1, SEEK_CUR);
+
+		while( (saltos_de_linea_buffer < saltos_de_linea_bloque_totales || (saltos_de_linea_buffer == saltos_de_linea_bloque_totales && mdj_interface->buffer[buffer_index] != '\n') )
+				&& (size > 0 || mdj_interface->buffer[buffer_index] != '\0')
+		){
+			if(mdj_interface->buffer[buffer_index] == '\n'){
+				saltos_de_linea_buffer++;
+			}
 			fprintf(ptr_filebloque,"%c",mdj_interface->buffer[buffer_index]);
 			buffer_index++;
 			size--;
 		}
-
+		/*if(mdj_interface->buffer[buffer_index] == '\n'){
+			buffer_index++;
+		}*/
 		/*
 		 * Cerrar bloque y liberar memoria
 		 */
@@ -449,6 +476,15 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 	free(path_fifa_archivos);
 	free(path_fifa_bloques);
 	free(path_absoluto);
+	/*
+	 * Guardar tamaño nuevo en bytes
+	 */
+	tamanio_archivo += (mdj_interface->size - size);
+	char* tam = string_new();
+	string_append_with_format(&tam,"%d",tamanio_archivo);
+	config_set_value(toGet_cfg,"TAMANIO",tam);
+	config_save(toGet_cfg);
+	free(tam);
 	config_destroy(toGet_cfg);
 	/*if(lineas_obtenidas[string_length(lineas_obtenidas)-1] != '\n'){
 		string_append(&lineas_obtenidas,"\n");

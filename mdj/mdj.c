@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
 
 
-    log_info(logger, "Listo");
+  //  log_info(logger, "Listo");
 
     levantar_metadata(logger);
 
@@ -171,12 +171,12 @@ int main(int argc, char **argv) {
             case CREAR_ARCHIVO:
             	data_operacion = crear_data_mdj_operacion(mensaje_recibido);
             	log_info(logger, "Creando archivo %s...", data_operacion->path);
-            	int cantidad_bloques_asignados = crear_archivo(data_operacion);
-            	(cantidad_bloques_asignados > 0)?
-            			log_info(logger, "Bloques asignados al archivo: %d",cantidad_bloques_asignados):
+            	int cantidad_bytes_asignados = crear_archivo(data_operacion);
+            	(cantidad_bytes_asignados > 0)?
+            			log_info(logger, "Bytes asignados al archivo: %d",cantidad_bytes_asignados):
 						log_error(logger,"Espacio insuficiente para crear el archivo");
             	mensaje_respuesta = crear_mensaje(CREAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
-            	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bloques_asignados );
+            	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bytes_asignados );
             	log_info(logger,"Enviando respuesta...");
 				enviar_mensaje(mensaje_respuesta);
 				log_info(logger,"Respuesta enviada...");

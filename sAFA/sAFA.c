@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 
     // crear estructuras de planificadores
     plp = inicializar_plp(configuracion->multiprogramacion);
-    pcp = inicializar_pcp(configuracion->algoritmo, configuracion->quantum);
+    pcp = inicializar_pcp(configuracion->algoritmo, configuracion->quantum, configuracion->retardo);
 
     plp->cola_ready = pcp->cola_ready;
     plp->mutex_ready = pcp->mutex_ready;

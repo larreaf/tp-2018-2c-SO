@@ -226,6 +226,9 @@ int main(int argc, char **argv) {
                     agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                     agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
                     enviar_mensaje(mensaje_dinamico);
+                    mensaje_dinamico = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, configuracion->transfer_size);
+                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                    enviar_mensaje(mensaje_dinamico);
                 }else{
                 	int size = strlen(archivo)+1;
 
@@ -240,11 +243,14 @@ int main(int argc, char **argv) {
                     }
                     recibir_int(&resultado, mensaje_dinamico);
                     if (resultado!=size){
-                    	codigo_error=4001;
+                    	codigo_error=40001;
                         log_error(logger, "Falla en flush archivo guardar datos en mdj para id_dtb %d- Error %d",id_dtb,codigo_error);
                         mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
                         agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                         agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
+                        enviar_mensaje(mensaje_dinamico);
+                        mensaje_dinamico = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, configuracion->transfer_size);
+                        agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                         enviar_mensaje(mensaje_dinamico);
                     }else{
                         log_info(logger, "Flush archivo guardar datos en mdj - OK");

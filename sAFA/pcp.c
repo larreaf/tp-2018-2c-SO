@@ -160,6 +160,25 @@ void desbloquear_dtb(PCP* pcp, int id_DTB){
     pthread_mutex_unlock(&(pcp->mutex_block));
 }
 
+DTB* obtener_dtb_de_block(PCP* pcp, int id_dtb){
+
+    DTB* dtb_seleccionado;
+
+    pthread_mutex_lock(&(pcp->mutex_block));
+    for(int i = 0; i<list_size(pcp->lista_block); i++){
+        dtb_seleccionado = list_get(pcp->lista_block, i);
+
+        if(dtb_seleccionado->id == id_dtb){
+            list_remove(pcp->lista_block, i);
+            pthread_mutex_unlock(&(pcp->mutex_block));
+            return dtb_seleccionado;
+        }
+    }
+    pthread_mutex_unlock(&(pcp->mutex_block));
+    
+    return NULL;
+}
+
 void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int direccion_archivo){
     DTB* dtb_seleccionado;
     ArchivoAbierto* archivo_a_cargar = malloc(sizeof(ArchivoAbierto));

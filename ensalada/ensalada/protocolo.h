@@ -46,7 +46,8 @@ typedef enum {
 	FLUSH_ARCHIVO,
 	RESULTADO_FLUSH_ARCHIVO,
 	ABORTAR_DTB,
-    ABORTAR_DTB_DE_NEW
+    ABORTAR_DTB_DE_NEW,
+    DESALOJAR_SCRIPT
 }protocolo_header;
 
 typedef enum {

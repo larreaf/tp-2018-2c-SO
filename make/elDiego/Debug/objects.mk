@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lensalada -lcommons
+LIBS := -lensalada -lcommons -lpthread
 

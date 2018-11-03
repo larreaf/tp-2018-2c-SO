@@ -123,6 +123,9 @@ void* ejecutar_servidor(void *arg){
                 recibir_int(&codigo_error, mensaje);
 
                 dtb_seleccionado = tomar_de_exec(pcp, id_dtb);
+                if(dtb_seleccionado == NULL)
+                    dtb_seleccionado = obtener_dtb_de_block(pcp, id_dtb);
+                
                 log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando", id_dtb,
                         dtb_seleccionado->path_script, codigo_error);
                 destruir_dtb(dtb_seleccionado);

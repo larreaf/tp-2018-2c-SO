@@ -95,6 +95,7 @@ int main(int argc, char **argv) {
 
                             mensaje_respuesta = recibir_mensaje(socket_fm9);
                             recibir_string(&linea, mensaje_respuesta);
+                            destruir_mensaje(mensaje_respuesta);
 
                             datos_dtb.program_counter++;
 
@@ -102,7 +103,11 @@ int main(int argc, char **argv) {
                             if(string_starts_with(linea, "#"))
                                 continue;
                             else if(string_starts_with(linea, "\n") || string_is_empty(linea)){
+                                // se termino el programa
                                 resultado_instruccion = DTB_EXIT;
+                                mensaje_respuesta = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, 0);
+                                agregar_dato(mensaje_respuesta, sizeof(int), &datos_dtb.id);
+                                enviar_mensaje(mensaje_respuesta);
                                 break;
                             }
 

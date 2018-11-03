@@ -25,7 +25,7 @@ endif
 all: sAFA
 
 dependents:
-	-cd /home/utnso/workspace/tp-2018-2c-Ensalada-C-sar/ensalada/Debug && $(MAKE) all
+	-cd /home/utnso/workspace/tp-2018-2c-Ensalada-C-sar/ensalada/Debug && $(MAKE) clean all
 
 # Tool invocations
 sAFA: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2018-2c-Ensalada-C-sar/ensalada/Debug/libensalada.so

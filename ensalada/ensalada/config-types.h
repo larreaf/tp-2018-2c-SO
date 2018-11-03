@@ -14,11 +14,11 @@
 	}t_process; //indentifica el tipo de proceso
 
 	typedef enum {
-		CONFIG_safa = 5,
-		CONFIG_elDiego = 8,
-		CONFIG_fm9 = 5,
+		CONFIG_safa = 6,
+		CONFIG_elDiego = 9,
+		CONFIG_fm9 = 6,
 		CONFIG_cpu = 7,
-		CONFIG_mdj = 3
+		CONFIG_mdj = 4
 
 	}cantidad_parametros; //cantidad de strings en su archivo configuracion
 
@@ -41,6 +41,7 @@
 	 */
 
 	typedef struct{
+		char* ip;
 		int puerto;
 		algoritmo_planificacion algoritmo;
 		int quantum;
@@ -50,6 +51,7 @@
 	}cfg_safa;
 
 	typedef struct{
+		char* 	ip;
 		int puerto;
 		char* 	ip_safa;
 		int 	puerto_safa;
@@ -62,6 +64,7 @@
 	}cfg_elDiego;
 
 	typedef struct {
+		char* ip;
 		int puerto;
 		modo_memoria modo;
 		int max_linea;
@@ -82,6 +85,7 @@
 	}cfg_cpu;
 
 	typedef struct {
+		char* ip;
 		int puerto;
 		char* punto_montaje;
 		int retardo;

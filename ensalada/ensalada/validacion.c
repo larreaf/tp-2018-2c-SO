@@ -6,15 +6,18 @@
  */
 
 char CONFIGURACION_safa[CONFIG_safa][TAMANIO_STRING] = {
+
 		"PUERTO",
 		"ALGORITMO",
 		"QUANTUM",
 		"MULTIPROGRAMACION",
-		"RETARDO_PLANIF"
+		"RETARDO_PLANIF",
+		"IP"
 
 };
 
 char CONFIGURACION_elDiego[CONFIG_elDiego][TAMANIO_STRING] = {
+
 		"PUERTO",
 		"IP_SAFA",
 		"PUERTO_SAFA",
@@ -22,7 +25,8 @@ char CONFIGURACION_elDiego[CONFIG_elDiego][TAMANIO_STRING] = {
 		"PUERTO_MDJ",
 		"IP_FM9",
 		"PUERTO_FM9",
-		"TRANSFER_SIZE"
+		"TRANSFER_SIZE",
+		"IP"
 };
 
 char CONFIGURACION_fm9[CONFIG_fm9][TAMANIO_STRING] = {
@@ -30,7 +34,8 @@ char CONFIGURACION_fm9[CONFIG_fm9][TAMANIO_STRING] = {
 		"MODO",
 		"TAMANIO",
 		"MAX_LINEA",
-		"TAM_PAGINA"
+		"TAM_PAGINA",
+		"IP"
 };
 
 char CONFIGURACION_cpu[CONFIG_cpu][TAMANIO_STRING] = {
@@ -46,7 +51,8 @@ char CONFIGURACION_cpu[CONFIG_cpu][TAMANIO_STRING] = {
 char CONFIGURACION_mdj[CONFIG_mdj][TAMANIO_STRING] = {
 		"PUERTO",
 		"PUNTO_MONTAJE",
-		"RETARDO"
+		"RETARDO",
+		"IP"
 };
 
 algoritmo_planificacion string_to_alg(char* string){
@@ -154,6 +160,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 		case safa :
 			retorno_safa = malloc(sizeof(cfg_safa));
 
+			retorno_safa->ip = config_get_string_value(configuracion,CONFIGURACION_safa[5]);
 			retorno_safa->puerto = config_get_int_value(configuracion,CONFIGURACION_safa[0]);
 			retorno_safa->algoritmo = string_to_alg(config_get_string_value(configuracion,CONFIGURACION_safa[1]));
 			retorno_safa->quantum = config_get_int_value(configuracion,CONFIGURACION_safa[2]);
@@ -166,6 +173,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 		case elDiego :
 			retorno_elDiego = malloc(sizeof(cfg_elDiego));
 
+			retorno_elDiego->ip = config_get_string_value(configuracion,CONFIGURACION_elDiego[8]);
 			retorno_elDiego->puerto = config_get_int_value(configuracion, CONFIGURACION_elDiego[0]);
 			retorno_elDiego->ip_safa = config_get_string_value(configuracion, CONFIGURACION_elDiego[1]);
 			retorno_elDiego->puerto_safa = config_get_int_value(configuracion, CONFIGURACION_elDiego[2]);
@@ -181,6 +189,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 		case fm9 :
 			retorno_fm9 = malloc(sizeof(cfg_fm9));
 
+			retorno_fm9->ip = config_get_string_value(configuracion,CONFIGURACION_fm9[5]);
 			retorno_fm9->puerto = config_get_int_value(configuracion,CONFIGURACION_fm9[0]);
 			retorno_fm9->modo = string_to_memory(config_get_string_value(configuracion,CONFIGURACION_fm9[1]));
 			retorno_fm9->tamanio = config_get_int_value(configuracion,CONFIGURACION_fm9[2]);
@@ -207,6 +216,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 		case mdj :
 			retorno_mdj = malloc(sizeof(cfg_mdj));
 
+			retorno_mdj->ip = config_get_string_value(configuracion, CONFIGURACION_mdj[3]);
 			retorno_mdj->puerto = config_get_int_value(configuracion,CONFIGURACION_mdj[0]);
 			retorno_mdj->punto_montaje = config_get_string_value(configuracion,CONFIGURACION_mdj[1]);
 			retorno_mdj->retardo = config_get_int_value(configuracion,CONFIGURACION_mdj[2]);

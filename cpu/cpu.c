@@ -105,9 +105,6 @@ int main(int argc, char **argv) {
                             else if(string_starts_with(linea, "\n") || string_is_empty(linea)){
                                 // se termino el programa
                                 resultado_instruccion = DTB_EXIT;
-                                mensaje_respuesta = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, 0);
-                                agregar_dato(mensaje_respuesta, sizeof(int), &datos_dtb.id);
-                                enviar_mensaje(mensaje_respuesta);
                                 break;
                             }
 
@@ -121,28 +118,29 @@ int main(int argc, char **argv) {
                         if(resultado_instruccion == -1){
                             log_error(logger, "Cantidad de argumentos erroneos en DTB %d, linea: %s\n", datos_dtb.id,
                                     linea);
-                            
-                            resultado_instruccion = DTB_EXIT;
                         }
                         else if(resultado_instruccion == -2){
                             log_error(logger, "Operacion no reconocida en DTB %d, linea: %s\n", datos_dtb.id,
                                       linea);
-
-                            resultado_instruccion = DTB_EXIT;
                         }
 
                         break;
 
                     default:
                         log_error(logger, "Flag inicializado de DTB %d invalida, abortando DTB...", datos_dtb.id);
-                        resultado_instruccion = DTB_EXIT;
+                        resultado_instruccion = -3;
                         break;
 	            }
 	            log_info(logger, "Volviendo DTB %d a CPU con quantum restante %d y status %d", datos_dtb.id,
 	                    datos_dtb.quantum, datos_dtb.status);
                 datos_dtb.status = resultado_instruccion;
-                enviar_datos_dtb(socket_safa, &datos_dtb);
 
+                if(datos_dtb.status != READY && datos_dtb.status != BLOQUEAR){
+                    mensaje_respuesta = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, 0);
+                    agregar_dato(mensaje_respuesta, sizeof(int), &datos_dtb.id);
+                    enviar_mensaje(mensaje_respuesta);
+                }
+                enviar_datos_dtb(socket_safa, &datos_dtb);
 	            break;
 
             case CONEXION_CERRADA:

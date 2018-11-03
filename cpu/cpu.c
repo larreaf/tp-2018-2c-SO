@@ -120,8 +120,7 @@ int main(int argc, char **argv) {
                                     linea);
                         }
                         else if(resultado_instruccion == -2){
-                            log_error(logger, "Operacion no reconocida en DTB %d, linea: %s\n", datos_dtb.id,
-                                      linea);
+                            log_error(logger, "Operacion no reconocida en DTB %d, linea: %s\n", datos_dtb.id, linea);
                         }
 
                         break;

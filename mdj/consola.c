@@ -6,12 +6,12 @@ char* dir_mdj;
 char* dir_fifa_abs;
 char* dir_fifa_rel;
 char* dir_actual;
-
+extern cfg_mdj* configuracion;
 
 void consola_mdj(){
 
     dir_fifa_rel = string_new();
-    string_append(&dir_fifa_rel,"mnt/FIFA_FS/Archivos");
+    string_append_with_format(&dir_fifa_rel,"%s/Archivos" ,configuracion->punto_montaje);
     dir_mdj = get_current_dir_name();
     //printf("%s\n", dir_mdj);
     dir_fifa_abs = strdup(dir_mdj);
@@ -282,6 +282,7 @@ void con_cat(char* linea){
         lineas_leidas = obtener_datos(mdj_interface);
         printf("%s",lineas_leidas);
         free(lineas_leidas);
+        printf("\n");
     }else {
         printf("El archivo no existe\n");
     }

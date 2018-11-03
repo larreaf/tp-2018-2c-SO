@@ -50,5 +50,6 @@ DTB* conseguir_y_actualizar_dtb(PCP*, DTB*);
 void imprimir_estado_pcp(PCP*);
 void* ejecutar_pcp(void*);
 void enviar_datos_dtb(int, DTB*);
+DTB* obtener_dtb_de_block(PCP*, int);
 
 #endif //SAFA_PCP_H

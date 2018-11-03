@@ -109,7 +109,7 @@ void inicializar_bloque(t_mdj_interface* mdj_interface){
 		/*
          * Guardar bytes
          */
-		while( lineas < metadata.tamanio_bloques-1 && size > 0){
+		while( lineas < metadata.tamanio_bloques && size > 1){
 			fprintf(ptr_filebloque,"%c",'\n');
 			lineas++;
 			size--;

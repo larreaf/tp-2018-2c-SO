@@ -68,7 +68,7 @@ void cerrar_conexion(ConexionesActivas conexiones_activas, int socket){
  * @param t_proceso_host tipo de proceso que ejecuta el servidor
  * @return struct Servidor con su logger, socket y lista de sockets clientes
  */
-ConexionesActivas inicializar_conexiones_activas(t_log *logger, int puerto, int *procesos_permitidos,
+ConexionesActivas inicializar_conexiones_activas(t_log *logger, char* ip, int puerto, int *procesos_permitidos,
                                                  Proceso t_proceso_host){
     int* procesos_conectados = calloc(sizeof(int), cantidad_tipos_procesos);
     int socket_escucha = 0;
@@ -76,7 +76,7 @@ ConexionesActivas inicializar_conexiones_activas(t_log *logger, int puerto, int 
     ConexionesActivas servidor;
 
     if(puerto){
-        inicializarDireccion(&addr_local, puerto, MY_IP);
+        inicializarDireccion(&addr_local, puerto, ip);
         socket_escucha = escuchar_Conexion((&addr_local));
     }
 

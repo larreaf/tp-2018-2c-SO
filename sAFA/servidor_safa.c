@@ -27,7 +27,7 @@ void* ejecutar_servidor(void *arg){
     conexiones_permitidas[t_elDiego] = 1;
     conexiones_permitidas[t_consola_safa] = 1;
     conexiones_permitidas[t_cpu] = 1;
-    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_safa);
+    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto, conexiones_permitidas, t_safa);
 
     while (correr) {
 

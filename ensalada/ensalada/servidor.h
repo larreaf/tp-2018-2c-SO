@@ -39,7 +39,7 @@ typedef struct{
 
 int conectar_como_cliente(ConexionesActivas, char *, int, Proceso);
 void cerrar_conexion(ConexionesActivas, int);
-ConexionesActivas inicializar_conexiones_activas(t_log *, int, int *, Proceso);
+ConexionesActivas inicializar_conexiones_activas(t_log *, char* ip, int puerto, int *, Proceso);
 void destruir_conexiones_activas(ConexionesActivas);
 MensajeDinamico* esperar_mensajes(ConexionesActivas);
 

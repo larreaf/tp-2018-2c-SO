@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	logger = log_create("elDiego.log", "elDiego", true, log_level_from_string("info"));
 
 	conexiones_permitidas[t_cpu] = 3;
-	conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_elDiego);
+	conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto, conexiones_permitidas, t_elDiego);
 
 	// conectar como cliente a MDJ
 	socket_mdj = conectar_como_cliente(conexiones_activas, configuracion->ip_mdj, configuracion->puerto_mdj, t_mdj);

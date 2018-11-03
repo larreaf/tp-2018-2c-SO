@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     validar_parametros(argc);
     cfg_cpu* configuracion = asignar_config(argv[1],cpu);
 
-    conexiones_activas = inicializar_conexiones_activas(logger, 0, conexiones_permitidas, t_cpu);
+    conexiones_activas = inicializar_conexiones_activas(logger, MY_IP,0, conexiones_permitidas, t_cpu);
 
 	socket_fm9 = conectar_como_cliente(conexiones_activas, configuracion->ip_fm9, configuracion->puerto_fm9, t_fm9);
 	log_info(logger, "Conexion con FM9 lista");

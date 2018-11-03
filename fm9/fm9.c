@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     log_info(logger, "Inicializando conexiones_activas...");
     conexiones_permitidas[t_cpu] = 1;
     conexiones_permitidas[elDiego] = 1;
-    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_fm9);
+    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto, conexiones_permitidas, t_fm9);
 
     storage = inicializar_memoria_real(configuracion->tamanio, configuracion->max_linea);
     memoria = inicializar_memoria(storage, configuracion->modo);

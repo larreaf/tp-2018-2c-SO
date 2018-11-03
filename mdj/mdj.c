@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
     // en este caso permitimos que se nos conecte el diego y nuestra propia consola
     conexiones_permitidas[t_elDiego] = 1;
     conexiones_permitidas[t_consola_mdj] = 1;
-    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->puerto, conexiones_permitidas, t_mdj);
+    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip ,configuracion->puerto, conexiones_permitidas, t_mdj);
 
 
   //  log_info(logger, "Listo");

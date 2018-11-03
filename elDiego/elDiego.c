@@ -81,6 +81,16 @@ int main(int argc, char **argv) {
                 }
                 recibir_string(&archivo, mensaje_dinamico);
 
+                if(string_is_empty(archivo)) {
+                    log_warning(logger, "Error al cargar script %s para DTB %d: no existe el script", path, id_dtb);
+                    resultado = -4;
+                    mensaje_dinamico = crear_mensaje(ABORTAR_DTB_DE_NEW, socket_safa, 0);
+                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                    agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
+                    enviar_mensaje(mensaje_dinamico);
+                    break;
+                }
+
                 log_info(logger, "Recibido script %s de MDJ para DTB %d, enviando datos a FM9", path, id_dtb);
 
                 // enviar mensaje a FM9 para cargar el script
@@ -243,7 +253,7 @@ int main(int argc, char **argv) {
                     }
                     recibir_int(&resultado, mensaje_dinamico);
                 	size--;
-                    if (resultado!=size){
+                    if (resultado==-1){
                     	codigo_error=40001;
                         log_error(logger, "Falla en flush archivo guardar datos en mdj para id_dtb %d- Error %d",id_dtb,codigo_error);
                         mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);

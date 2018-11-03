@@ -28,7 +28,7 @@ void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_act
     // cierra cada socket
     destruir_conexiones_activas(conexiones_activas);
     correr = 0;
-    pthread_cancel(thread_consola);
+    pthread_kill(thread_consola, SIGUSR1);
     pthread_join(thread_consola, NULL);
     log_destroy(logger);
     destroy_cfg(config, t_fm9);

@@ -453,7 +453,7 @@ int desalojar_script(Memoria* memoria, int id_dtb){
         cantidad_segmentos = list_size(tabla_segmentos_proceso->tabla_de_segmentos);
 
         for(int i = 0; i<cantidad_segmentos; i++) {
-            segmento = list_get(tabla_segmentos_proceso->tabla_de_segmentos, i);
+            segmento = list_get(tabla_segmentos_proceso->tabla_de_segmentos, 0);
 
             log_info(memoria->logger, "Liberando archivo en segmento %d para DTB %d", segmento->id_segmento,
                      id_dtb);
@@ -463,7 +463,7 @@ int desalojar_script(Memoria* memoria, int id_dtb){
                 memoria->storage->estado_lineas[segmento->inicio_segmento + j] = 0;
             }
 
-            list_remove(tabla_segmentos_proceso->tabla_de_segmentos, i);
+            list_remove(tabla_segmentos_proceso->tabla_de_segmentos, 0);
         }
 
         for(int i = 0; i<list_size(memoria->lista_tablas_de_segmentos); i++){

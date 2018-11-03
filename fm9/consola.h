@@ -7,6 +7,7 @@
 
 #include "memoria.h"
 #include <readline/readline.h>
+#include <errno.h>
 
 void* ejecutar_consola_fm9(void);
 

@@ -152,7 +152,7 @@ int in_borrar(int dtb_id, char* path){
 int in_asignar(DTB* dtb, char* path, int linea, char* datos){
     MensajeDinamico* peticion_asignar;
     ArchivoAbierto* nodo_aux = NULL;
-    int error = 20001, direccion;
+    int error = 20001, direccion, resultado;
 
     int tamanio_lista = list_size(dtb->archivos_abiertos);
 
@@ -173,6 +173,13 @@ int in_asignar(DTB* dtb, char* path, int linea, char* datos){
     agregar_dato(peticion_asignar, sizeof(int), &direccion);
     agregar_string(peticion_asignar, datos);
     enviar_mensaje(peticion_asignar);
+
+    peticion_asignar = recibir_mensaje(socket_fm9);
+    recibir_int(&resultado, peticion_asignar);
+
+    if(resultado)
+        return resultado;
+
     // TODO verificar error en enviar_mensaje
 
     return READY;

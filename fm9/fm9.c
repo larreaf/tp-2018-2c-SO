@@ -132,6 +132,10 @@ int main(int argc, char **argv) {
                 else
                     log_error(logger, "Falla al modificar archivo en memoria (codigo error %d)", resultado);
 
+                mensaje_respuesta = crear_mensaje(ASIGNAR_ARCHIVO_CPU_FM9, mensaje->socket, 0);
+                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                enviar_mensaje(mensaje_respuesta);
+
                 break;
 
             case FLUSH_ARCHIVO:

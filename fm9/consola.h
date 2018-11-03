@@ -8,6 +8,6 @@
 #include "memoria.h"
 #include <readline/readline.h>
 
-void ejecutar_consola_fm9(void);
+void* ejecutar_consola_fm9(void);
 
 #endif //FM9_CONSOLA_H

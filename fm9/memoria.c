@@ -109,14 +109,14 @@ NodoListaTablasSegmentos* encontrar_tabla_segmentos_por_id_dtb(t_list* lista, in
  * @param linea datos a escribir
  * @param numero_linea numero de linea a escribir
  */
-void escribir_linea(MemoriaReal* storage, char* linea, int numero_linea){
+void escribir_linea(MemoriaReal* storage, char* linea, int numero_linea, char sobreescribir){
     if(strlen(linea)>storage->tamanio_linea){
         log_error(storage->logger, "Se intento escribir una linea mas grande del tamanio maximo de linea"
                                    " (linea %d, datos %s)", numero_linea, linea);
         return;
     }
 
-    if(!storage->estado_lineas[numero_linea]) {
+    if(!storage->estado_lineas[numero_linea] || sobreescribir) {
         strcpy(storage->inicio + (numero_linea * storage->tamanio_linea), linea);
         storage->estado_lineas[numero_linea] = 1;
     }
@@ -176,7 +176,7 @@ void escribir_archivo_en_storage(MemoriaReal *storage, char *script, int base){
     char* word;
 
     while((word=strsep(&script, "\n")) != NULL) {
-        escribir_linea(storage, word, base+i);
+        escribir_linea(storage, word, base+i, 0);
         log_info(storage->logger, "Linea escrita en posicion %d: %s", base+i, word);
         i++;
     }
@@ -429,7 +429,7 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
                          id_dtb);
 
                 for(int j = 0; j<segmento->longitud_segmento; j++){
-                    escribir_linea(memoria->storage, "", segmento->inicio_segmento+j);
+                    escribir_linea(memoria->storage, "", segmento->inicio_segmento+j, 1);
                     memoria->storage->estado_lineas[segmento->inicio_segmento+j] = 0;
                 }
                 break;
@@ -441,6 +441,39 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
     }
 
     return 40002;
+}
+
+int desalojar_script(Memoria* memoria, int id_dtb){
+    NodoListaTablasSegmentos* tabla_segmentos_proceso;
+    NodoTablaSegmentos* segmento;
+
+    if(memoria->modo == SEG) {
+        tabla_segmentos_proceso = encontrar_tabla_segmentos_por_id_dtb(memoria->lista_tablas_de_segmentos, id_dtb);
+
+        segmento = list_get(tabla_segmentos_proceso->tabla_de_segmentos, 0);
+
+        log_info(memoria->logger, "Liberando archivo en segmento %d para DTB %d", segmento->id_segmento,
+                 id_dtb);
+
+        for (int j = 0; j < segmento->longitud_segmento; j++) {
+            escribir_linea(memoria->storage, "", segmento->inicio_segmento + j, 1);
+            memoria->storage->estado_lineas[segmento->inicio_segmento + j] = 0;
+        }
+
+        list_remove(tabla_segmentos_proceso->tabla_de_segmentos, 0);
+
+        for(int i = 0; i<list_size(memoria->lista_tablas_de_segmentos); i++){
+            tabla_segmentos_proceso = list_get(memoria->lista_tablas_de_segmentos, i);
+
+            if(tabla_segmentos_proceso->id_dtb == id_dtb) {
+                list_remove(memoria->lista_tablas_de_segmentos, i);
+                free(tabla_segmentos_proceso);
+            }
+        }
+        return 0;
+    }
+
+    return -1;
 }
 
 /*!

@@ -166,6 +166,18 @@ int main(int argc, char **argv) {
 
                 break;
 
+            case DESALOJAR_SCRIPT:
+                recibir_int(&id_dtb, mensaje);
+
+                resultado = desalojar_script(memoria, id_dtb);
+
+                if(!resultado)
+                    log_info(memoria->logger, "Script de DTB %d desalojado con exito", id_dtb);
+                else
+                    log_error(memoria->logger, "Falla al desalojar script de DTB %d", id_dtb);
+
+                break;
+
             case CONEXION_CERRADA:
                 if (mensaje->t_proceso == t_elDiego)
                     cerrar_fm9(logger, configuracion, conexiones_activas, memoria);

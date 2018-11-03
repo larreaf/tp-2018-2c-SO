@@ -7,7 +7,7 @@
 extern Memoria* memoria;
 extern int correr;
 
-void ejecutar_consola_fm9(void){
+void* ejecutar_consola_fm9(void){
     char* linea_leida;
     int id_dtb;
 

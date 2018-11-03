@@ -109,11 +109,14 @@ void inicializar_bloque(t_mdj_interface* mdj_interface){
 		/*
          * Guardar bytes
          */
-		while( lineas < metadata.tamanio_bloques && size > 1){
+		while( lineas < metadata.tamanio_bloques && size > 0){
 			fprintf(ptr_filebloque,"%c",'\n');
 			lineas++;
 			size--;
 		}
+		/*if(lineas == metadata.tamanio_bloques){
+			fprintf(ptr_filebloque,"%c",'\n');
+		}*/
 
 		/*
          * Cerrar bloque y liberar memoria
@@ -447,9 +450,7 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 		 * Guardar bytes
 		 */
 
-		while( (saltos_de_linea_buffer < saltos_de_linea_bloque_totales || (saltos_de_linea_buffer == saltos_de_linea_bloque_totales && mdj_interface->buffer[buffer_index] != '\n') )
-				&& (size > 0 || mdj_interface->buffer[buffer_index] != '\0')
-		){
+		while( saltos_de_linea_buffer < saltos_de_linea_bloque_totales && (size > 0 || mdj_interface->buffer[buffer_index] != '\0')){
 			if(mdj_interface->buffer[buffer_index] == '\n'){
 				saltos_de_linea_buffer++;
 			}

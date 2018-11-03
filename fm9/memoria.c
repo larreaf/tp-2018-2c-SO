@@ -15,7 +15,7 @@ MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea){
 
     memoria_real->logger = log_create("fm9.log", "MemoriaReal", true, log_level_from_string("info"));
 
-    if(tamanio % tamanio_linea == 1)
+    if(tamanio % tamanio_linea)
         log_warning(memoria_real->logger, "Tamanio (%d) no divisible por tamanio de linea (%d)", tamanio, tamanio_linea);
 
     memoria_real->tamanio = tamanio;
@@ -30,7 +30,8 @@ MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea){
 
     log_info(memoria_real->logger, "Storage inicializado correctamente: Tamanio %d lineas de %d bytes cada una"
                                    " (total %d bytes)",
-            memoria_real->cant_lineas, memoria_real->tamanio_linea, memoria_real->tamanio);
+            memoria_real->cant_lineas, memoria_real->tamanio_linea,
+            memoria_real->cant_lineas*memoria_real->tamanio_linea);
     return memoria_real;
 }
 

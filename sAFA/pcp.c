@@ -50,7 +50,7 @@ void decrementar_procesos_asignados_cpu(ConexionesActivas conexiones_activas, in
  * @param quantum quantum con el cual planificar
  * @return PCP inicializado
  */
-PCP* inicializar_pcp(int algoritmo_planificador, int quantum){
+PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo){
     PCP* nuevo_pcp = malloc(sizeof(PCP));
     DTB* dtb_dummy;
     nuevo_pcp->cola_ready = queue_create();
@@ -65,6 +65,7 @@ PCP* inicializar_pcp(int algoritmo_planificador, int quantum){
     nuevo_pcp->algoritmo_planificacion = algoritmo_planificador;
     nuevo_pcp->quantum = quantum;
     nuevo_pcp->logger = log_create("safa.log", "PCP", true, log_level_from_string("info"));
+    nuevo_pcp->retardo_planificacion = retardo;
 
     dtb_dummy = crear_dtb(0, 0);
     agregar_a_block(nuevo_pcp, dtb_dummy);
@@ -175,7 +176,7 @@ DTB* obtener_dtb_de_block(PCP* pcp, int id_dtb){
         }
     }
     pthread_mutex_unlock(&(pcp->mutex_block));
-    
+
     return NULL;
 }
 
@@ -436,6 +437,7 @@ void* ejecutar_pcp(void* arg){
             log_info(pcp->logger, "Enviando datos DTB DUMMY a CPU %d para cargar script %s para DTB %d",
                     cpu_seleccionado->id, dtb_seleccionado->path_script, dtb_seleccionado->id);
 
+        usleep(pcp->retardo_planificacion*1000);
         enviar_datos_dtb(cpu_seleccionado->socket, dtb_seleccionado);
         (cpu_seleccionado->cantidad_procesos_asignados)++;
     }

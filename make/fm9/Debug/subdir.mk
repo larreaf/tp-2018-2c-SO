@@ -5,14 +5,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../fm9.c \
+../consola.c \
 ../memoria.c 
 
 OBJS += \
 ./fm9.o \
+./consola.o \
 ./memoria.o 
 
 C_DEPS += \
 ./fm9.d \
+./consola.d \
 ./memoria.d 
 
 

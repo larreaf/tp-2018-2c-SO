@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
                     agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                     enviar_mensaje(mensaje_dinamico);
                 }else{
-                	int size = strlen(archivo)+1;
+                	int size = strlen(archivo);
 
                 	//guardar en mdj
                 	mensaje_dinamico = crear_mensaje_mdj_guardar_datos(socket_mdj, path, 0, size, archivo, configuracion->transfer_size);
@@ -242,6 +242,7 @@ int main(int argc, char **argv) {
                         cerrar_elDiego(logger, configuracion, conexiones_activas);
                     }
                     recibir_int(&resultado, mensaje_dinamico);
+                	size--;
                     if (resultado!=size){
                     	codigo_error=40001;
                         log_error(logger, "Falla en flush archivo guardar datos en mdj para id_dtb %d- Error %d",id_dtb,codigo_error);

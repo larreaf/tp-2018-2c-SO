@@ -29,7 +29,10 @@ Instruccion* parsear_linea(char* linea){
 
         for(int i = 2; i<retorno->argc; i++){
             string_append(&linea_final, (char*)list_get(retorno->argv, 2));
-            string_append(&linea_final, " ");
+
+            if(i<retorno->argc-1)
+                string_append(&linea_final, " ");
+
             list_remove(retorno->argv, 2);
         }
         list_add(retorno->argv, linea_final);

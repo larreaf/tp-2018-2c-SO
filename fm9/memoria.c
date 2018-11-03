@@ -446,21 +446,25 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
 int desalojar_script(Memoria* memoria, int id_dtb){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;
+    int cantidad_segmentos;
 
     if(memoria->modo == SEG) {
         tabla_segmentos_proceso = encontrar_tabla_segmentos_por_id_dtb(memoria->lista_tablas_de_segmentos, id_dtb);
+        cantidad_segmentos = list_size(tabla_segmentos_proceso->tabla_de_segmentos);
 
-        segmento = list_get(tabla_segmentos_proceso->tabla_de_segmentos, 0);
+        for(int i = 0; i<cantidad_segmentos; i++) {
+            segmento = list_get(tabla_segmentos_proceso->tabla_de_segmentos, i);
 
-        log_info(memoria->logger, "Liberando archivo en segmento %d para DTB %d", segmento->id_segmento,
-                 id_dtb);
+            log_info(memoria->logger, "Liberando archivo en segmento %d para DTB %d", segmento->id_segmento,
+                     id_dtb);
 
-        for (int j = 0; j < segmento->longitud_segmento; j++) {
-            escribir_linea(memoria->storage, "", segmento->inicio_segmento + j, 1);
-            memoria->storage->estado_lineas[segmento->inicio_segmento + j] = 0;
+            for (int j = 0; j < segmento->longitud_segmento; j++) {
+                escribir_linea(memoria->storage, "", segmento->inicio_segmento + j, 1);
+                memoria->storage->estado_lineas[segmento->inicio_segmento + j] = 0;
+            }
+
+            list_remove(tabla_segmentos_proceso->tabla_de_segmentos, i);
         }
-
-        list_remove(tabla_segmentos_proceso->tabla_de_segmentos, 0);
 
         for(int i = 0; i<list_size(memoria->lista_tablas_de_segmentos); i++){
             tabla_segmentos_proceso = list_get(memoria->lista_tablas_de_segmentos, i);
@@ -518,6 +522,9 @@ void dump(Memoria* memoria, int id_dtb){
         linea = string_new();
 
         string_append(&linea, leer_linea_storage(memoria->storage, i, 0));
+        if(string_is_empty(linea))
+            string_append(&linea, "*vacio*");
+
         printf("Linea %d: %s\n", i, linea);
         free(linea);
     }

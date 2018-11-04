@@ -138,6 +138,7 @@ void* ejecutar_plp(void* arg){
         dtb_seleccionado = list_get(plp->lista_new, list_size(plp->lista_new)-1);
         pthread_mutex_unlock(&(plp->mutex_new));
 
+
         desbloquear_dtb_dummy(pcp, dtb_seleccionado->id, dtb_seleccionado->path_script);
     }
 

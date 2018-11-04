@@ -14,14 +14,16 @@ extern bool correr;
  * @return CPU libre
  */
 CPU* seleccionar_cpu(t_list* lista_cpus){
-    CPU* cpu_seleccionado;
+    CPU* cpu_seleccionado = NULL;
     int tamanio_lista_cpus = list_size(lista_cpus);
 
     for(int i = 0; i<tamanio_lista_cpus; i++){
         cpu_seleccionado = list_get(lista_cpus, i);
 
-        if(!(cpu_seleccionado->cantidad_procesos_asignados))
+        if(!(cpu_seleccionado->cantidad_procesos_asignados)) {
+            cpu_seleccionado->id = i;
             return cpu_seleccionado;
+        }
     }
 }
 
@@ -437,7 +439,7 @@ void* ejecutar_pcp(void* arg){
             log_info(pcp->logger, "Enviando datos DTB DUMMY a CPU %d para cargar script %s para DTB %d",
                     cpu_seleccionado->id, dtb_seleccionado->path_script, dtb_seleccionado->id);
 
-        usleep(pcp->retardo_planificacion*1000);
+        usleep((__useconds_t)(pcp->retardo_planificacion*1000));
         enviar_datos_dtb(cpu_seleccionado->socket, dtb_seleccionado);
         (cpu_seleccionado->cantidad_procesos_asignados)++;
     }

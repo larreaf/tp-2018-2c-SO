@@ -11,11 +11,13 @@
  */
 int conectar_como_cliente(ConexionesActivas conexiones_activas, char *ip_destino, int puerto_destino, Proceso t_proceso_destino){
     struct sockaddr_in addr;
-    int socket = crearSocket();
+    int socket = crearSocket(), resultado;
     ConexionCliente* nueva_conexion;
 
     inicializarDireccion(&addr,puerto_destino,ip_destino);
-    conectar_Servidor(socket,&addr, conexiones_activas.t_proceso_host);
+    resultado = conectar_Servidor(socket,&addr, conexiones_activas.t_proceso_host);
+    if(resultado==-1)
+        return resultado;
 
     nueva_conexion = malloc(sizeof(ConexionCliente));
     nueva_conexion->socket = socket;
@@ -126,10 +128,10 @@ void destruir_conexiones_activas(ConexionesActivas servidor){
 MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
     ConexionCliente* cliente_seleccionado;
     fd_set descriptores_lectura;
-    MensajeDinamico* retorno;
+    MensajeDinamico* retorno, *respuesta;
     Proceso cliente;
     CPU* cpu;
-    int retsel, ids_cpu = 0;
+    int retsel, header;
 
     if(servidor.inicializado != 1){
         log_error(servidor.logger, "Se intento utilizar un ConexionesActivas no inicializado");
@@ -185,6 +187,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                     if(retorno->header!=-1){
                         if(retorno->header==HANDSHAKE_CLIENTE){
                             recibir_int((int*)&cliente, retorno);
+                            header = NUEVA_CONEXION;
 
                             switch(cliente){
                                 case t_cpu:
@@ -196,13 +199,13 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
 
                                         cpu = malloc(sizeof(CPU));
                                         cpu->socket = cliente_seleccionado->socket;
-                                        cpu->id = ids_cpu++;
                                         cpu->cantidad_procesos_asignados = 0;
                                         list_add(servidor.lista_cpus, cpu);
 
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso CPU denegada");
                                         cerrar_conexion(servidor, i);
+                                        header = CONEXION_DENEGADA;
                                     }
                                     break;
 
@@ -217,6 +220,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso elDiego denegada");
                                         cerrar_conexion(servidor, i);
+                                        header = CONEXION_DENEGADA;
                                     }
                                     break;
 
@@ -231,6 +235,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso MDJ denegada");
                                         cerrar_conexion(servidor, i);
+                                        header = CONEXION_DENEGADA;
                                     }
                                     break;
 
@@ -245,6 +250,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso FM9 denegada");
                                         cerrar_conexion(servidor, i);
+                                        header = CONEXION_DENEGADA;
                                     }
                                     break;
 
@@ -259,6 +265,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     }else{
                                         log_error(servidor.logger, "Conexion de proceso SAFA denegada");
                                         cerrar_conexion(servidor, i);
+                                        header = CONEXION_DENEGADA;
                                     }
                                     break;
 
@@ -272,6 +279,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     }else{
                                         log_error(servidor.logger, "Conexion de consola MDJ denegada");
                                         cerrar_conexion(servidor, i);
+                                        header = CONEXION_DENEGADA;
                                     }
                                     break;
 
@@ -285,6 +293,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     }else{
                                         log_error(servidor.logger, "Conexion de consola FM9 denegada");
                                         cerrar_conexion(servidor, i);
+                                        header = CONEXION_DENEGADA;
                                     }
                                     break;
 
@@ -298,14 +307,22 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                     }else{
                                         log_error(servidor.logger, "Conexion de consola SAFA denegada");
                                         cerrar_conexion(servidor, i);
+                                        header = CONEXION_DENEGADA;
                                     }
                                     break;
 
                                 default:
                                     log_error(servidor.logger, "Falla handshake, tipo de proceso invalido");
+                                    header = CONEXION_DENEGADA;
                                     break;
                             }
-                            retorno->header = NUEVA_CONEXION;
+                            if(header == NUEVA_CONEXION)
+                                respuesta = crear_mensaje(HANDSHAKE_CLIENTE, retorno->socket, 0);
+                            else
+                                respuesta = crear_mensaje(CONEXION_DENEGADA, retorno->socket, 0);
+                            enviar_mensaje(respuesta);
+
+                            retorno->header = header;
                             retorno->t_proceso = cliente;
                             return retorno;
                         }else{

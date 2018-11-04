@@ -52,7 +52,7 @@ int escuchar_Conexion( struct sockaddr_in*);
  * @NAME: conectar_Servidor
  * @DESC: conecta el socket al servidor con la direccion addr_servidor.
  */
-void conectar_Servidor(int fd_socket, struct sockaddr_in *addr_servidor, Proceso t_proceso);
+int conectar_Servidor(int fd_socket, struct sockaddr_in *addr_servidor, Proceso t_proceso);
 
 /*
  * @NAME: aceptar_conexion
@@ -65,7 +65,7 @@ int aceptar_conexion(int socketEscucha);
  * @DESC: Envia que tipo de cliente es hacia el servidor al que quiere conectarse
  *
  */
-void handshakeCliente(Proceso cliente, int socket_destino);
+int handshakeCliente(Proceso cliente, int socket_destino);
 
 /*
  * @NAME: handshakeCliente

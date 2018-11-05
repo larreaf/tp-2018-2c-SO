@@ -22,7 +22,7 @@ void levantar_metadata(t_log* logger){
 //	printf("\nruta: %s\n",ruta);
 	t_config* metadata_cfg = config_create(ruta);
 	if(metadata_cfg == NULL){
-		log_error(logger, "No se encontró el archivo %s", ruta);
+		log_error(logger, "No se encontró el archivo Metadata.bin");
 		exit(-1);
 	}else{
 		metadata.tamanio_bloques = config_get_int_value(metadata_cfg,"TAMANIO_BLOQUES");

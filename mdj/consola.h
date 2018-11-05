@@ -26,6 +26,10 @@ typedef struct{
 }operacionConsolaMDJ;
 
 
+bool check_folder(char* folder);
+
+bool verificar_path(char* linea, bool dir);
+
 void consola_mdj();
 
 void ejecutar_linea(char* linea);

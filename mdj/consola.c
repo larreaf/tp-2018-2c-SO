@@ -7,6 +7,7 @@ char* dir_fifa_abs;
 char* dir_fifa_rel;
 char* dir_actual;
 extern cfg_mdj* configuracion;
+extern char* punto_de_montaje_absoluto;
 
 void consola_mdj(){
 
@@ -42,25 +43,49 @@ void consola_mdj(){
 
 void ejecutar_linea(char* linea){
 	operacionConsolaMDJ* op_consola = parsear_linea(linea);
+	t_mdj_interface* mdj_interface = malloc(sizeof(t_mdj_interface));
 	char* bitmap_string;
 	switch (op_consola->accion){
 		case LS:
-			con_ls(op_consola->argumento);
+			if(verificar_path(op_consola->argumento, true)){
+				con_ls(op_consola->argumento);
+			} else {
+				printf("Directorio invalido\n");
+			}
 			destroy_operacion(op_consola);
 			break;
 
 		case CD:
-			con_cd(op_consola->argumento);
+			/*if(verificar_path(op_consola->argumento, true)){*/
+				con_cd(op_consola->argumento);
+			/*} else {
+				printf("Directorio invalido\n");
+			}*/
+
 			destroy_operacion(op_consola);
 			break;
 
 		case MD5_CONSOLA:
-			con_md5(op_consola->argumento);
+			mdj_interface->path = string_new();
+			string_append_with_format(&mdj_interface->path,"%s%s",dir_actual,op_consola->argumento);
+			if(op_consola->argumento != NULL && !string_is_empty(op_consola->argumento) && verificar_path(op_consola->argumento, false) && validar_archivo(mdj_interface)){
+				con_md5(op_consola->argumento);
+			} else {
+				printf("Archivo invalido\n");
+			}
+			free(mdj_interface->path);
 			destroy_operacion(op_consola);
 			break;
 
 		case CAT:
-			con_cat(op_consola->argumento);
+			mdj_interface->path = string_new();
+			string_append_with_format(&mdj_interface->path,"%s%s",dir_actual,op_consola->argumento);
+			if(op_consola->argumento != NULL && !string_is_empty(op_consola->argumento) && verificar_path(op_consola->argumento, false) && validar_archivo(mdj_interface)){
+				con_cat(op_consola->argumento);
+			} else {
+				printf("Archivo invalido\n");
+			}
+			free(mdj_interface->path);
 			destroy_operacion(op_consola);
 			break;
 
@@ -85,6 +110,7 @@ void ejecutar_linea(char* linea){
 			printf("Operacion incorrecta\n");
 			break;
 	}
+	free(mdj_interface);
 }
 
 operacionConsolaMDJ* parsear_linea(char* linea){
@@ -139,10 +165,61 @@ tipo_accion_consola_mdj string_to_accion(char* string){
     return retorno;
 }
 
+bool check_folder(char* folder){
+	char* directorio = string_new();
+	string_append_with_format(&directorio,"%s/%s%s",dir_fifa_abs,dir_actual,folder);
+	char* path_absoluto = realpath(directorio, NULL);
+	//   printf("realpath = %s\n punto_montaje = %s",path_absoluto, punto_de_montaje_absoluto);
+
+	if (path_absoluto != NULL && string_contains(path_absoluto,punto_de_montaje_absoluto) && !string_equals_ignore_case(path_absoluto,punto_de_montaje_absoluto)){
+		return true;
+	}
+	if(path_absoluto != NULL){
+		free(path_absoluto);
+	}
+	free(directorio);
+	return false;
+}
+
+bool verificar_path(char* linea, bool dir){
+	char** path_split = string_split(linea,"/");
+	char* carpeta = string_new();
+	int i = 0;
+	int longitud = 0;
+	bool ret = true;
+	while(path_split[i] != NULL ){
+		if(!string_is_empty(path_split[i])){
+		longitud++;
+		}
+		i++;
+	}
+	if(!dir){
+		longitud--;
+	}
+
+	for(i = 0; i < longitud && ret;i++){
+		string_append_with_format(&carpeta,"%s/",path_split[i]);
+		ret = check_folder(carpeta);
+	}
+	i = 0;
+	while(path_split[i] != NULL){
+		free(path_split[i]);
+		i++;
+	}
+	free(path_split);
+	free(carpeta);
+	return ret;
+}
+
 void con_ls(char* linea){
     char* arg = string_new();
-    string_append_with_format(&arg,"ls %s/%s%s",dir_fifa_abs,dir_actual,linea);
+    char* directorio = string_new();
+    string_append_with_format(&directorio,"%s/%s%s",dir_fifa_abs,dir_actual,linea);
+    string_append_with_format(&arg,"ls %s",directorio);
+
     system(arg);
+
+    free(directorio);
     free(arg);
 }
 

@@ -152,7 +152,7 @@ bool validar_archivo(t_mdj_interface* mdj_interface){
 	}
 
 	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
-	FILE* ptr = fopen(path_absoluto, "r");
+	FILE* ptr = fopen(path_absoluto, "r+");
 	if(ptr == NULL){
 		//	printf("Archivo no existe!\n");
 		ret = false;

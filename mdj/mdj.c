@@ -23,6 +23,7 @@ pthread_t thread_consola;
 t_bitarray* bitmap;
 cfg_mdj* configuracion;
 metadata_fifa metadata;
+char* punto_de_montaje_absoluto;
 
 void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, ConexionesActivas conexiones_activas){
     log_info(logger, "Cerrando MDJ...");
@@ -74,6 +75,7 @@ void* ejecutar_consola(void* arg){
 void abs_to_rel_pto_montaje();
 
 void abs_to_rel_pto_montaje(){
+	punto_de_montaje_absoluto = strdup(configuracion->punto_montaje);
 	char* rel_path_pto_montaje = string_new();
 	char* curr_dir;
 	curr_dir = get_current_dir_name();
@@ -111,7 +113,9 @@ int main(int argc, char **argv) {
     logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
     configuracion = asignar_config(argv[1],mdj);
     log_info(logger, "Archivo de configuracion correcto");
+
     abs_to_rel_pto_montaje();
+
     log_info(logger, "Path del punto de montaje absoluto convertido a relativo");
     if(configuracion->punto_montaje[0] == '/'){
         configuracion->punto_montaje[0] = ' ';

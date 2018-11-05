@@ -71,6 +71,32 @@ void* ejecutar_consola(void* arg){
     }
 }*/
 
+void abs_to_rel_pto_montaje();
+
+void abs_to_rel_pto_montaje(){
+	char* rel_path_pto_montaje = string_new();
+	char* curr_dir;
+	curr_dir = get_current_dir_name();
+
+	char** aux_split = string_split(curr_dir,"/");
+	int i = 0;
+	int longitud = 0;
+	while(aux_split[i] != NULL){
+		longitud++;
+		free(aux_split[i]);
+		i++;
+	}
+	i = 0;
+	free(curr_dir);
+	free(aux_split);
+	for(i = 0; i < longitud; i++){
+		string_append(&rel_path_pto_montaje,"/..");
+	}
+	string_append(&rel_path_pto_montaje, configuracion->punto_montaje);
+	free(configuracion->punto_montaje);
+	configuracion->punto_montaje = rel_path_pto_montaje;
+}
+
 int main(int argc, char **argv) {
 
     int conexiones_permitidas[cantidad_tipos_procesos]={0}, header, retsocket=0;
@@ -84,6 +110,8 @@ int main(int argc, char **argv) {
     logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
     configuracion = asignar_config(argv[1],mdj);
     log_info(logger, "Archivo de configuracion correcto");
+    abs_to_rel_pto_montaje();
+    log_info(logger, "Path del punto de montaje absoluto convertido a relativo");
     if(configuracion->punto_montaje[0] == '/'){
         configuracion->punto_montaje[0] = ' ';
         string_trim(&configuracion->punto_montaje);

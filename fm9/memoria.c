@@ -523,7 +523,7 @@ void dump(Memoria* memoria, int id_dtb){
         linea = string_new();
 
         string_append(&linea, leer_linea_storage(memoria->storage, i, 0));
-        if(string_is_empty(linea))
+        if(string_is_empty(linea) && !memoria->storage->estado_lineas[i])
             string_append(&linea, "*vacio*");
 
         printf("Linea %d: %s\n", i, linea);

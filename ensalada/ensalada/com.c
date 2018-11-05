@@ -44,19 +44,29 @@ void handshake(int socket_escucha,struct sockaddr_in direccionLocal){
 
 }*/
 
-void conectar_Servidor(int fd_socket, struct sockaddr_in *addr_servidor, Proceso t_proceso){
+int conectar_Servidor(int fd_socket, struct sockaddr_in *addr_servidor, Proceso t_proceso){
 	int codigo = connect(fd_socket,(struct sockaddr*)addr_servidor, sizeof(struct sockaddr));
 	comprobar_error(codigo, "Error al conectar a un servidor\0");
 
-	handshakeCliente(t_proceso,fd_socket);
+	return handshakeCliente(t_proceso,fd_socket);
 }
 
 
-void handshakeCliente(Proceso cliente, int socket_destino){
+int handshakeCliente(Proceso cliente, int socket_destino){
 	MensajeDinamico* mensaje = crear_mensaje(HANDSHAKE_CLIENTE, socket_destino, 0);
+	int header;
 
 	agregar_dato(mensaje, sizeof(Proceso), &cliente);
 	enviar_mensaje(mensaje);
+
+	mensaje = recibir_mensaje(socket_destino);
+	header = mensaje->header;
+	destruir_mensaje(mensaje);
+
+	if(header == HANDSHAKE_CLIENTE)
+		return 0;
+	else
+		return -1;
 }
 
 int aceptar_conexion(int socketEscucha)

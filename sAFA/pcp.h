@@ -26,6 +26,7 @@ typedef struct {
     pthread_mutex_t mutex_block;
     pthread_mutex_t mutex_exec;
     sem_t semaforo_ready;
+    sem_t semaforo_dummy;
     int algoritmo_planificacion;
     int quantum;
     int retardo_planificacion;

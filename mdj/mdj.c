@@ -107,6 +107,7 @@ int main(int argc, char **argv) {
     MensajeDinamico* mensaje_respuesta;
 
     validar_parametros(argc);
+    remove("mdj.log");
     logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
     configuracion = asignar_config(argv[1],mdj);
     log_info(logger, "Archivo de configuracion correcto");

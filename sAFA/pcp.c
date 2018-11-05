@@ -14,14 +14,16 @@ extern bool correr;
  * @return CPU libre
  */
 CPU* seleccionar_cpu(t_list* lista_cpus){
-    CPU* cpu_seleccionado;
+    CPU* cpu_seleccionado = NULL;
     int tamanio_lista_cpus = list_size(lista_cpus);
 
     for(int i = 0; i<tamanio_lista_cpus; i++){
         cpu_seleccionado = list_get(lista_cpus, i);
 
-        if(!(cpu_seleccionado->cantidad_procesos_asignados))
+        if(!(cpu_seleccionado->cantidad_procesos_asignados)) {
+            cpu_seleccionado->id = i;
             return cpu_seleccionado;
+        }
     }
 }
 
@@ -58,6 +60,7 @@ PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo){
     nuevo_pcp->lista_block = list_create();
     nuevo_pcp->lista_exec = list_create();
     sem_init(&(nuevo_pcp->semaforo_ready), 0, 0);
+    sem_init(&(nuevo_pcp->semaforo_dummy), 0, 0);
     pthread_mutex_init(&(nuevo_pcp->mutex_ready), NULL);
     pthread_mutex_init(&(nuevo_pcp->mutex_ready_aux), NULL);
     pthread_mutex_init(&(nuevo_pcp->mutex_block), NULL);
@@ -94,6 +97,8 @@ void destruir_pcp(PCP* pcp_a_destruir){
     queue_destroy_and_destroy_elements(pcp_a_destruir->cola_ready_aux, destruir_dtb);
     list_destroy_and_destroy_elements(pcp_a_destruir->lista_block, destruir_dtb);
     list_destroy_and_destroy_elements(pcp_a_destruir->lista_exec, destruir_dtb);
+    sem_destroy(&pcp_a_destruir->semaforo_ready);
+    sem_destroy(&pcp_a_destruir->semaforo_dummy);
 
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_ready));
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_ready_aux));
@@ -213,6 +218,7 @@ void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int dire
  */
 void desbloquear_dtb_dummy(PCP* pcp, int id_DTB, char* path_script){
     DTB* dtb_seleccionado;
+    sem_wait(&pcp->semaforo_dummy);
 
     for(int i = 0; i<list_size(pcp->lista_block); i++){
         dtb_seleccionado = list_get(pcp->lista_block, i);
@@ -301,6 +307,9 @@ void agregar_a_block(PCP* pcp, DTB* dtb){
     pthread_mutex_lock(&(pcp->mutex_block));
     list_add(pcp->lista_block, dtb);
     pthread_mutex_unlock(&(pcp->mutex_block));
+
+    if(!dtb->inicializado)
+        sem_post(&pcp->semaforo_dummy);
 }
 
 /*!
@@ -437,7 +446,7 @@ void* ejecutar_pcp(void* arg){
             log_info(pcp->logger, "Enviando datos DTB DUMMY a CPU %d para cargar script %s para DTB %d",
                     cpu_seleccionado->id, dtb_seleccionado->path_script, dtb_seleccionado->id);
 
-        usleep(pcp->retardo_planificacion*1000);
+        usleep((__useconds_t)(pcp->retardo_planificacion*1000));
         enviar_datos_dtb(cpu_seleccionado->socket, dtb_seleccionado);
         (cpu_seleccionado->cantidad_procesos_asignados)++;
     }

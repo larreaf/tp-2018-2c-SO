@@ -28,7 +28,7 @@ void cerrar_cpu(t_log* logger, cfg_cpu* configuracion, ConexionesActivas conexio
 }
 
 int main(int argc, char **argv) {
-	int socket_safa, header;
+	int socket_safa;
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0};
     t_accion_post_instruccion resultado_instruccion;
 	DTB datos_dtb;
@@ -44,14 +44,29 @@ int main(int argc, char **argv) {
     conexiones_activas = inicializar_conexiones_activas(logger, MY_IP,0, conexiones_permitidas, t_cpu);
 
 	socket_fm9 = conectar_como_cliente(conexiones_activas, configuracion->ip_fm9, configuracion->puerto_fm9, t_fm9);
-	log_info(logger, "Conexion con FM9 lista");
+	if(socket_fm9!=-1)
+	    log_info(logger, "Conexion con FM9 lista");
+	else{
+	    log_error(logger, "Conexion con FM9 denegada, cerrando CPU");
+	    cerrar_cpu(logger, configuracion, conexiones_activas);
+	}
 
     socket_safa = conectar_como_cliente(conexiones_activas, configuracion->ip_safa, configuracion->puerto_safa, t_safa);
-    log_info(logger, "Conexion con s-AFA lista");
+    if(socket_safa!=-1)
+        log_info(logger, "Conexion con SAFA lista");
+    else{
+        log_error(logger, "Conexion con SAFA denegada, cerrando CPU");
+        cerrar_cpu(logger, configuracion, conexiones_activas);
+    }
 
     socket_elDiego = conectar_como_cliente(conexiones_activas, configuracion->ip_elDiego, configuracion->puerto_elDiego,
             t_elDiego);
-    log_info(logger, "Conexion con elDiego lista");
+    if(socket_elDiego!=-1)
+        log_info(logger, "Conexion con elDiego lista");
+    else{
+        log_error(logger, "Conexion con elDiego denegada, cerrando CPU");
+        cerrar_cpu(logger, configuracion, conexiones_activas);
+    }
 
     log_info(logger, "Listo");
 

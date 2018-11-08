@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     configuracion = asignar_config(argv[1], safa);
 
     remove("safa.log");
-    logger = log_create("safa.log", "S-AFA", 1, LOG_LEVEL_INFO);
+    logger = log_create("safa.log", "S-AFA", 1, log_level_from_string(configuracion->logger_level));
     log_trace(logger, "Archivo de configuracion correcto");
 
     signal(SIGINT, sig_handler);
@@ -53,8 +53,9 @@ int main(int argc, char **argv) {
     comprobar_error(err, "Error al iniciar semaforo arrancar_planificadores");
 
     // crear estructuras de planificadores
-    plp = inicializar_plp(configuracion->multiprogramacion);
-    pcp = inicializar_pcp(configuracion->algoritmo, configuracion->quantum, configuracion->retardo);
+    plp = inicializar_plp(configuracion->multiprogramacion, configuracion->logger_level);
+    pcp = inicializar_pcp(configuracion->algoritmo, configuracion->quantum, configuracion->retardo,
+            configuracion->logger_level);
 
     plp->cola_ready = pcp->cola_ready;
     plp->mutex_ready = pcp->mutex_ready;

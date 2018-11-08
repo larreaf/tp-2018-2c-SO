@@ -12,7 +12,8 @@ char CONFIGURACION_safa[CONFIG_safa][TAMANIO_STRING] = {
 		"QUANTUM",
 		"MULTIPROGRAMACION",
 		"RETARDO_PLANIF",
-		"IP"
+		"IP",
+		"LOGGER_LEVEL"
 
 };
 
@@ -166,6 +167,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_safa->quantum = config_get_int_value(configuracion,CONFIGURACION_safa[2]);
 			retorno_safa->multiprogramacion = config_get_int_value(configuracion, CONFIGURACION_safa[3]);
 			retorno_safa->retardo = config_get_int_value(configuracion, CONFIGURACION_safa[4]);
+			retorno_safa->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[6]);
             retorno_safa->config = configuracion;
 			retorno = retorno_safa;
 			break;

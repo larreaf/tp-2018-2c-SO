@@ -58,3 +58,19 @@ void enviar_datos_dtb(int socket_cpu, DTB* dtb){
     resultado = enviar_mensaje(mensaje);
     comprobar_error(resultado, "Error al enviar datos DTB al CPU");
 }
+
+DTB* encontrar_dtb_en_lista(t_list* lista, int id_dtb, bool remover_de_lista){
+    DTB* dtb_seleccionado = NULL;
+    int tamanio_lista = list_size(lista);
+
+    for(int i = 0; i<tamanio_lista; i++){
+        dtb_seleccionado = list_get(lista, i);
+
+        if(dtb_seleccionado->id == id_dtb) {
+            if(remover_de_lista)
+                list_remove(lista, i);
+            return dtb_seleccionado;
+        }
+    }
+    return NULL;
+}

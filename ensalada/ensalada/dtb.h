@@ -27,5 +27,6 @@ typedef struct{
 
 void desempaquetar_dtb(MensajeDinamico*, DTB*);
 void enviar_datos_dtb(int, DTB*);
+DTB* encontrar_dtb_en_lista(t_list*, int, bool);
 
 #endif //DTB_H

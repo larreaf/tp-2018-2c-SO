@@ -35,7 +35,7 @@ typedef struct {
 
 CPU* seleccionar_cpu(t_list*);
 void decrementar_procesos_asignados_cpu(ConexionesActivas, int);
-PCP* inicializar_pcp(int, int, int);
+PCP* inicializar_pcp(int, int, int, char*);
 void destruir_pcp(PCP*);
 void destruir_dtb(void*);
 DTB* crear_dtb(int, int);
@@ -50,6 +50,7 @@ DTB* ready_a_exec(PCP*);
 DTB* tomar_de_exec(PCP*, int);
 DTB* conseguir_y_actualizar_dtb(PCP*, DTB*);
 void imprimir_estado_pcp(PCP*);
+DTB* encontrar_dtb_pcp(PCP*, int);
 void* ejecutar_pcp(void*);
 void enviar_datos_dtb(int, DTB*);
 DTB* obtener_dtb_de_block(PCP*, int);

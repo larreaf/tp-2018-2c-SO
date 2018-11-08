@@ -13,13 +13,13 @@ extern bool correr;
  * @param multiprogramacion Cuantos procesos puede correr sistema al mismo tiempo
  * @return el PLP creado
  */
-PLP* inicializar_plp(int multiprogramacion){
+PLP* inicializar_plp(int multiprogramacion, char* logger_level){
     PLP* nuevo_plp = malloc(sizeof(PLP));
     nuevo_plp->lista_new = list_create();
     sem_init(&(nuevo_plp->semaforo_new), 0, 0);
     sem_init(&(nuevo_plp->semaforo_multiprogramacion), 0, (unsigned int)multiprogramacion);
     pthread_mutex_init(&(nuevo_plp->mutex_new), NULL);
-    nuevo_plp->logger = log_create("safa.log", "PLP", true, log_level_from_string("info"));
+    nuevo_plp->logger = log_create("safa.log", "PLP", true, log_level_from_string(logger_level));
 
     return nuevo_plp;
 }
@@ -74,17 +74,16 @@ void eliminar_de_new(PLP *plp, int id_dtb){
 void pasar_new_a_ready(PLP* plp, int id_dtb){
     DTB* dtb_seleccionado;
 
-    // TODO sincronizar
+    pthread_mutex_lock(&plp->mutex_new);
+    dtb_seleccionado = encontrar_dtb_en_lista(plp->lista_new, id_dtb, true);
 
-    for(int i = 0; i<list_size(plp->lista_new); i++){
-        dtb_seleccionado = list_get(plp->lista_new, i);
-
-        if(dtb_seleccionado->id == id_dtb){
-            log_info(logger, "Pasando DTB %d de NEW a READY...", id_dtb);
-            agregar_a_ready(pcp, dtb_seleccionado);
-            eliminar_de_new(plp, id_dtb);
-        }
+    if(dtb_seleccionado != NULL){
+        log_info(logger, "Pasando DTB %d de NEW a READY...", id_dtb);
+        agregar_a_ready(pcp, dtb_seleccionado);
+    }else{
+        log_error(plp->logger, "DTB %d no encontrado en NEW", id_dtb);
     }
+    pthread_mutex_unlock(&plp->mutex_new);
 }
 
 /*!
@@ -114,6 +113,16 @@ void imprimir_estado_plp(PLP* plp){
     pthread_mutex_unlock(&(plp->mutex_new));
 }
 
+DTB* encontrar_dtb_plp(PLP* plp, int id_dtb){
+    DTB* dtb_seleccionado;
+
+    pthread_mutex_lock(&(plp->mutex_new));
+    dtb_seleccionado = encontrar_dtb_en_lista(plp->lista_new, id_dtb, false);
+    pthread_mutex_unlock(&(plp->mutex_new));
+
+    return dtb_seleccionado;
+}
+
 /*!
  * Ejecuta el PLP
  * @param arg PLP a ejecutar
@@ -137,7 +146,6 @@ void* ejecutar_plp(void* arg){
         pthread_mutex_lock(&(plp->mutex_new));
         dtb_seleccionado = list_get(plp->lista_new, list_size(plp->lista_new)-1);
         pthread_mutex_unlock(&(plp->mutex_new));
-
 
         desbloquear_dtb_dummy(pcp, dtb_seleccionado->id, dtb_seleccionado->path_script);
     }

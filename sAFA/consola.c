@@ -33,7 +33,7 @@ void ejecutar_linea(char* linea){
 			break;
 
 		case STATUS:
-			con_status(-1);
+			con_status(strtol(strsep(&op_consola->argumento," "), NULL, 10));
 			destroy_operacion(op_consola);
 			break;
 
@@ -121,10 +121,43 @@ void con_ejecutar(char* ruta_escriptorio){
 }
 
 void con_status(int id_DTB){
-    if(id_DTB == -1){
+    DTB* dtb_seleccionado;
+    ArchivoAbierto* archivo_abierto;
+
+    if(!id_DTB){
         imprimir_estado_plp(plp);
         imprimir_estado_pcp(pcp);
+        return;
+    }else{
+        dtb_seleccionado = encontrar_dtb_plp(plp, id_DTB);
+
+        if(dtb_seleccionado == NULL){
+            printf("DTB %d no encontrado en NEW, buscando en BLOCK y EXEC\n", id_DTB);
+            dtb_seleccionado = encontrar_dtb_pcp(pcp, id_DTB);
+        }
+
+        if(dtb_seleccionado == NULL){
+            printf("DTB %d no encontrado\n", id_DTB);
+            return;
+        }
     }
+    printf("---------\n");
+    printf("Datos DTB: %d\n", id_DTB);
+    printf("Path: %s\n", dtb_seleccionado->path_script);
+    printf("Program Counter: %d\n", dtb_seleccionado->program_counter);
+    printf("Inicializado: %d\n", dtb_seleccionado->inicializado);
+    printf("Quantum: %d\n", dtb_seleccionado->quantum);
+    printf("Status: %d\n", dtb_seleccionado->status);
+
+    if(!list_size(dtb_seleccionado->archivos_abiertos))
+        printf("Sin archivos abiertos\n");
+    else{
+        for(int i = 0; i<list_size(dtb_seleccionado->archivos_abiertos); i++){
+            archivo_abierto = list_get(dtb_seleccionado->archivos_abiertos, i);
+            printf("Archivo abierto %s (direccion %d)\n", archivo_abierto->path, archivo_abierto->direccion_memoria);
+        }
+    }
+    printf("---------\n");
 	return;
 }
 

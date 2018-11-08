@@ -21,12 +21,13 @@ typedef struct {
     t_log* logger;
 }PLP;
 
-PLP* inicializar_plp(int);
+PLP* inicializar_plp(int, char*);
 void destruir_plp(PLP*);
 void eliminar_de_new(PLP *, int);
 void agregar_a_new(PLP*, DTB*);
 void pasar_new_a_ready(PLP*, int);
 void imprimir_estado_plp(PLP*);
+DTB* encontrar_dtb_plp(PLP*, int);
 void* ejecutar_plp(void*);
 
 #endif //SAFA_PLP_H

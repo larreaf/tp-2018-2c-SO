@@ -52,7 +52,7 @@ void decrementar_procesos_asignados_cpu(ConexionesActivas conexiones_activas, in
  * @param quantum quantum con el cual planificar
  * @return PCP inicializado
  */
-PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo){
+PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo, char* logger_level){
     PCP* nuevo_pcp = malloc(sizeof(PCP));
     DTB* dtb_dummy;
     nuevo_pcp->cola_ready = queue_create();
@@ -67,7 +67,7 @@ PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo){
     pthread_mutex_init(&(nuevo_pcp->mutex_exec), NULL);
     nuevo_pcp->algoritmo_planificacion = algoritmo_planificador;
     nuevo_pcp->quantum = quantum;
-    nuevo_pcp->logger = log_create("safa.log", "PCP", true, log_level_from_string("info"));
+    nuevo_pcp->logger = log_create("safa.log", "PCP", true, log_level_from_string(logger_level));
     nuevo_pcp->retardo_planificacion = retardo;
 
     dtb_dummy = crear_dtb(0, 0);
@@ -148,41 +148,34 @@ void desbloquear_dtb(PCP* pcp, int id_DTB){
     DTB* dtb_seleccionado;
 
     pthread_mutex_lock(&(pcp->mutex_block));
-    for(int i = 0; i<list_size(pcp->lista_block); i++){
-        dtb_seleccionado = list_get(pcp->lista_block, i);
+    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_DTB, true);
 
-        if(dtb_seleccionado->id == id_DTB){
-
-            if(dtb_seleccionado->quantum && pcp->algoritmo_planificacion == VRR){
-                log_info(pcp->logger, "Pasando DTB %d a READY AUX", id_DTB);
-                agregar_a_ready_aux(pcp, dtb_seleccionado);
-            }else{
-                log_info(pcp->logger, "Pasando DTB %d a READY", id_DTB);
-                agregar_a_ready(pcp, dtb_seleccionado);
-            }
-            list_remove(pcp->lista_block, i);
+    if(dtb_seleccionado != NULL) {
+        if (dtb_seleccionado->quantum && pcp->algoritmo_planificacion == VRR) {
+            log_info(pcp->logger, "Pasando DTB %d a READY AUX", id_DTB);
+            agregar_a_ready_aux(pcp, dtb_seleccionado);
+        } else {
+            log_info(pcp->logger, "Pasando DTB %d a READY", id_DTB);
+            agregar_a_ready(pcp, dtb_seleccionado);
         }
-    }
+    } else
+        log_error(pcp->logger, "DTB %d no encontrado en BLOCK", id_DTB);
+
     pthread_mutex_unlock(&(pcp->mutex_block));
 }
 
 DTB* obtener_dtb_de_block(PCP* pcp, int id_dtb){
-
     DTB* dtb_seleccionado;
 
     pthread_mutex_lock(&(pcp->mutex_block));
-    for(int i = 0; i<list_size(pcp->lista_block); i++){
-        dtb_seleccionado = list_get(pcp->lista_block, i);
+    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_dtb, true);
 
-        if(dtb_seleccionado->id == id_dtb){
-            list_remove(pcp->lista_block, i);
-            pthread_mutex_unlock(&(pcp->mutex_block));
-            return dtb_seleccionado;
-        }
-    }
+    if(dtb_seleccionado == NULL)
+        log_error(pcp->logger, "DTB %d no encontrado en BLOCK", id_dtb);
+
     pthread_mutex_unlock(&(pcp->mutex_block));
 
-    return NULL;
+    return dtb_seleccionado;
 }
 
 void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int direccion_archivo){
@@ -194,19 +187,18 @@ void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int dire
     archivo_a_cargar->direccion_memoria = direccion_archivo;
 
     pthread_mutex_lock(&(pcp->mutex_block));
-    for(int i = 0; i<list_size(pcp->lista_block); i++){
-        dtb_seleccionado = list_get(pcp->lista_block, i);
+    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_DTB, true);
 
-        if(dtb_seleccionado->id == id_DTB){
-            log_info(pcp->logger, "Cargando archivo %s en lista de archivos de DTB %d (direccion %d)",
-                    archivo_a_cargar->path, id_DTB, direccion_archivo);
+    if(dtb_seleccionado != NULL){
+        log_info(pcp->logger, "Cargando archivo %s en lista de archivos de DTB %d (direccion %d)",
+                 archivo_a_cargar->path, id_DTB, direccion_archivo);
 
-            list_add(dtb_seleccionado->archivos_abiertos, archivo_a_cargar);
-            log_info(pcp->logger, "Pasando DTB %d a READY", id_DTB);
-            agregar_a_ready(pcp, dtb_seleccionado);
-            list_remove(pcp->lista_block, i);
-        }
-    }
+        list_add(dtb_seleccionado->archivos_abiertos, archivo_a_cargar);
+        log_info(pcp->logger, "Pasando DTB %d a READY", id_DTB);
+        agregar_a_ready(pcp, dtb_seleccionado);
+    } else
+        log_error(pcp->logger, "DTB %d no encontrado en BLOCK", id_DTB);
+
     pthread_mutex_unlock(&(pcp->mutex_block));
 }
 
@@ -320,20 +312,15 @@ void agregar_a_block(PCP* pcp, DTB* dtb){
  */
 DTB* tomar_de_exec(PCP* pcp, int id){
     DTB* dtb_seleccionado;
-    int size_lista = list_size(pcp->lista_exec);
 
     pthread_mutex_lock(&(pcp->mutex_exec));
-    for(int i = 0; i<size_lista; i++){
-        dtb_seleccionado = list_get(pcp->lista_exec, i);
+    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_exec, id, true);
 
-        if(dtb_seleccionado->id == id){
-            list_remove(pcp->lista_exec, i);
-            pthread_mutex_unlock(&(pcp->mutex_exec));
-            return dtb_seleccionado;
-        }
-    }
+    if(dtb_seleccionado == NULL)
+        log_error(pcp->logger, "DTB %d no encontrado en EXEC", id);
+
     pthread_mutex_unlock(&(pcp->mutex_exec));
-    return NULL;
+    return dtb_seleccionado;
 }
 
 /*!
@@ -414,6 +401,23 @@ void imprimir_estado_pcp(PCP* pcp){
     }
     printf("----------------\n");
     pthread_mutex_unlock(&(pcp->mutex_exec));
+}
+
+DTB* encontrar_dtb_pcp(PCP* pcp, int id_dtb){
+    DTB* dtb_seleccionado;
+
+    pthread_mutex_lock(&pcp->mutex_block);
+    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_dtb, false);
+    pthread_mutex_unlock(&pcp->mutex_block);
+
+    if(dtb_seleccionado != NULL)
+        return dtb_seleccionado;
+
+    pthread_mutex_lock(&pcp->mutex_exec);
+    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_exec, id_dtb, false);
+    pthread_mutex_unlock(&pcp->mutex_exec);
+
+    return dtb_seleccionado;
 }
 
 /*!

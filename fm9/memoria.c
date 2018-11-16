@@ -10,7 +10,8 @@
  * @param tamanio_linea Tamanio de linea en bytes
  * @return struct MemoriaReal*
  */
-MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea){
+
+	MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea, int tamanio_pagina){
     MemoriaReal* memoria_real = malloc(sizeof(MemoriaReal));
 
     memoria_real->logger = log_create("fm9.log", "MemoriaReal", true, log_level_from_string("info"));
@@ -18,10 +19,17 @@ MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea){
     if(tamanio % tamanio_linea)
         log_warning(memoria_real->logger, "Tamanio (%d) no divisible por tamanio de linea (%d)", tamanio, tamanio_linea);
 
+    if(tamanio % tamanio_pagina)
+                log_warning(memoria_real->logger, "Tamanio (%d) no divisible por tamanio de pagina (%d)", tamanio, tamanio_pagina);
+
     memoria_real->tamanio = tamanio;
     memoria_real->tamanio_linea = tamanio_linea;
     memoria_real->cant_lineas = tamanio / tamanio_linea;
     memoria_real->estado_lineas = (char*)calloc(sizeof(char), (size_t)memoria_real->cant_lineas);
+    memoria_real->tamanio_pagina = tamanio_pagina;
+    memoria_real->cant_lineas_pagina = tamanio_pagina / tamanio_linea;
+    memoria_real->cant_paginas = tamanio / tamanio_pagina;
+    memoria_real->estado_paginas = (char*)calloc(sizeof(char), (size_t)memoria_real->tamanio/memoria_real->tamanio_pagina);
 
     memoria_real->inicio = malloc((size_t)tamanio);
 
@@ -56,6 +64,7 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo){
 
     memoria->storage = storage;
     memoria->lista_tablas_de_segmentos = list_create();
+    memoria->lista_tabla_de_paginas_invertida = list_create();
     memoria->modo = modo;
 
     if(modo == SEG)
@@ -216,6 +225,112 @@ int encontrar_espacio_para_segmento(MemoriaReal* storage, int cant_lineas_segmen
 }
 
 /*!
+ * Nos informa cuantas páginas vamos a necesitar para guardar lo que nos solicitan
+ * @param storage
+ * @param cant_lineas
+ * @return cantidad de páginas necesarias
+ *
+ * created: 10/11/2018
+ * modified: 15/11/2018
+ */
+
+int obtener_cantidad_paginas_necesarias(MemoriaReal* storage, int cant_lineas){
+
+	int paginas_necesarias;
+
+	if(storage->cant_lineas_pagina < cant_lineas){
+		paginas_necesarias = storage->cant_lineas_pagina / cant_lineas;
+	}
+
+	paginas_necesarias ++;
+
+	return paginas_necesarias;
+}
+
+/*!
+ * Buscamos si tenemos las páginas suficientes como para guardar lo solicitado
+ * @param storage
+ * @param cant_lineas
+ * @return en caso de error retorna -1 sino otro número para ok
+ *
+ * created: 10/11/2018
+ * modified: 15/11/2018
+ */
+
+int verificar_si_hay_cantidad_paginas_necesarias(MemoriaReal* storage, int cant_paginas){
+
+	int j;
+
+    for(int i = 0; i < storage->cant_paginas;){
+
+        if(!storage->estado_paginas[i]){
+            for (j = 0; j < cant_paginas; j++) {
+
+                if (!storage->estado_paginas[j+i])
+                    continue;
+                else {
+                    i += j;
+                    break;
+                }
+            }
+            if(j == cant_paginas)
+                return i;
+
+            continue;
+        }
+        i++;
+    }
+
+    return -1;
+}
+
+/*!
+ * Calculamos el marco que corresponde
+ * @param storage
+ * @param nro de pagina
+ * @param id_dtb
+ * @return el nro de marco
+ *
+ * created: 10/11/2018
+ * modified: 15/11/2018
+ */
+
+int encontrar_marco_hash(MemoriaReal* storage,int pagina,int id_dtb){
+	return 1;
+}
+
+/*!
+ * Controla que el marco este sin usar sino encadena en la tabla invertida
+ * @param memoria
+ * @param marco
+ * @return el nro marco pasado por parámetro en el caso que no haya encadenamiento, sino nuevo marco correspondiente
+ *
+ * created: 10/11/2018
+ * modified: 15/11/2018
+ */
+
+int encadenamiento_tabla_paginas_invertida(Memoria* memoria,int posicion_marco){
+	NodoTablaPaginasInvertida* nodo_filtrado;
+
+	int _is_the_one(NodoTablaPaginasInvertida*nodo) {
+	   return (nodo->id_tabla == posicion_marco);
+	}
+
+	nodo_filtrado = list_find(memoria->lista_tabla_de_paginas_invertida, (void*) _is_the_one);
+
+	if(nodo_filtrado && nodo_filtrado->encadenamiento != 0){
+		posicion_marco ++;
+		encadenamiento_tabla_paginas_invertida(memoria, posicion_marco);
+	}
+	else
+	{
+		return posicion_marco;
+	}
+
+	return 0;
+}
+
+/*!
  * Carga un escriptorio en memoria
  * @param memoria
  * @param id_dtb ID del DTB para el cual se esta cargando el script
@@ -258,6 +373,70 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
 
         return 0;
     }
+    else if(memoria->modo == TPI){
+
+        	NodoTablaPaginasInvertida * nodo_lista_tabla_paginas_invertida;
+    	    nodo_lista_tabla_paginas_invertida = malloc(sizeof(NodoTablaPaginasInvertida));
+    		cant_lineas = contar_lineas(string);
+
+    		log_info(memoria->logger, "Buscando espacio para pagina/s para script de DTB %d (%d lineas)", id_dtb,cant_lineas);
+
+    		int paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cant_lineas);
+    		int hay_paginas_necesarias = verificar_si_hay_cantidad_paginas_necesarias(memoria->storage, paginas_necesarias);
+
+    		if(hay_paginas_necesarias == -1)
+    			return -10002;
+
+    		for(int a = 0; a < paginas_necesarias;a++){
+
+    			int pagina = a + 1;
+    			int posicion_marco = encontrar_marco_hash(memoria->storage, pagina, id_dtb);
+    			posicion_marco = encadenamiento_tabla_paginas_invertida(memoria, posicion_marco);
+
+    			log_info(memoria->logger, "Escribiendo pagina %d", pagina);
+
+    			char* particion_string = string_new();
+
+    			int desde_linea = a * memoria->storage->cant_lineas_pagina;
+    			int contador = 0;
+    			char* linea;
+
+    			while((linea=strsep(&string, "\n")) != NULL) {
+    				if(desde_linea >= contador && contador < pagina * memoria->storage->cant_lineas_pagina){
+    					string_append(&particion_string, linea);
+    				}
+
+    				contador ++;
+    			}
+
+    			escribir_archivo_en_storage(memoria->storage, particion_string, posicion_marco);
+
+    			log_info(memoria->logger, "Guardando pagina en tabla de paginas invertida");
+
+    			nodo_lista_tabla_paginas_invertida->id_tabla = posicion_marco;
+    			nodo_lista_tabla_paginas_invertida->id_dtb = id_dtb;
+    			nodo_lista_tabla_paginas_invertida->nro_pagina = pagina;
+    			nodo_lista_tabla_paginas_invertida->encadenamiento = NULL;
+
+    			list_add(memoria->lista_tabla_de_paginas_invertida, nodo_lista_tabla_paginas_invertida);
+
+    		}
+
+    		return 0;
+    	}
+
+        return 0;
+    }
+
+/*!
+ * Trae la ultima pagina cargada en tabla invertida
+ * @param nro_pagina1
+ * @param nro_pagina2
+ * @return devuelve un numero entero con el nro de la ultima pagina
+ */
+
+int traer_ultima_pagina_id_dtb(int nro_pagina1,int nro_pagina2){
+	return nro_pagina1 >= nro_pagina2 ? nro_pagina1 : nro_pagina2;
 }
 
 /*!
@@ -270,7 +449,8 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
 int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento_script, *nodo_aux;
-    int posicion_segmento, cant_lineas, direccion_logica = 0;
+    NodoTablaPaginasInvertida* nodo_lista_tabla_paginas_invertida;
+    int posicion_segmento, posicion_pagina, cant_lineas, direccion_logica = 0;
 
     if(memoria->modo == SEG){
         log_info(memoria->logger, "Buscando tabla de segmentos para DTB %d", id_dtb);
@@ -302,6 +482,60 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 
         return direccion_logica;
     }
+    else if(memoria->modo == TPI){
+		NodoTablaPaginasInvertida * nodo_lista_tabla_paginas_invertida;
+		nodo_lista_tabla_paginas_invertida = malloc(sizeof(NodoTablaPaginasInvertida));
+		cant_lineas = contar_lineas(string);
+		int pagina_base = list_fold(memoria->lista_tabla_de_paginas_invertida,0,traer_ultima_pagina_id_dtb) + 1;
+
+		log_info(memoria->logger, "Buscando espacio para pagina/s para script de DTB %d (%d lineas)", id_dtb,cant_lineas);
+
+		int paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cant_lineas);
+		int hay_paginas_necesarias = verificar_si_hay_cantidad_paginas_necesarias(memoria->storage, paginas_necesarias);
+
+		if(hay_paginas_necesarias == -1)
+			return -10002;
+
+		for(int a = 0; a < paginas_necesarias;a++){
+
+			int pagina = a + 1;
+			int posicion_marco = encontrar_marco_hash(memoria->storage, pagina, id_dtb);
+			posicion_marco = encadenamiento_tabla_paginas_invertida(memoria, posicion_marco);
+
+			log_info(memoria->logger, "Escribiendo pagina %d", pagina);
+
+			char* particion_string = string_new();
+
+			int desde_linea = a * memoria->storage->cant_lineas_pagina;
+			int contador = 0;
+			char* linea;
+
+			while((linea=strsep(&string, "\n")) != NULL) {
+				if(desde_linea >= contador && contador < pagina * memoria->storage->cant_lineas_pagina){
+					string_append(&particion_string, linea);
+				}
+
+				contador ++;
+			}
+
+			escribir_archivo_en_storage(memoria->storage, particion_string, posicion_marco);
+
+			log_info(memoria->logger, "Guardando pagina en tabla de paginas invertida");
+
+			nodo_lista_tabla_paginas_invertida->id_tabla = posicion_marco;
+			nodo_lista_tabla_paginas_invertida->id_dtb = id_dtb;
+			nodo_lista_tabla_paginas_invertida->nro_pagina = pagina;
+			nodo_lista_tabla_paginas_invertida->encadenamiento = 0;
+
+			list_add(memoria->lista_tabla_de_paginas_invertida, nodo_lista_tabla_paginas_invertida);
+			direccion_logica = pagina_base + cant_lineas;
+		}
+
+
+		return direccion_logica;
+	}
+
+	return 0;
 }
 
 /*!
@@ -333,6 +567,30 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
                 numero_linea -= segmento->longitud_segmento;
         }
     }
+    else if(memoria->modo == TPI){
+
+		NodoTablaPaginasInvertida * tabla_invertida = memoria->lista_tabla_de_paginas_invertida;
+		NodoTablaPaginasInvertida * tabla_invertida_id_dtb = list_filter(tabla_invertida, tabla_invertida->id_dtb == id_dtb);
+
+		int desplazamiento = numero_linea % memoria->storage->tamanio_pagina;
+		int pagina = (numero_linea / memoria->storage->tamanio_pagina) + 1;
+
+		int _is_the_one(NodoTablaPaginasInvertida* nodo) {
+			   return (nodo->nro_pagina == pagina);
+			}
+
+		NodoTablaPaginasInvertida* nodo_filtrado = list_find(tabla_invertida_id_dtb, (void*) _is_the_one);
+
+		if(nodo_filtrado){
+			log_info(memoria->logger, "Leyendo linea %d en pagina %d (direccion %d) para DTB %d", numero_linea,
+					nodo_filtrado->nro_pagina, nodo_filtrado->id_tabla + desplazamiento, id_dtb);
+						string_append(&linea, leer_linea_storage(memoria->storage, nodo_filtrado->id_tabla, desplazamiento));
+						return linea;
+		}
+		else{
+			return -1;
+		}
+	}
 }
 
 /*!

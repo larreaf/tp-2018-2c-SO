@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     conexiones_permitidas[t_elDiego] = 1;
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto, conexiones_permitidas, t_fm9);
 
-    storage = inicializar_memoria_real(configuracion->tamanio, configuracion->max_linea);
+    storage = inicializar_memoria_real(configuracion->tamanio, configuracion->max_linea, configuracion->tam_pagina);
     memoria = inicializar_memoria(storage, configuracion->modo);
 
     pthread_create(&thread_consola, NULL, (void*)ejecutar_consola_fm9, NULL);

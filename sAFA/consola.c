@@ -38,7 +38,7 @@ void ejecutar_linea(char* linea){
 			break;
 
 		case FINALIZAR:
-			con_finalizar(0);
+            con_finalizar(strtol(strsep(&op_consola->argumento," "), NULL, 10));
 			destroy_operacion(op_consola);
 			break;
 
@@ -162,6 +162,28 @@ void con_status(int id_DTB){
 }
 
 void con_finalizar(int id_DTB){
+    DTB* dtb_seleccionado;
+
+    // TODO mutex
+
+    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_DTB, true);
+
+    if(dtb_seleccionado == NULL){
+        printf("DTB %d no encontrado en BLOCK\n", id_DTB);
+
+        dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_exec, id_DTB, false);
+
+        if(dtb_seleccionado == NULL) {
+            printf("DTB %d encontrado en EXEC\n", id_DTB);
+            pcp->finalizar_dtb = id_DTB;
+            return;
+        }
+    }else{
+        printf("DTB %d encontrado en BLOCK, finalizando\n", id_DTB);
+        destruir_dtb(dtb_seleccionado);
+        sem_post(&plp->semaforo_multiprogramacion);
+    }
+
 	return;
 }
 

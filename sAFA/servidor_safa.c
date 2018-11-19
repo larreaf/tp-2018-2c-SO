@@ -18,9 +18,11 @@ extern bool correr;
  * @return NULL cuando se recibe exit desde consola
  */
 void* ejecutar_servidor(void *arg){
-    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, direccion_archivo, codigo_error;
+    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, direccion_archivo, codigo_error, resultado;
+    int* copia_id_dtb;
     MensajeDinamico* mensaje_respuesta, *mensaje;
-    char* str = NULL, *path;
+    char* str = NULL, *path, *nombre_recurso;
+    t_queue* cola_recurso;
     DTB datos_dtb;
     DTB* dtb_seleccionado;
 
@@ -52,6 +54,15 @@ void* ejecutar_servidor(void *arg){
                 free(datos_dtb.path_script);
                 decrementar_procesos_asignados_cpu(conexiones_activas, mensaje->socket);
                 sem_post(&cantidad_cpus);
+
+                if(pcp->finalizar_dtb && pcp->finalizar_dtb == datos_dtb.id){
+                    log_info(logger, "DTB %d finalizado por comando, cerrando DTB", datos_dtb.id);
+                    destruir_dtb(dtb_seleccionado);
+                    sem_post(&plp->semaforo_multiprogramacion);
+                    destruir_mensaje(mensaje);
+                    pcp->finalizar_dtb = 0;
+                    continue;
+                }
 
                 switch(datos_dtb.status){
                     case READY:
@@ -138,6 +149,48 @@ void* ejecutar_servidor(void *arg){
                 recibir_int(&direccion_archivo, mensaje);
 
                 desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo);
+                break;
+
+            case SOLICITUD_RECURSO:
+                recibir_int(&id_dtb, mensaje);
+                recibir_string(&nombre_recurso, mensaje);
+                copia_id_dtb = malloc(sizeof(int));
+                *copia_id_dtb = id_dtb;
+
+                if(!dictionary_has_key(pcp->recursos, nombre_recurso)){
+                    cola_recurso = queue_create();
+                    dictionary_put(pcp->recursos, nombre_recurso, cola_recurso);
+                    resultado = 1;
+                }else{
+                    cola_recurso = dictionary_get(pcp->recursos, nombre_recurso);
+                    if(queue_is_empty(cola_recurso))
+                        resultado = 1;
+                    else
+                        resultado = 0;
+                }
+                queue_push(cola_recurso, &copia_id_dtb);
+
+                mensaje_respuesta = crear_mensaje(mensaje->socket, SOLICITUD_RECURSO, 0);
+                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                enviar_mensaje(mensaje_respuesta);
+                break;
+
+            case LIBERAR_RECURSO:
+                recibir_string(&nombre_recurso, mensaje);
+
+                cola_recurso = dictionary_get(pcp->recursos, nombre_recurso);
+
+                if(cola_recurso == NULL){
+                    log_error(logger, "Se intento liberar un recurso no asignado");
+                    break;
+                }
+
+                free(queue_pop(cola_recurso));
+
+                if(!queue_is_empty(cola_recurso)){
+                    id_dtb = *((int*)queue_peek(cola_recurso));
+                    desbloquear_dtb(pcp, id_dtb);
+                }
                 break;
 
             case NUEVA_CONEXION:

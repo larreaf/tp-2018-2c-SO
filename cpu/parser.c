@@ -24,7 +24,9 @@ Instruccion* parsear_linea(char* linea){
     }
     retorno->argc = argc-1;
 
-    if(retorno->opcode == OP_ASIGNAR && retorno->argc > 3){
+    if((retorno->opcode == OP_WAIT || retorno->opcode == OP_SIGNAL || retorno->opcode == OP_ASIGNAR) &&
+    retorno->argc > 3){
+
         linea_final = string_new();
 
         for(int i = 2; i<retorno->argc; i++){
@@ -97,9 +99,11 @@ int ejecutar_linea(DTB* dtb, char* linea, unsigned int retardo){
             break;
 
         case OP_WAIT:
+            resultado = in_wait(dtb, (char*)list_get(instruccion->argv, 0));
             break;
 
         case OP_SIGNAL:
+            resultado = in_signal(dtb, (char*)list_get(instruccion->argv, 0));
             break;
 
         case OP_FLUSH:

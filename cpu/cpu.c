@@ -15,6 +15,7 @@ ConexionesActivas conexiones_activas;
 t_log* logger;
 int socket_elDiego;
 int socket_fm9;
+int socket_safa;
 
 void cerrar_cpu(t_log* logger, cfg_cpu* configuracion, ConexionesActivas conexiones_activas){
     log_info(logger, "Cerrando CPU...");
@@ -28,7 +29,6 @@ void cerrar_cpu(t_log* logger, cfg_cpu* configuracion, ConexionesActivas conexio
 }
 
 int main(int argc, char **argv) {
-	int socket_safa;
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0};
     t_accion_post_instruccion resultado_instruccion;
 	DTB datos_dtb;

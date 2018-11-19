@@ -7,6 +7,7 @@
 extern ConexionesActivas conexiones_activas;
 extern int socket_elDiego;
 extern int socket_fm9;
+extern int socket_safa;
 
 /*!
  * Funcion que representa la operacion "abrir"
@@ -176,6 +177,7 @@ int in_asignar(DTB* dtb, char* path, int linea, char* datos){
 
     peticion_asignar = recibir_mensaje(socket_fm9);
     recibir_int(&resultado, peticion_asignar);
+    destruir_mensaje(peticion_asignar);
 
     if(resultado)
         return resultado;
@@ -185,14 +187,33 @@ int in_asignar(DTB* dtb, char* path, int linea, char* datos){
     return READY;
 }
 
-int in_wait(){
+int in_wait(DTB* dtb, char* nombre_recurso){
+    MensajeDinamico* peticion_wait;
+    int resultado;
 
-    return 0;
+    peticion_wait = crear_mensaje(socket_safa, SOLICITUD_RECURSO, 0);
+    agregar_dato(peticion_wait, sizeof(int), &dtb->id);
+    agregar_dato(peticion_wait, sizeof(int), &nombre_recurso);
+    enviar_mensaje(peticion_wait);
+
+    peticion_wait = recibir_mensaje(socket_safa);
+    recibir_int(&resultado, peticion_wait);
+    destruir_mensaje(peticion_wait);
+
+    if(resultado)
+        return READY;
+    else
+        return BLOQUEAR;
 }
 
-int in_signal(){
+int in_signal(DTB* dtb, char* nombre_recurso){
+    MensajeDinamico* peticion_signal;
 
-    return 0;
+    peticion_signal = crear_mensaje(socket_safa, LIBERAR_RECURSO, 0);
+    agregar_dato(peticion_signal, sizeof(int), &nombre_recurso);
+    enviar_mensaje(peticion_signal);
+
+    return READY;
 }
 
 /*!

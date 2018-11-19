@@ -27,15 +27,18 @@ typedef struct {
     pthread_mutex_t mutex_exec;
     sem_t semaforo_ready;
     sem_t semaforo_dummy;
+    t_dictionary* recursos;
     int algoritmo_planificacion;
     int quantum;
     int retardo_planificacion;
+    int finalizar_dtb;
     t_log* logger;
 }PCP;
 
 CPU* seleccionar_cpu(t_list*);
 void decrementar_procesos_asignados_cpu(ConexionesActivas, int);
 PCP* inicializar_pcp(int, int, int, char*);
+void destruir_cola(void*);
 void destruir_pcp(PCP*);
 void destruir_dtb(void*);
 DTB* crear_dtb(int, int);

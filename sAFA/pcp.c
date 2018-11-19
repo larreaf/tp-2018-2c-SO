@@ -69,6 +69,8 @@ PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo, char*
     nuevo_pcp->quantum = quantum;
     nuevo_pcp->logger = log_create("safa.log", "PCP", true, log_level_from_string(logger_level));
     nuevo_pcp->retardo_planificacion = retardo;
+    nuevo_pcp->finalizar_dtb = 0;
+    nuevo_pcp->recursos = dictionary_create();
 
     dtb_dummy = crear_dtb(0, 0);
     agregar_a_block(nuevo_pcp, dtb_dummy);
@@ -88,6 +90,13 @@ void destruir_dtb(void* arg){
     free(dtb);
 }
 
+void destruir_cola(void* arg){
+    t_queue* cola = (t_queue*)arg;
+
+    while(!queue_is_empty(cola))
+        free(queue_pop(cola));
+}
+
 /*!
  * Destruye el PCP liberando memoria
  * @param pcp_a_destruir Puntero al PCP a destruir
@@ -99,6 +108,7 @@ void destruir_pcp(PCP* pcp_a_destruir){
     list_destroy_and_destroy_elements(pcp_a_destruir->lista_exec, destruir_dtb);
     sem_destroy(&pcp_a_destruir->semaforo_ready);
     sem_destroy(&pcp_a_destruir->semaforo_dummy);
+    dictionary_destroy_and_destroy_elements(pcp_a_destruir->recursos, destruir_cola);
 
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_ready));
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_ready_aux));

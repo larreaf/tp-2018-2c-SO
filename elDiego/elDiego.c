@@ -223,7 +223,6 @@ int main(int argc, char **argv) {
                 free(archivo);
                 break;
 
-
             case BORRAR_ARCHIVO_CPU_DIEGO:
                 recibir_int(&id_dtb, nuevo_mensaje);
                 recibir_string(&path, nuevo_mensaje);

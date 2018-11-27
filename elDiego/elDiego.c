@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
                         agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
                         enviar_mensaje(mensaje_dinamico);
                 }else{
-                        log_info(logger, "BORRAR ARCHIVO en MDJ - OK");
+                        log_info(logger, "Se Borro el Archivo %s - BORRRAR ARCHIVO en mdj OK", path);
                         mensaje_dinamico = crear_mensaje(DESBLOQUEAR_DTB, socket_safa, 0);
                         agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                         enviar_mensaje(mensaje_dinamico);

@@ -1,5 +1,7 @@
 #include "parser.h"
 
+extern int cantidad_instrucciones_dma;
+
 /*!
  * Toma un char* y lo parsea, retornando un Instruccion* con una lista de argumentos
  * @param linea char* a parsear
@@ -86,10 +88,12 @@ int ejecutar_linea(DTB* dtb, char* linea, unsigned int retardo){
         case OP_CREAR:
             string_to_int = strtol(list_get(instruccion->argv, 1), NULL, 10);
             resultado = in_crear(dtb->id, (char*)list_get(instruccion->argv, 0), (int)string_to_int);
+            cantidad_instrucciones_dma++;
             break;
 
         case OP_BORRAR:
             resultado = in_borrar(dtb->id, (char*)list_get(instruccion->argv, 0));
+            cantidad_instrucciones_dma++;
             break;
 
         case OP_ASIGNAR:
@@ -103,7 +107,7 @@ int ejecutar_linea(DTB* dtb, char* linea, unsigned int retardo){
             break;
 
         case OP_SIGNAL:
-            resultado = in_signal(dtb, (char*)list_get(instruccion->argv, 0));
+            resultado = in_signal((char*)list_get(instruccion->argv, 0));
             break;
 
         case OP_FLUSH:
@@ -116,17 +120,21 @@ int ejecutar_linea(DTB* dtb, char* linea, unsigned int retardo){
 
         case OP_ABRIR:
             resultado = in_abrir(dtb, (char*)list_get(instruccion->argv, 0));
+            cantidad_instrucciones_dma++;
             break;
 
         case OP_CLOSE:
             resultado = in_close(dtb, (char*)list_get(instruccion->argv, 0));
+            cantidad_instrucciones_dma++;
             break;
 
         default:
             resultado = -2;
             break;
     }
+
     destruir_instruccion(instruccion);
+
     return resultado;
 }
 

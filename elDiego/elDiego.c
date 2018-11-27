@@ -223,6 +223,42 @@ int main(int argc, char **argv) {
                 free(archivo);
                 break;
 
+
+            case BORRAR_ARCHIVO_CPU_DIEGO:
+                recibir_int(&id_dtb, nuevo_mensaje);
+                recibir_string(&path, nuevo_mensaje);
+
+                //Enviar pedido a MDJ para borrar archivo
+                mensaje_dinamico = crear_mensaje_mdj_borrar_archivo(socket_mdj, path, configuracion->transfer_size);
+                log_info(logger, "Enviando mensaje a MDJ para borrar archivo %s", path);
+                enviar_mensaje(mensaje_dinamico);
+
+                // recibir respuesta de MDJ
+                mensaje_dinamico = recibir_mensaje(socket_mdj);
+                if(mensaje_dinamico->header != BORRAR_ARCHIVO){
+                log_error(logger, "Falla al recibir respuesta de BORRAR ARCHIVO en MDJ");
+                cerrar_elDiego(logger, configuracion, conexiones_activas);
+                }
+
+                recibir_int(&resultado, mensaje_dinamico);
+                destruir_mensaje(mensaje_dinamico);
+
+                //Segun el resultado de MDJ enviar a SAFA - Dsbloquear DTB o codigo de error
+                if (resultado==-1){
+                    	codigo_error=60001;
+                    	log_error(logger, "Falla en BORRRAR ARCHIVO en mdj para id_dtb %d- Error %d",id_dtb,codigo_error);
+                        mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
+                        agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                        agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
+                        enviar_mensaje(mensaje_dinamico);
+                }else{
+                        log_info(logger, "Se Borro el Archivo %s - BORRRAR ARCHIVO en mdj OK", path);
+                        mensaje_dinamico = crear_mensaje(DESBLOQUEAR_DTB, socket_safa, 0);
+                        agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                        enviar_mensaje(mensaje_dinamico);
+                }
+            	break;
+
             case FLUSH_ARCHIVO:
                 recibir_int(&id_dtb, nuevo_mensaje);
                 recibir_int(&direccion_memoria, nuevo_mensaje);
@@ -245,7 +281,7 @@ int main(int argc, char **argv) {
                 recibir_string(&archivo, mensaje_dinamico);
 
                 if (string_is_empty(archivo)) {
-                	codigo_error=4002;
+                	codigo_error=40002;
                     log_error(logger, "Falla en flush archivo");
                     mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
                     agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);

@@ -65,6 +65,7 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo){
     memoria->storage = storage;
     memoria->lista_tablas_de_segmentos = list_create();
     memoria->lista_tabla_de_paginas_invertida = list_create();
+    memoria->tabla_procesos = list_create();
     memoria->modo = modo;
 
     if(modo == SEG)
@@ -423,7 +424,11 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
     		}
 
     		return 0;
-    	}
+	}
+	else if(memoria->modo == SPA){
+
+
+	}
 
         return 0;
     }

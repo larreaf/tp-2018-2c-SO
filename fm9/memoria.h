@@ -29,6 +29,7 @@ typedef struct {
     MemoriaReal* storage;
     t_list* lista_tablas_de_segmentos;
     t_list* lista_tabla_de_paginas_invertida;
+    t_list* tabla_procesos; //Lo pide segmentacion paginada
     modo_memoria modo;
     t_log* logger;
 }Memoria;
@@ -51,6 +52,20 @@ typedef struct{
     int nro_pagina;
     int encadenamiento;
 }NodoTablaPaginasInvertida;
+
+// Estructuras para segmentacion paginada
+typedef struct {
+	int id_proceso;
+	t_list* tabla_segmentos;
+}NodoProceso;
+typedef struct {
+	t_list* tabla_paginas;
+}NodoSegmento;
+
+typedef struct {
+	int numero_marco;
+}NodoPagina;
+
 
 MemoriaReal* inicializar_memoria_real(int, int, int);
 void destruir_memoria_real(MemoriaReal*);

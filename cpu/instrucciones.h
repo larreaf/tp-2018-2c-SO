@@ -18,7 +18,7 @@ int in_crear(int, char*, int);
 int in_borrar(int, char*);
 int in_asignar(DTB*, char*, int, char*);
 int in_wait(DTB*, char*);
-int in_signal(DTB*, char*);
+int in_signal(char*);
 int in_concentrar();
 
 #endif //CPU_INSTRUCCIONES_H

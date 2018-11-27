@@ -16,7 +16,8 @@ extern int socket_safa;
  * @return BLOQUEAR si la solicitud a elDiego se envio correctamente, READY si el archivo ya esta abierto
  */
 int in_abrir(DTB* dtb, char* path){
-    MensajeDinamico* peticion_abrir;
+    MensajeDinamico* peticion_abrir, *consulta_archivo_abierto;
+    int resultado;
 
     int tamanio_lista = list_size(dtb->archivos_abiertos);
 
@@ -24,6 +25,16 @@ int in_abrir(DTB* dtb, char* path){
         if (!strcmp(path, list_get(dtb->archivos_abiertos, i)))
             return READY;
     }
+    consulta_archivo_abierto = crear_mensaje(CONSULTA_ARCHIVO_ABIERTO, socket_safa, 0);
+    agregar_string(consulta_archivo_abierto, path);
+    enviar_mensaje(consulta_archivo_abierto);
+
+    consulta_archivo_abierto = recibir_mensaje(socket_safa);
+    recibir_int(&resultado, consulta_archivo_abierto);
+    destruir_mensaje(consulta_archivo_abierto);
+
+    if(!resultado)
+        return 10003;
 
     peticion_abrir = crear_mensaje(ABRIR_ARCHIVO_CPU_DIEGO, socket_elDiego, 0);
     agregar_dato(peticion_abrir, sizeof(int), &dtb->id);
@@ -41,7 +52,7 @@ int in_abrir(DTB* dtb, char* path){
  * @return READY si la solicitud a elDiego se envio correctamente, 40001 si el archivo no esta abierto
  */
 int in_close(DTB* dtb, char* path){
-    MensajeDinamico* peticion_cerrar;
+    MensajeDinamico* peticion_cerrar, *notificacion_safa;
     ArchivoAbierto* nodo_aux = NULL;
     int error = 40001;
 
@@ -53,6 +64,7 @@ int in_close(DTB* dtb, char* path){
         if (!strcmp(path, nodo_aux->path)) {
             error = 0;
             list_remove(dtb->archivos_abiertos, i);
+            free(nodo_aux);
             break;
         }
     }
@@ -60,12 +72,15 @@ int in_close(DTB* dtb, char* path){
     if(error)
         return error;
 
+    notificacion_safa = crear_mensaje(CERRAR_ARCHIVO_CPU_FM9, socket_safa, 0);
+    agregar_string(notificacion_safa, path);
+    enviar_mensaje(notificacion_safa);
+
     peticion_cerrar = crear_mensaje(CERRAR_ARCHIVO_CPU_FM9, socket_fm9, 0);
     agregar_dato(peticion_cerrar, sizeof(int), &dtb->id);
     agregar_dato(peticion_cerrar, sizeof(int), &nodo_aux->direccion_memoria);
     enviar_mensaje(peticion_cerrar);
     // TODO verificar error en enviar_mensaje
-    free(nodo_aux);
 
     return READY;
 }
@@ -133,7 +148,7 @@ int in_crear(int dtb_id, char* path, int cant_lineas){
 int in_borrar(int dtb_id, char* path){
     MensajeDinamico* peticion_borrar;
 
-    peticion_borrar = crear_mensaje(BORRAR_ARCHIVO_CPU_DIEGO, conexiones_activas.socket_eldiego, 0);
+    peticion_borrar = crear_mensaje(BORRAR_ARCHIVO_CPU_DIEGO, socket_elDiego, 0);
     agregar_dato(peticion_borrar, sizeof(int), &dtb_id);
     agregar_string(peticion_borrar, path);
     enviar_mensaje(peticion_borrar);
@@ -206,7 +221,7 @@ int in_wait(DTB* dtb, char* nombre_recurso){
         return BLOQUEAR;
 }
 
-int in_signal(DTB* dtb, char* nombre_recurso){
+int in_signal(char* nombre_recurso){
     MensajeDinamico* peticion_signal;
 
     peticion_signal = crear_mensaje(socket_safa, LIBERAR_RECURSO, 0);

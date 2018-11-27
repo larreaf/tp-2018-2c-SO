@@ -13,7 +13,9 @@ char CONFIGURACION_safa[CONFIG_safa][TAMANIO_STRING] = {
 		"MULTIPROGRAMACION",
 		"RETARDO_PLANIF",
 		"IP",
-		"LOGGER_LEVEL"
+		"LOGGER_LEVEL",
+		"LOGGER_CONSOLA",
+		"CANT_LINEAS_EQUIPO_GRANDE"
 
 };
 
@@ -168,6 +170,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_safa->multiprogramacion = config_get_int_value(configuracion, CONFIGURACION_safa[3]);
 			retorno_safa->retardo = config_get_int_value(configuracion, CONFIGURACION_safa[4]);
 			retorno_safa->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[6]);
+            retorno_safa->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[7]);
+            retorno_safa->cant_lineas_equipo_grande = config_get_int_value(configuracion,CONFIGURACION_safa[8]);
             retorno_safa->config = configuracion;
 			retorno = retorno_safa;
 			break;

@@ -14,7 +14,7 @@
 	}t_process; //indentifica el tipo de proceso
 
 	typedef enum {
-		CONFIG_safa = 7,
+		CONFIG_safa = 9,
 		CONFIG_elDiego = 9,
 		CONFIG_fm9 = 6,
 		CONFIG_cpu = 7,
@@ -49,6 +49,8 @@
 		int retardo;
 		t_config* config;
 		char* logger_level;
+		int logger_consola;
+		int cant_lineas_equipo_grande;
 	}cfg_safa;
 
 	typedef struct{

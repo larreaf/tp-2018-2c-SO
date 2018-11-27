@@ -26,11 +26,21 @@ void cerrar_elDiego(t_log* logger, cfg_elDiego* configuracion, ConexionesActivas
     exit(0);
 }
 
+int contar_lineas(char* string){
+    int count = 0, len = strlen(string);
+
+    for(int i = 0; i<len; i++)
+        if(string[i] == '\n')
+            count++;
+
+    return count;
+}
+
 int main(int argc, char **argv) {
     int socket_mdj, socket_fm9, socket_safa, conexiones_permitidas[cantidad_tipos_procesos]={0};
     MensajeDinamico* nuevo_mensaje;
     ConexionesActivas conexiones_activas;
-    int id_dtb, resultado, cant_lineas, direccion_memoria,codigo_error;
+    int id_dtb, resultado, direccion_memoria, codigo_error, cant_lineas;
     char* path;
     char* archivo;
     MensajeDinamico* mensaje_dinamico;
@@ -125,6 +135,7 @@ int main(int argc, char **argv) {
                     agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
                     enviar_mensaje(mensaje_dinamico);
                 }
+                free(archivo);
 
                 break;
 
@@ -201,13 +212,17 @@ int main(int argc, char **argv) {
                     // TODO enviar error a SAFA para que aborte el DTB
                 }
 
+                cant_lineas = contar_lineas(archivo);
+                printf("Cantidad lineas archivo: %d\n", cant_lineas);
                 mensaje_dinamico = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, socket_safa, 0);
                 agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                 agregar_string(mensaje_dinamico, path);
                 agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
+                agregar_dato(mensaje_dinamico, sizeof(int), &cant_lineas);
                 enviar_mensaje(mensaje_dinamico);
-
+                free(archivo);
                 break;
+
             case FLUSH_ARCHIVO:
                 recibir_int(&id_dtb, nuevo_mensaje);
                 recibir_int(&direccion_memoria, nuevo_mensaje);
@@ -270,6 +285,9 @@ int main(int argc, char **argv) {
                         enviar_mensaje(mensaje_dinamico);
                     }
                 }
+                free(path);
+                free(archivo);
+
                 break;
 
             case CONEXION_CERRADA:

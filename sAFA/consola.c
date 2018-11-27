@@ -43,7 +43,7 @@ void ejecutar_linea(char* linea){
 			break;
 
 		case METRICAS:
-			con_metricas(0);
+            con_metricas(strtol(strsep(&op_consola->argumento," "), NULL, 10));
 			destroy_operacion(op_consola);
 			break;
 
@@ -110,14 +110,21 @@ tipo_accion_consola_safa string_to_accion(char* string){
 
 
 void con_ejecutar(char* ruta_escriptorio){
+    MetricasDTB* metricas_dtb = malloc(sizeof(MetricasDTB));
+    metricas_dtb->cantidad_instrucciones_dma = 0;
+    metricas_dtb->cantidad_instrucciones_ejecutadas = 0;
+    metricas_dtb->cantidad_instrucciones_new = 0;
+    metricas_dtb->id_dtb = contador_id_dtb;
+    metricas_dtb->en_new = 1;
 
-    DTB* nuevo_dtb = crear_dtb(contador_id_dtb++, 1);
+    DTB* nuevo_dtb = crear_dtb(contador_id_dtb, 1);
 	log_info(plp->logger, "Creando DTB %d", nuevo_dtb->id);
 	string_append(&nuevo_dtb->path_script, ruta_escriptorio);
+	list_add(plp->metricas_dtbs, metricas_dtb);
 
     agregar_a_new(plp, nuevo_dtb);
-
-	return;
+    contador_id_dtb++;
+    printf("Ejecutando %s\n", ruta_escriptorio);
 }
 
 void con_status(int id_DTB){
@@ -188,5 +195,45 @@ void con_finalizar(int id_DTB){
 }
 
 void con_metricas(int id_DTB){
+    int lista_size, acumulador_instr_ejecutadas = 0, acumulador_instr_dma = 0, i = 0;
+    float cantidad_instrucciones_promedio, cantidad_instrucciones_dma_promedio, porcentaje_dma;
+    MetricasDTB* metricas;
+
+    pthread_mutex_lock(&plp->mutex_metricas);
+    if(!id_DTB){
+        lista_size = list_size(plp->metricas_dtbs);
+
+        for(; i<lista_size; i++){
+            metricas = list_get(plp->metricas_dtbs, i);
+
+            acumulador_instr_ejecutadas += metricas->cantidad_instrucciones_ejecutadas;
+            acumulador_instr_dma += metricas->cantidad_instrucciones_dma;
+        }
+        cantidad_instrucciones_promedio = (float)acumulador_instr_ejecutadas/(float)i;
+        cantidad_instrucciones_dma_promedio = (float)acumulador_instr_dma/(float)i;
+        porcentaje_dma = ((float)acumulador_instr_dma/(float)acumulador_instr_ejecutadas)*100;
+
+        printf("--------------\n");
+        printf("Metricas generales:\n");
+        printf("Cantidad de instrucciones ejecutadas promedio para que el DTB termine en exit: %.1f\n",
+                cantidad_instrucciones_promedio);
+        printf("Cantidad de instrucciones promedio que usaron a El Diego: %.1f\n", cantidad_instrucciones_dma_promedio);
+        printf("Porcentaje de instrucciones que usaron a El Diego: %1.f%%\n", porcentaje_dma);
+        printf("--------------\n");
+    }else{
+        metricas = encontrar_metricas_en_lista(plp->metricas_dtbs, id_DTB, false);
+
+        if(metricas != NULL){
+            printf("--------------\n");
+            printf("Metricas DTB %d:\n", id_DTB);
+            printf("Cantidad instrucciones ejecutadas: %d\n", metricas->cantidad_instrucciones_ejecutadas);
+            printf("Cantidad instrucciones DMA: %d\n", metricas->cantidad_instrucciones_dma);
+            printf("Cantidad instrucciones esperadas en NEW: %d\n", metricas->cantidad_instrucciones_new);
+            printf("--------------\n");
+        } else
+            log_error(plp->logger, "DTB %d no encontrado en metricas", id_DTB);
+    }
+    pthread_mutex_unlock(&plp->mutex_metricas);
+
 	return;
 }

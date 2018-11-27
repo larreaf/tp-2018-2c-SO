@@ -18,18 +18,23 @@ extern bool correr;
  * @return NULL cuando se recibe exit desde consola
  */
 void* ejecutar_servidor(void *arg){
-    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, direccion_archivo, codigo_error, resultado;
+    int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, direccion_archivo, codigo_error, resultado,
+    cant_lineas, cantidad_instrucciones_ejecutadas, cantidad_instrucciones_dma;
     int* copia_id_dtb;
     MensajeDinamico* mensaje_respuesta, *mensaje;
     char* str = NULL, *path, *nombre_recurso;
+    t_dictionary* archivos_abiertos;
     t_queue* cola_recurso;
     DTB datos_dtb;
     DTB* dtb_seleccionado;
+    MetricasDTB* metricas;
 
     conexiones_permitidas[t_elDiego] = 1;
     conexiones_permitidas[t_consola_safa] = 1;
     conexiones_permitidas[t_cpu] = 2;
-    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto, conexiones_permitidas, t_safa);
+    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto,
+            conexiones_permitidas, t_safa);
+    archivos_abiertos = dictionary_create();
 
     while (correr) {
 
@@ -44,6 +49,8 @@ void* ejecutar_servidor(void *arg){
                 // un CPU termino de ejecutar instrucciones y manda los datos del DTB actualizados
 
                 desempaquetar_dtb(mensaje, &datos_dtb);
+                recibir_int(&cantidad_instrucciones_ejecutadas, mensaje);
+                recibir_int(&cantidad_instrucciones_dma, mensaje);
 
                 if(datos_dtb.inicializado)
                     log_info(logger, "Recibidos datos de DTB %d", datos_dtb.id);
@@ -54,6 +61,13 @@ void* ejecutar_servidor(void *arg){
                 free(datos_dtb.path_script);
                 decrementar_procesos_asignados_cpu(conexiones_activas, mensaje->socket);
                 sem_post(&cantidad_cpus);
+
+                pthread_mutex_lock(&plp->mutex_metricas);
+                metricas = encontrar_metricas_en_lista(plp->metricas_dtbs, dtb_seleccionado->id, false);
+                metricas->cantidad_instrucciones_ejecutadas += cantidad_instrucciones_ejecutadas;
+                metricas->cantidad_instrucciones_dma += cantidad_instrucciones_dma;
+                actualizar_cantidad_instrucciones_en_new(plp, cantidad_instrucciones_ejecutadas);
+                pthread_mutex_unlock(&plp->mutex_metricas);
 
                 if(pcp->finalizar_dtb && pcp->finalizar_dtb == datos_dtb.id){
                     log_info(logger, "DTB %d finalizado por comando, cerrando DTB", datos_dtb.id);
@@ -78,6 +92,7 @@ void* ejecutar_servidor(void *arg){
                     case DTB_EXIT:
                         // los datos actualizados del DTB indican que debe ser pasado a exit
                         log_info(logger, "DTB %d devolvio EXIT, cerrando DTB", datos_dtb.id);
+                        printf("DTB %d ha finalizado exitosamente\n", datos_dtb.id);
                         destruir_dtb(dtb_seleccionado);
                         sem_post(&plp->semaforo_multiprogramacion);
                         break;
@@ -95,13 +110,11 @@ void* ejecutar_servidor(void *arg){
             case PASAR_DTB_A_READY:
                 recibir_int(&id_dtb, mensaje);
                 pasar_new_a_ready(plp, id_dtb);
-
                 break;
 
             case DESBLOQUEAR_DTB:
                 recibir_int(&id_dtb, mensaje);
                 desbloquear_dtb(pcp, id_dtb);
-
                 break;
 
             case ABORTAR_DTB_DE_NEW:
@@ -147,8 +160,10 @@ void* ejecutar_servidor(void *arg){
                 recibir_int(&id_dtb, mensaje);
                 recibir_string(&path, mensaje);
                 recibir_int(&direccion_archivo, mensaje);
+                recibir_int(&cant_lineas, mensaje);
 
-                desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo);
+                desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo, cant_lineas);
+                free(path);
                 break;
 
             case SOLICITUD_RECURSO:
@@ -173,6 +188,7 @@ void* ejecutar_servidor(void *arg){
                 mensaje_respuesta = crear_mensaje(mensaje->socket, SOLICITUD_RECURSO, 0);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
                 enviar_mensaje(mensaje_respuesta);
+                free(nombre_recurso);
                 break;
 
             case LIBERAR_RECURSO:
@@ -191,6 +207,30 @@ void* ejecutar_servidor(void *arg){
                     id_dtb = *((int*)queue_peek(cola_recurso));
                     desbloquear_dtb(pcp, id_dtb);
                 }
+
+                free(nombre_recurso);
+                break;
+
+            case CONSULTA_ARCHIVO_ABIERTO:
+                recibir_string(&path, mensaje);
+
+                if(dictionary_has_key(archivos_abiertos, path))
+                    resultado = 0;
+                else{
+                    resultado = 1;
+                    dictionary_put(archivos_abiertos, path, NULL);
+                }
+
+                mensaje_respuesta = crear_mensaje(CONSULTA_ARCHIVO_ABIERTO, mensaje->socket, 0);
+                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                enviar_mensaje(mensaje_respuesta);
+                free(path);
+                break;
+
+            case CERRAR_ARCHIVO_CPU_FM9:
+                recibir_string(&path, mensaje);
+                dictionary_remove(archivos_abiertos, path);
+                free(path);
                 break;
 
             case NUEVA_CONEXION:
@@ -236,12 +276,12 @@ void* ejecutar_servidor(void *arg){
                 break;
 
             default:
-                // TODO aca habria que programar que pasa si se manda un header invalido
-
+                log_error(logger, "Recibido header invalido (%d)", mensaje->header);
                 break;
         }
 
         destruir_mensaje(mensaje);
     }
+    dictionary_destroy(archivos_abiertos);
     return NULL;
 }

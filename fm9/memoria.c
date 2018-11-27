@@ -296,8 +296,41 @@ int verificar_si_hay_cantidad_paginas_necesarias(MemoriaReal* storage, int cant_
  * modified: 15/11/2018
  */
 
-int encontrar_marco_hash(MemoriaReal* storage,int pagina,int id_dtb){
-	return 1;
+int encontrar_marco_hash(Memoria* memoria,int pagina,int id_dtb){
+
+	t_list* tabla_filtrada_por_pagina, tabla_filtrada_por_pagina_id_dtb;
+
+	bool _is_the_page(NodoTablaPaginasInvertida* nodo){
+		return (nodo->id_tabla == pagina);
+	}
+
+	tabla_filtrada_por_pagina = list_filter(memoria->lista_tabla_de_paginas_invertida, (void*) _is_the_page);
+
+	bool _is_the_id_dtb(NodoTablaPaginasInvertida* nodo){
+		return (nodo->id_dtb == id_dtb);
+	}
+
+	tabla_filtrada_por_pagina_id_dtb = list_filter(tabla_filtrada_por_pagina, (void*) _is_the_id_dtb);
+
+	if(list_size(tabla_filtrada_por_pagina_id_dtb) == 1){
+
+		NodoTablaPaginasInvertida nodo = list_get(tabla_filtrada_por_pagina_id_dtb, 0);
+
+		return nodo->nro_pagina;
+	}
+	else
+	{
+		if(list_size(tabla_filtrada_por_pagina_id_dtb) == 1){
+			NodoTablaPaginasInvertida nodo_error = list_get(tabla_filtrada_por_pagina, 0);
+
+			encontrar_marco_hash(memoria, nodo_error->encadenamiento, id_dtb);
+		}
+		else{
+			return 0;
+		}
+	}
+
+	return 0;
 }
 
 /*!
@@ -628,6 +661,20 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
         }
         return 20001;
     }
+    else if(memoria->modo == TPI){
+
+		int nro_pagina = direccion / memoria->storage->tamanio_pagina;
+		int marco = encontrar_marco_hash(memoria, nro_pagina, id_dtb);
+
+		if(marco == -1){
+			return 20001;
+		}
+		else{
+			log_info(memoria->logger, "Modificando linea %d en pagina %d con marco %d (direccion %d) para DTB %d", direccion, nro_pagina, marco, marco+direccion, id_dtb);
+			modificar_linea_storage(memoria->storage, marco, direccion, datos);
+			return 0;
+		}
+	}
 
     return 20001;
 }

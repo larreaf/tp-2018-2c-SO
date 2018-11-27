@@ -19,15 +19,18 @@ typedef struct {
     sem_t semaforo_new;
     sem_t semaforo_multiprogramacion;
     t_log* logger;
+    t_list* metricas_dtbs;
+    pthread_mutex_t mutex_metricas;
 }PLP;
 
-PLP* inicializar_plp(int, char*);
+PLP* inicializar_plp(int, char*, int);
 void destruir_plp(PLP*);
-void eliminar_de_new(PLP *, int);
+void actualizar_cantidad_instrucciones_en_new(PLP*, int);
 void agregar_a_new(PLP*, DTB*);
 void pasar_new_a_ready(PLP*, int);
 void imprimir_estado_plp(PLP*);
 DTB* encontrar_dtb_plp(PLP*, int);
+char* codigo_error_a_string(int);
 void* ejecutar_plp(void*);
 
 #endif //SAFA_PLP_H

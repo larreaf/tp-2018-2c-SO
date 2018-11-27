@@ -13,9 +13,7 @@
 
 ConexionesActivas conexiones_activas;
 t_log* logger;
-int socket_elDiego;
-int socket_fm9;
-int socket_safa;
+int socket_elDiego, socket_fm9, socket_safa, cantidad_instrucciones_ejecutadas, cantidad_instrucciones_dma;
 
 void cerrar_cpu(t_log* logger, cfg_cpu* configuracion, ConexionesActivas conexiones_activas){
     log_info(logger, "Cerrando CPU...");
@@ -79,6 +77,8 @@ int main(int argc, char **argv) {
 	            desempaquetar_dtb(mensaje, &datos_dtb);
                 log_info(logger, "Datos DTB entrantes de DTB %d...", datos_dtb.id);
                 resultado_instruccion = READY;
+                cantidad_instrucciones_ejecutadas = 0;
+                cantidad_instrucciones_dma = 0;
 
 	            switch(datos_dtb.inicializado){
                     case 0:
@@ -101,12 +101,13 @@ int main(int argc, char **argv) {
 
 	                    while(datos_dtb.quantum && resultado_instruccion == READY) {
 
+	                        // fetch de instruccion
                             mensaje_respuesta = crear_mensaje(LEER_LINEA, socket_fm9, 0);
                             agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.id));
                             agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.program_counter));
                             enviar_mensaje(mensaje_respuesta);
 
-                            log_info(logger, "Esperando respuesta de FM9...");
+                            log_trace(logger, "Esperando respuesta de FM9...");
 
                             mensaje_respuesta = recibir_mensaje(socket_fm9);
                             recibir_string(&linea, mensaje_respuesta);
@@ -123,11 +124,15 @@ int main(int argc, char **argv) {
                                 break;
                             }
 
+                            // ejecucion de instruccion
                             log_info(logger, "Quantum restante: %d | Ejecutando linea: %s", datos_dtb.quantum, linea);
                             resultado_instruccion = ejecutar_linea(&datos_dtb, linea,
-                                    (unsigned int) configuracion->retardo);
+                                    (unsigned int)configuracion->retardo);
 
                             datos_dtb.quantum--;
+
+                            if(resultado_instruccion != -2)
+                                cantidad_instrucciones_ejecutadas++;
                         }
 
                         if(resultado_instruccion == -1){
@@ -153,8 +158,12 @@ int main(int argc, char **argv) {
                     mensaje_respuesta = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, 0);
                     agregar_dato(mensaje_respuesta, sizeof(int), &datos_dtb.id);
                     enviar_mensaje(mensaje_respuesta);
+                    // TODO flush archivos abiertos?
                 }
-                enviar_datos_dtb(socket_safa, &datos_dtb);
+                mensaje_respuesta = generar_mensaje_dtb(socket_safa, &datos_dtb);
+                agregar_dato(mensaje_respuesta, sizeof(int), &cantidad_instrucciones_ejecutadas);
+                agregar_dato(mensaje_respuesta, sizeof(int), &cantidad_instrucciones_dma);
+                enviar_mensaje(mensaje_respuesta);
 	            break;
 
             case CONEXION_CERRADA:

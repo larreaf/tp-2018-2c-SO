@@ -52,7 +52,8 @@ void decrementar_procesos_asignados_cpu(ConexionesActivas conexiones_activas, in
  * @param quantum quantum con el cual planificar
  * @return PCP inicializado
  */
-PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo, char* logger_level){
+PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo, char* logger_level, int logger_consola,
+        int cantidad_lineas_equipo_grande){
     PCP* nuevo_pcp = malloc(sizeof(PCP));
     DTB* dtb_dummy;
     nuevo_pcp->cola_ready = queue_create();
@@ -67,10 +68,11 @@ PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo, char*
     pthread_mutex_init(&(nuevo_pcp->mutex_exec), NULL);
     nuevo_pcp->algoritmo_planificacion = algoritmo_planificador;
     nuevo_pcp->quantum = quantum;
-    nuevo_pcp->logger = log_create("safa.log", "PCP", true, log_level_from_string(logger_level));
+    nuevo_pcp->logger = log_create("safa.log", "PCP", (bool)logger_consola, log_level_from_string(logger_level));
     nuevo_pcp->retardo_planificacion = retardo;
     nuevo_pcp->finalizar_dtb = 0;
     nuevo_pcp->recursos = dictionary_create();
+    nuevo_pcp->cantidad_lineas_equipo_grande = cantidad_lineas_equipo_grande;
 
     dtb_dummy = crear_dtb(0, 0);
     agregar_a_block(nuevo_pcp, dtb_dummy);
@@ -188,7 +190,7 @@ DTB* obtener_dtb_de_block(PCP* pcp, int id_dtb){
     return dtb_seleccionado;
 }
 
-void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int direccion_archivo){
+void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int direccion_archivo, int cant_lineas){
     DTB* dtb_seleccionado;
     ArchivoAbierto* archivo_a_cargar = malloc(sizeof(ArchivoAbierto));
 
@@ -204,8 +206,16 @@ void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int dire
                  archivo_a_cargar->path, id_DTB, direccion_archivo);
 
         list_add(dtb_seleccionado->archivos_abiertos, archivo_a_cargar);
-        log_info(pcp->logger, "Pasando DTB %d a READY", id_DTB);
-        agregar_a_ready(pcp, dtb_seleccionado);
+        if(pcp->algoritmo_planificacion == PROPIO && cant_lineas >= pcp->cantidad_lineas_equipo_grande)
+            archivo_a_cargar->equipo_grande = 1;
+        else
+            archivo_a_cargar->equipo_grande = 0;
+
+        if (dtb_seleccionado->quantum && pcp->algoritmo_planificacion == VRR) {
+            agregar_a_ready_aux(pcp, dtb_seleccionado);
+        } else {
+            agregar_a_ready(pcp, dtb_seleccionado);
+        }
     } else
         log_error(pcp->logger, "DTB %d no encontrado en BLOCK", id_DTB);
 
@@ -240,12 +250,36 @@ void desbloquear_dtb_dummy(PCP* pcp, int id_DTB, char* path_script){
  * @param dtb DTB a agregar a ready
  */
 void agregar_a_ready(PCP* pcp, DTB* dtb){
+    ArchivoAbierto* archivo_seleccionado;
+    int tamanio_lista_archivos;
+
     dtb->status = READY;
     dtb->quantum = pcp->quantum;
 
-    pthread_mutex_lock(&(pcp->mutex_ready));
-    queue_push(pcp->cola_ready, dtb);
-    pthread_mutex_unlock(&(pcp->mutex_ready));
+    if(pcp->algoritmo_planificacion != PROPIO) {
+        log_info(pcp->logger, "Pasando DTB %d a READY", dtb->id);
+        pthread_mutex_lock(&(pcp->mutex_ready));
+        queue_push(pcp->cola_ready, dtb);
+        pthread_mutex_unlock(&(pcp->mutex_ready));
+    }else{
+        tamanio_lista_archivos = list_size(dtb->archivos_abiertos);
+
+        for(int i = 0; i < tamanio_lista_archivos; i++){
+            archivo_seleccionado = list_get(dtb->archivos_abiertos, i);
+
+            if(archivo_seleccionado->equipo_grande){
+                log_info(pcp->logger, "Pasando DTB %d a READY AUX", dtb->id);
+                pthread_mutex_lock(&(pcp->mutex_ready_aux));
+                queue_push(pcp->cola_ready_aux, dtb);
+                pthread_mutex_unlock(&(pcp->mutex_ready_aux));
+                sem_post(&(pcp->semaforo_ready));
+                return;
+            }
+        }
+        pthread_mutex_lock(&(pcp->mutex_ready));
+        queue_push(pcp->cola_ready, dtb);
+        pthread_mutex_unlock(&(pcp->mutex_ready));
+    }
     sem_post(&(pcp->semaforo_ready));
 }
 
@@ -276,7 +310,7 @@ DTB* ready_a_exec(PCP* pcp){
 
     if(pcp->algoritmo_planificacion == RR)
         dtb_seleccionado = queue_pop(pcp->cola_ready);
-    else if(pcp->algoritmo_planificacion == VRR){
+    else{
         if(!queue_is_empty(pcp->cola_ready_aux))
             dtb_seleccionado = queue_pop(pcp->cola_ready_aux);
         else
@@ -439,6 +473,7 @@ void* ejecutar_pcp(void* arg){
     PCP* pcp = (PCP*)arg;
     DTB* dtb_seleccionado;
     CPU* cpu_seleccionado;
+    MensajeDinamico* mensaje_dtb;
 
     while(correr){
 
@@ -461,7 +496,9 @@ void* ejecutar_pcp(void* arg){
                     cpu_seleccionado->id, dtb_seleccionado->path_script, dtb_seleccionado->id);
 
         usleep((__useconds_t)(pcp->retardo_planificacion*1000));
-        enviar_datos_dtb(cpu_seleccionado->socket, dtb_seleccionado);
+
+        mensaje_dtb = generar_mensaje_dtb(cpu_seleccionado->socket, dtb_seleccionado);
+        enviar_mensaje(mensaje_dtb);
         (cpu_seleccionado->cantidad_procesos_asignados)++;
     }
 

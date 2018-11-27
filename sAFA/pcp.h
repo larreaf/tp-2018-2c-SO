@@ -32,19 +32,20 @@ typedef struct {
     int quantum;
     int retardo_planificacion;
     int finalizar_dtb;
+    int cantidad_lineas_equipo_grande;
     t_log* logger;
 }PCP;
 
 CPU* seleccionar_cpu(t_list*);
 void decrementar_procesos_asignados_cpu(ConexionesActivas, int);
-PCP* inicializar_pcp(int, int, int, char*);
+PCP* inicializar_pcp(int, int, int, char*, int, int);
 void destruir_cola(void*);
 void destruir_pcp(PCP*);
 void destruir_dtb(void*);
 DTB* crear_dtb(int, int);
 void resetear_dtb_dummy(DTB*);
 void desbloquear_dtb(PCP*, int);
-void desbloquear_dtb_cargando_archivo(PCP*, int, char*, int);
+void desbloquear_dtb_cargando_archivo(PCP*, int, char*, int, int);
 void desbloquear_dtb_dummy(PCP*, int, char*);
 void agregar_a_ready(PCP*, DTB*);
 void agregar_a_ready_aux(PCP*, DTB*);

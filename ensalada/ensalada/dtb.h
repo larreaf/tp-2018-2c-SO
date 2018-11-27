@@ -13,6 +13,7 @@ typedef enum {
 typedef struct{
     char* path;
     int direccion_memoria;
+    int equipo_grande;
 }ArchivoAbierto;
 
 typedef struct{
@@ -25,8 +26,17 @@ typedef struct{
     t_list* archivos_abiertos;
 }DTB;
 
+typedef struct{
+    int id_dtb;
+    int cantidad_instrucciones_ejecutadas;
+    int cantidad_instrucciones_dma;
+    int cantidad_instrucciones_new;
+    char en_new;
+}MetricasDTB;
+
 void desempaquetar_dtb(MensajeDinamico*, DTB*);
-void enviar_datos_dtb(int, DTB*);
+MensajeDinamico* generar_mensaje_dtb(int, DTB *);
 DTB* encontrar_dtb_en_lista(t_list*, int, bool);
+MetricasDTB* encontrar_metricas_en_lista(t_list* lista, int id_dtb, bool);
 
 #endif //DTB_H

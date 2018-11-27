@@ -23,6 +23,7 @@ void desempaquetar_dtb(MensajeDinamico* mensaje, DTB* dtb){
 
         recibir_string(&archivo_abierto->path, mensaje);
         recibir_int(&archivo_abierto->direccion_memoria, mensaje);
+        recibir_int(&archivo_abierto->equipo_grande, mensaje);
 
         list_add(dtb->archivos_abiertos, archivo_abierto);
     }
@@ -33,10 +34,9 @@ void desempaquetar_dtb(MensajeDinamico* mensaje, DTB* dtb){
  * @param socket_cpu CPU al cual enviar los datos
  * @param dtb DTB del cual enviar los datos
  */
-void enviar_datos_dtb(int socket_cpu, DTB* dtb){
+MensajeDinamico* generar_mensaje_dtb(int socket_cpu, DTB *dtb){
     MensajeDinamico* mensaje = crear_mensaje(DATOS_DTB, socket_cpu, 0);
     int tamanio_lista_archivos_abiertos = list_size(dtb->archivos_abiertos);
-    int resultado;
     ArchivoAbierto* archivo_abierto_seleccionado;
 
     agregar_dato(mensaje, sizeof(int), &(dtb->id));
@@ -53,10 +53,10 @@ void enviar_datos_dtb(int socket_cpu, DTB* dtb){
 
         agregar_string(mensaje, archivo_abierto_seleccionado->path);
         agregar_dato(mensaje, sizeof(int), &(archivo_abierto_seleccionado->direccion_memoria));
+        agregar_dato(mensaje, sizeof(int), &(archivo_abierto_seleccionado->equipo_grande));
     }
 
-    resultado = enviar_mensaje(mensaje);
-    comprobar_error(resultado, "Error al enviar datos DTB al CPU");
+    return mensaje;
 }
 
 DTB* encontrar_dtb_en_lista(t_list* lista, int id_dtb, bool remover_de_lista){
@@ -70,6 +70,22 @@ DTB* encontrar_dtb_en_lista(t_list* lista, int id_dtb, bool remover_de_lista){
             if(remover_de_lista)
                 list_remove(lista, i);
             return dtb_seleccionado;
+        }
+    }
+    return NULL;
+}
+
+MetricasDTB* encontrar_metricas_en_lista(t_list* lista, int id_dtb, bool remover_de_lista){
+    MetricasDTB* metricas_seleccionado = NULL;
+    int tamanio_lista = list_size(lista);
+
+    for(int i = 0; i<tamanio_lista; i++){
+        metricas_seleccionado = list_get(lista, i);
+
+        if(metricas_seleccionado->id_dtb == id_dtb) {
+            if(remover_de_lista)
+                list_remove(lista, i);
+            return metricas_seleccionado;
         }
     }
     return NULL;

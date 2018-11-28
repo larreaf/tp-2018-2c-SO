@@ -92,6 +92,15 @@ int cerrar_archivo(Memoria*, int, int);
 int desalojar_script(Memoria*, int);
 void dump(Memoria*, int);
 int encontrar_marco_libre(MemoriaReal* storage);
-void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, int seg_limit, char* buffer);
+void escribir_archivo_seg_pag(Memoria* memoria,int pid , int seg_init ,bool inicializar_archivo, char* buffer);
 int obtener_numero_linea_pagina(int numero_marco, int tamanio_marco);
+/*
+ * Puede darse el caso de que agregue mas de un segmento
+ */
+int crear_segmento_y_agregarlo_al_proceso(NodoProceso* un_proceso,Memoria* memoria, int cant_lineas, int id_dtb);
+/*
+ * Para separar un string por \n aunque solo contenga puros \n
+ */
+char** lineas_split_(char* lineas);
+int cuenta_saltos_de_linea(char* string);
 #endif //FM9_MEMORIA_H

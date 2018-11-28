@@ -206,9 +206,9 @@ int in_wait(DTB* dtb, char* nombre_recurso){
     MensajeDinamico* peticion_wait;
     int resultado;
 
-    peticion_wait = crear_mensaje(socket_safa, SOLICITUD_RECURSO, 0);
+    peticion_wait = crear_mensaje(SOLICITUD_RECURSO, socket_safa, 0);
     agregar_dato(peticion_wait, sizeof(int), &dtb->id);
-    agregar_dato(peticion_wait, sizeof(int), &nombre_recurso);
+    agregar_string(peticion_wait, nombre_recurso);
     enviar_mensaje(peticion_wait);
 
     peticion_wait = recibir_mensaje(socket_safa);
@@ -224,8 +224,8 @@ int in_wait(DTB* dtb, char* nombre_recurso){
 int in_signal(char* nombre_recurso){
     MensajeDinamico* peticion_signal;
 
-    peticion_signal = crear_mensaje(socket_safa, LIBERAR_RECURSO, 0);
-    agregar_dato(peticion_signal, sizeof(int), &nombre_recurso);
+    peticion_signal = crear_mensaje(LIBERAR_RECURSO, socket_safa, 0);
+    agregar_string(peticion_signal, nombre_recurso);
     enviar_mensaje(peticion_signal);
 
     return READY;

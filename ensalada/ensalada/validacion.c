@@ -38,7 +38,8 @@ char CONFIGURACION_fm9[CONFIG_fm9][TAMANIO_STRING] = {
 		"TAMANIO",
 		"MAX_LINEA",
 		"TAM_PAGINA",
-		"IP"
+		"IP",
+		"TAM_MAX_SEGMENTO"
 };
 
 char CONFIGURACION_cpu[CONFIG_cpu][TAMANIO_STRING] = {
@@ -195,6 +196,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 		case fm9 :
 			retorno_fm9 = malloc(sizeof(cfg_fm9));
 
+			retorno_fm9->tam_max_segmento = config_get_int_value(configuracion,CONFIGURACION_fm9[6]);
 			retorno_fm9->ip = config_get_string_value(configuracion,CONFIGURACION_fm9[5]);
 			retorno_fm9->puerto = config_get_int_value(configuracion,CONFIGURACION_fm9[0]);
 			retorno_fm9->modo = string_to_memory(config_get_string_value(configuracion,CONFIGURACION_fm9[1]));

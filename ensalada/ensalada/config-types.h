@@ -73,6 +73,7 @@
 		int max_linea;
 		int tamanio;
 		int tam_pagina;
+		int tam_max_segmento;
 		t_config* config;
 	}cfg_fm9;
 

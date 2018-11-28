@@ -203,6 +203,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_fm9->tamanio = config_get_int_value(configuracion,CONFIGURACION_fm9[2]);
 			retorno_fm9->max_linea = config_get_int_value(configuracion,CONFIGURACION_fm9[3]);
 			retorno_fm9->tam_pagina = config_get_int_value(configuracion,CONFIGURACION_fm9[4]);
+			retorno_fm9->tam_max_segmento = config_get_int_value(configuracion, CONFIGURACION_fm9[6]);
             retorno_fm9->config = configuracion;
 			retorno = retorno_fm9;
 			break;

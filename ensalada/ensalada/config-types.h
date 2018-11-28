@@ -16,7 +16,7 @@
 	typedef enum {
 		CONFIG_safa = 9,
 		CONFIG_elDiego = 9,
-		CONFIG_fm9 = 6,
+		CONFIG_fm9 = 7,
 		CONFIG_cpu = 7,
 		CONFIG_mdj = 4
 

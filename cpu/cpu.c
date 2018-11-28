@@ -34,6 +34,8 @@ int main(int argc, char **argv) {
     char* linea = "";
 
     remove("cpu.log");
+
+    // TODO nombre CPU + numero de CPU
     logger = log_create("cpu.log", "cpu", true, log_level_from_string("info"));
 
     validar_parametros(argc);
@@ -150,7 +152,7 @@ int main(int argc, char **argv) {
                         resultado_instruccion = -3;
                         break;
 	            }
-	            log_info(logger, "Volviendo DTB %d a CPU con quantum restante %d y status %d", datos_dtb.id,
+	            log_info(logger, "Volviendo DTB %d a SAFA con quantum restante %d y status %d", datos_dtb.id,
 	                    datos_dtb.quantum, datos_dtb.status);
                 datos_dtb.status = resultado_instruccion;
 

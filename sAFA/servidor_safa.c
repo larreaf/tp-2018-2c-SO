@@ -28,10 +28,11 @@ void* ejecutar_servidor(void *arg){
     DTB datos_dtb;
     DTB* dtb_seleccionado;
     MetricasDTB* metricas;
+    Recurso* recurso_seleccionado;
 
     conexiones_permitidas[t_elDiego] = 1;
     conexiones_permitidas[t_consola_safa] = 1;
-    conexiones_permitidas[t_cpu] = 2;
+    conexiones_permitidas[t_cpu] = 10;
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto,
             conexiones_permitidas, t_safa);
     archivos_abiertos = dictionary_create();
@@ -162,6 +163,15 @@ void* ejecutar_servidor(void *arg){
                 recibir_int(&direccion_archivo, mensaje);
                 recibir_int(&cant_lineas, mensaje);
 
+                if(direccion_archivo==-10002){
+                    direccion_archivo = -direccion_archivo;
+                    dtb_seleccionado = tomar_de_exec(pcp, id_dtb);
+                    log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando", id_dtb,
+                              dtb_seleccionado->path_script, direccion_archivo);
+                    destruir_dtb(dtb_seleccionado);
+                    sem_post(&plp->semaforo_multiprogramacion);
+                }
+
                 desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo, cant_lineas);
                 free(path);
                 break;
@@ -173,19 +183,30 @@ void* ejecutar_servidor(void *arg){
                 *copia_id_dtb = id_dtb;
 
                 if(!dictionary_has_key(pcp->recursos, nombre_recurso)){
-                    cola_recurso = queue_create();
-                    dictionary_put(pcp->recursos, nombre_recurso, cola_recurso);
-                    resultado = 1;
+                    recurso_seleccionado = malloc(sizeof(Recurso));
+                    recurso_seleccionado->cola = queue_create();
+                    queue_push(recurso_seleccionado->cola, copia_id_dtb);
+                    recurso_seleccionado->disponibilidad = 0;
+                    dictionary_put(pcp->recursos, nombre_recurso, recurso_seleccionado);
+                    resultado = 0;
                 }else{
-                    cola_recurso = dictionary_get(pcp->recursos, nombre_recurso);
-                    if(queue_is_empty(cola_recurso))
+                    recurso_seleccionado = dictionary_get(pcp->recursos, nombre_recurso);
+                    if(recurso_seleccionado->disponibilidad > 0) {
+                        recurso_seleccionado->disponibilidad--;
                         resultado = 1;
-                    else
+                        free(copia_id_dtb);
+                    }else {
                         resultado = 0;
+                        queue_push(recurso_seleccionado->cola, &copia_id_dtb);
+                    }
                 }
-                queue_push(cola_recurso, &copia_id_dtb);
+                if(resultado)
+                    log_info(logger, "Instancias de recurso '%s' decrementadas (total %d)", nombre_recurso,
+                             recurso_seleccionado->disponibilidad);
+                else
+                    log_info(logger, "DTB %d intento solicitar recurso '%s' no disponible", id_dtb, nombre_recurso);
 
-                mensaje_respuesta = crear_mensaje(mensaje->socket, SOLICITUD_RECURSO, 0);
+                mensaje_respuesta = crear_mensaje(SOLICITUD_RECURSO, mensaje->socket, 0);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
                 enviar_mensaje(mensaje_respuesta);
                 free(nombre_recurso);
@@ -194,19 +215,23 @@ void* ejecutar_servidor(void *arg){
             case LIBERAR_RECURSO:
                 recibir_string(&nombre_recurso, mensaje);
 
-                cola_recurso = dictionary_get(pcp->recursos, nombre_recurso);
+                recurso_seleccionado = dictionary_get(pcp->recursos, nombre_recurso);
 
-                if(cola_recurso == NULL){
-                    log_error(logger, "Se intento liberar un recurso no asignado");
-                    break;
+                if(recurso_seleccionado == NULL){
+                    recurso_seleccionado = malloc(sizeof(Recurso));
+                    recurso_seleccionado->cola = queue_create();
+                    recurso_seleccionado->disponibilidad = 1;
+                    dictionary_put(pcp->recursos, nombre_recurso, recurso_seleccionado);
+                }else{
+                    recurso_seleccionado->disponibilidad++;
+                    if(!queue_is_empty(recurso_seleccionado->cola)){
+                        copia_id_dtb = (int*)queue_pop(recurso_seleccionado->cola);
+                        desbloquear_dtb(pcp, *copia_id_dtb);
+                        free(copia_id_dtb);
+                    }
                 }
-
-                free(queue_pop(cola_recurso));
-
-                if(!queue_is_empty(cola_recurso)){
-                    id_dtb = *((int*)queue_peek(cola_recurso));
-                    desbloquear_dtb(pcp, id_dtb);
-                }
+                log_info(logger, "Instancias de recurso '%s' incrementadas (total %d)", nombre_recurso,
+                        recurso_seleccionado->disponibilidad);
 
                 free(nombre_recurso);
                 break;

@@ -16,6 +16,11 @@
 #include <semaphore.h>
 #include "plp.h"
 
+typedef struct{
+    t_queue* cola;
+    int disponibilidad;
+}Recurso;
+
 typedef struct {
     t_queue* cola_ready;
     t_queue* cola_ready_aux;
@@ -39,7 +44,7 @@ typedef struct {
 CPU* seleccionar_cpu(t_list*);
 void decrementar_procesos_asignados_cpu(ConexionesActivas, int);
 PCP* inicializar_pcp(int, int, int, char*, int, int);
-void destruir_cola(void*);
+void destruir_recurso(void*);
 void destruir_pcp(PCP*);
 void destruir_dtb(void*);
 DTB* crear_dtb(int, int);

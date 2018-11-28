@@ -92,11 +92,11 @@ void destruir_dtb(void* arg){
     free(dtb);
 }
 
-void destruir_cola(void* arg){
-    t_queue* cola = (t_queue*)arg;
+void destruir_recurso(void *arg){
+    Recurso* recurso_seleccionado = (Recurso*)arg;
 
-    while(!queue_is_empty(cola))
-        free(queue_pop(cola));
+    queue_destroy_and_destroy_elements(recurso_seleccionado->cola, free);
+    free(recurso_seleccionado);
 }
 
 /*!
@@ -110,7 +110,7 @@ void destruir_pcp(PCP* pcp_a_destruir){
     list_destroy_and_destroy_elements(pcp_a_destruir->lista_exec, destruir_dtb);
     sem_destroy(&pcp_a_destruir->semaforo_ready);
     sem_destroy(&pcp_a_destruir->semaforo_dummy);
-    dictionary_destroy_and_destroy_elements(pcp_a_destruir->recursos, destruir_cola);
+    dictionary_destroy_and_destroy_elements(pcp_a_destruir->recursos, destruir_recurso);
 
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_ready));
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_ready_aux));

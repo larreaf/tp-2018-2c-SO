@@ -94,7 +94,6 @@ ConexionesActivas inicializar_conexiones_activas(t_log *logger, char* ip, int pu
     servidor.socket_fm9 = -1;
     servidor.socket_safa = -1;
     servidor.socket_mdj = -1;
-    sem_init(&(servidor.semaforo_safa), 0, 0);
 
     return servidor;
 }
@@ -112,7 +111,6 @@ void destruir_conexiones_activas(ConexionesActivas servidor){
     }
 
     close(servidor.socket);
-    sem_destroy(&(servidor.semaforo_safa));
     list_destroy(servidor.lista_clientes);
     list_destroy(servidor.lista_cpus);
     free(servidor.procesos_conectados);
@@ -149,9 +147,6 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
 
         if(servidor.socket)
             FD_SET(servidor.socket, &descriptores_lectura);
-
-        if(servidor.procesos_conectados[t_elDiego] && servidor.procesos_conectados[t_cpu])
-            sem_post(&(servidor.semaforo_safa));
 
         for(int i = 0; i<list_size(servidor.lista_clientes); i++) {
             cliente_seleccionado = list_get(servidor.lista_clientes, i);

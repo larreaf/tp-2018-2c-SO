@@ -2,7 +2,6 @@
 #define SERVIDOR_H
 
 #include <sys/select.h>
-#include <semaphore.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include "com.h"
@@ -33,7 +32,6 @@ typedef struct{
     t_list* lista_cpus;
     t_log* logger;
     Proceso t_proceso_host;
-    sem_t semaforo_safa;
 
 }ConexionesActivas;
 

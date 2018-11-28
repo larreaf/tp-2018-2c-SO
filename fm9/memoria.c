@@ -238,13 +238,13 @@ int encontrar_espacio_para_segmento(MemoriaReal* storage, int cant_lineas_segmen
 
 int obtener_cantidad_paginas_necesarias(MemoriaReal* storage, int cant_lineas){
 
-	int paginas_necesarias = 0;
+	int paginas_necesarias = 1;
 
 	if(storage->cant_lineas_pagina < cant_lineas){
 		paginas_necesarias = storage->cant_lineas_pagina / cant_lineas;
 	}
 	if(storage->cant_lineas_pagina % cant_lineas > 0)
-		paginas_necesarias ++;
+		paginas_necesarias++;
 
 	return paginas_necesarias;
 }
@@ -387,8 +387,7 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
         segmento_script = malloc(sizeof(NodoTablaSegmentos));
 
         cant_lineas = contar_lineas(string);
-        log_info(memoria->logger, "Buscando espacio para segmento 0 para script de DTB %d (%d lineas)", id_dtb,
-                cant_lineas);
+        log_info(memoria->logger, "Buscando espacio para segmento 0 para script de DTB %d (%d lineas)", id_dtb, cant_lineas);
         posicion_segmento = encontrar_espacio_para_segmento(memoria->storage, cant_lineas);
         if(posicion_segmento == -1)
             return -10002;
@@ -472,7 +471,8 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
 
 		list_add(nuevo_proceso->tabla_segmentos,segmento);
 		list_add(memoria->tabla_procesos, nuevo_proceso);
-
+		cant_lineas = contar_lineas(string);
+		//printf("String:\n %s \n",string);
 		log_info(memoria->logger, "Buscando espacio para pagina/s para script de DTB %d (%d lineas)", id_dtb,cant_lineas);
 
 		int paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cant_lineas);
@@ -670,6 +670,28 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
 			return -1;
 		}
 	}
+    else if(memoria->modo == SPA){
+    	bool _is_the_one(NodoProceso* proceso){
+			if(proceso->id_proceso == id_dtb){
+				return true;
+			}else{
+				return false;
+			}
+		}
+    	NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
+    	NodoSegmento* segmento = NULL;
+    	NodoPagina* pagina = NULL;
+    	int numero_pagina_bruto = numero_linea / memoria->storage->cant_lineas_pagina;
+    	int numero_pagina_neto = 0;
+    	int numero_linea_neto = numero_linea % memoria->storage->cant_lineas_pagina;
+    	int i = 0;
+    	for (i = 0; i < proceso->tabla_segmentos->elements_count && numero_pagina_bruto > (memoria->tamanio_maximo_segmento*i) ; i++){}
+    	segmento = list_get(proceso->tabla_segmentos, i);
+    	numero_pagina_neto = numero_pagina_bruto - memoria->tamanio_maximo_segmento*i;
+    	pagina = list_get(segmento->tabla_paginas, numero_pagina_neto);
+    	string_append(&linea, leer_linea_storage(memoria->storage, pagina->numero_marco*memoria->storage->cant_lineas_pagina, numero_linea_neto));
+    	return linea;
+    }
 }
 
 /*!
@@ -912,7 +934,7 @@ void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, int seg_lim
 	NodoProceso* proceso;
 	int cantidad_lineas = contar_lineas(buffer);
 	int paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cantidad_lineas);
-	proceso = list_find(memoria->tabla_procesos, _is_the_one);
+	proceso = list_find(memoria->tabla_procesos, &_is_the_one);
 	if(seg_init <= 0){
 		segmento = list_get(proceso->tabla_segmentos,0);
 	} else {
@@ -924,9 +946,12 @@ void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, int seg_lim
 		int j = 0;
 		pagina = list_get(segmento->tabla_paginas, index);
 		int numero_inicial_pagina = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
-		for(j = 0; j < tamanio_pagina ; j++){
-			log_info(memoria->logger, "Escribiendo linea #%d del código del DTB %d", (j+index*tamanio_pagina) , pid);
-			escribir_linea(memoria->storage,lineas[(j+index*tamanio_pagina)],(j+numero_inicial_pagina),0);
+		int indice_lineas = (j+index*tamanio_pagina);
+		for(j = 0; j < tamanio_pagina && lineas[indice_lineas+1] != NULL ; j++){
+			indice_lineas = (j+index*tamanio_pagina);
+			log_info(memoria->logger, "Escribiendo linea #%d del código del DTB %d", indice_lineas , pid);
+			escribir_linea(memoria->storage,lineas[indice_lineas],(j+numero_inicial_pagina),0);
+
 		}
 	}
 

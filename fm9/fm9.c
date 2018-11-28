@@ -24,8 +24,8 @@ pthread_t thread_consola;
 void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_activas, Memoria* memoria){
     log_info(logger, "Cerrando FM9...");
 
-    // destruir_conexiones_activas manda headers CONEXION_CERRADA a todos los clientes conectados para que se enteren y despues
-    // cierra cada socket
+    // destruir_conexiones_activas manda headers CONEXION_CERRADA a todos los clientes conectados para que se enteren y
+    // despues cierra cada socket
     destruir_conexiones_activas(conexiones_activas);
     correr = 0;
     pthread_kill(thread_consola, SIGUSR1);
@@ -52,9 +52,10 @@ int main(int argc, char **argv) {
     cfg_fm9 *configuracion = asignar_config(argv[1], fm9);
 
     log_info(logger, "Inicializando conexiones_activas...");
-    conexiones_permitidas[t_cpu] = 2;
+    conexiones_permitidas[t_cpu] = 10;
     conexiones_permitidas[t_elDiego] = 1;
-    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto, conexiones_permitidas, t_fm9);
+    conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto,
+            conexiones_permitidas, t_fm9);
 
     storage = inicializar_memoria_real(configuracion->tamanio, configuracion->max_linea, configuracion->tam_pagina);
     memoria = inicializar_memoria(storage, configuracion->modo, configuracion->tam_max_segmento);

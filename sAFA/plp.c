@@ -205,7 +205,7 @@ char* codigo_error_a_string(int codigo_error){
         default:
             break;
     }
-    return string_error:
+    return string_error;
 }
 
 /*!

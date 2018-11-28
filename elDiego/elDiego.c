@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 	remove("elDiego.log");
 	logger = log_create("elDiego.log", "elDiego", true, log_level_from_string("info"));
 
-	conexiones_permitidas[t_cpu] = 3;
+	conexiones_permitidas[t_cpu] = 10;
 	conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto, conexiones_permitidas, t_elDiego);
 
 	// conectar como cliente a MDJ
@@ -213,7 +213,6 @@ int main(int argc, char **argv) {
                 }
 
                 cant_lineas = contar_lineas(archivo);
-                printf("Cantidad lineas archivo: %d\n", cant_lineas);
                 mensaje_dinamico = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, socket_safa, 0);
                 agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                 agregar_string(mensaje_dinamico, path);

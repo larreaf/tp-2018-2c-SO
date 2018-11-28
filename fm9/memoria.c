@@ -521,7 +521,6 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
         return direccion_logica;
     }
     else if(memoria->modo == TPI){
-		NodoTablaPaginasInvertida * nodo_lista_tabla_paginas_invertida;
 		nodo_lista_tabla_paginas_invertida = malloc(sizeof(NodoTablaPaginasInvertida));
 		cant_lineas = contar_lineas(string);
 		int pagina_base = list_fold(memoria->lista_tabla_de_paginas_invertida,0,traer_ultima_pagina_id_dtb) + 1;
@@ -577,7 +576,7 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 }
 
 /*!
- * Encuentra y lee una linea
+ * Encuentra y lee una linea de script
  * @param memoria
  * @param id_dtb
  * @param numero_linea
@@ -680,7 +679,7 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
 }
 
 /*!
- * Flushea un archivo
+ * Flushea un archivo (guarda los datos en MDJ)
  * @param memoria
  * @param id_dtb
  * @param direccion direccion logica del archivo
@@ -754,6 +753,12 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
     return 40002;
 }
 
+/*!
+ * Desaloja un script del storage, junto con todos los archivos que no cerro previamente
+ * @param memoria
+ * @param id_dtb
+ * @return 0 si no hubo error, -1 si hubo error
+ */
 int desalojar_script(Memoria* memoria, int id_dtb){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;

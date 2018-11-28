@@ -30,6 +30,7 @@ typedef struct {
     t_list* lista_tablas_de_segmentos;
     t_list* lista_tabla_de_paginas_invertida;
     t_list* tabla_procesos; //Lo pide segmentacion paginada
+    int tamanio_maximo_segmento;
     modo_memoria modo;
     t_log* logger;
 }Memoria;
@@ -70,7 +71,7 @@ typedef struct {
 MemoriaReal* inicializar_memoria_real(int, int, int);
 void destruir_memoria_real(MemoriaReal*);
 void destruir_tabla_segmentos(void*);
-Memoria* inicializar_memoria(MemoriaReal*, int);
+Memoria* inicializar_memoria(MemoriaReal*, int, int);
 void destruir_memoria(Memoria*);
 void escribir_linea(MemoriaReal*, char*, int, char);
 void escribir_archivo_en_storage(MemoriaReal*, char*, int);
@@ -78,7 +79,7 @@ void modificar_linea_storage(MemoriaReal*, int, int, char*);
 int encontrar_espacio_para_segmento(MemoriaReal*, int);
 int obtener_cantidad_paginas_necesarias(MemoriaReal*, int);
 int verificar_si_hay_cantidad_paginas_necesarias(MemoriaReal*, int);
-int encontrar_marco_hash(MemoriaReal*, int, int);
+int encontrar_marco_hash(Memoria*, int, int);
 NodoListaTablasSegmentos* encontrar_tabla_segmentos_por_id_dtb(t_list*, int);
 int contar_lineas(char*);
 int cargar_script(Memoria*, int, char*);
@@ -90,5 +91,7 @@ char* flush_archivo(Memoria*, int, int);
 int cerrar_archivo(Memoria*, int, int);
 int desalojar_script(Memoria*, int);
 void dump(Memoria*, int);
-
+int encontrar_marco_libre(MemoriaReal* storage);
+void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, int seg_limit, char* buffer);
+int obtener_numero_linea_pagina(int numero_marco, int tamanio_marco);
 #endif //FM9_MEMORIA_H

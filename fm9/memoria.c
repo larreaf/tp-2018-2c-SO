@@ -59,7 +59,7 @@ void destruir_memoria_real(MemoriaReal* storage){
  * @param modo Modo de ejecucion
  * @return Memoria* inicializado
  */
-Memoria* inicializar_memoria(MemoriaReal* storage, int modo){
+Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_segmento){
     Memoria* memoria = malloc(sizeof(Memoria));
 
     memoria->storage = storage;
@@ -67,6 +67,7 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo){
     memoria->lista_tabla_de_paginas_invertida = list_create();
     memoria->tabla_procesos = list_create();
     memoria->modo = modo;
+    memoria->tamanio_maximo_segmento = tamanio_maximo_segmento;
 
     if(modo == SEG)
         memoria->logger = log_create("fm9.log", "MemoriaSegmentada", true, log_level_from_string("info"));
@@ -237,13 +238,13 @@ int encontrar_espacio_para_segmento(MemoriaReal* storage, int cant_lineas_segmen
 
 int obtener_cantidad_paginas_necesarias(MemoriaReal* storage, int cant_lineas){
 
-	int paginas_necesarias;
+	int paginas_necesarias = 1;
 
 	if(storage->cant_lineas_pagina < cant_lineas){
 		paginas_necesarias = storage->cant_lineas_pagina / cant_lineas;
 	}
-
-	paginas_necesarias ++;
+	if(storage->cant_lineas_pagina % cant_lineas > 0)
+		paginas_necesarias++;
 
 	return paginas_necesarias;
 }
@@ -296,7 +297,7 @@ int verificar_si_hay_cantidad_paginas_necesarias(MemoriaReal* storage, int cant_
  * modified: 15/11/2018
  */
 
-int encontrar_marco_hash(Memoria* memoria,int pagina,int id_dtb){
+int encontrar_marco_hash(Memoria* memoria,int pagina,int id_dtb){/*
 
 	t_list* tabla_filtrada_por_pagina, tabla_filtrada_por_pagina_id_dtb;
 
@@ -330,8 +331,9 @@ int encontrar_marco_hash(Memoria* memoria,int pagina,int id_dtb){
 		}
 	}
 
-	return 0;
+	return 0;*/
 }
+
 
 /*!
  * Controla que el marco este sin usar sino encadena en la tabla invertida
@@ -385,8 +387,7 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
         segmento_script = malloc(sizeof(NodoTablaSegmentos));
 
         cant_lineas = contar_lineas(string);
-        log_info(memoria->logger, "Buscando espacio para segmento 0 para script de DTB %d (%d lineas)", id_dtb,
-                cant_lineas);
+        log_info(memoria->logger, "Buscando espacio para segmento 0 para script de DTB %d (%d lineas)", id_dtb, cant_lineas);
         posicion_segmento = encontrar_espacio_para_segmento(memoria->storage, cant_lineas);
         if(posicion_segmento == -1)
             return -10002;
@@ -460,6 +461,46 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
 	}
 	else if(memoria->modo == SPA){
 
+		NodoProceso* nuevo_proceso = malloc(sizeof(NodoProceso));
+		nuevo_proceso->id_proceso = id_dtb;
+		nuevo_proceso->tabla_segmentos = list_create();
+		NodoSegmento* segmento = malloc(sizeof(NodoSegmento));
+		segmento->tabla_paginas = list_create();
+
+		NodoPagina* pagina;
+
+		list_add(nuevo_proceso->tabla_segmentos,segmento);
+		list_add(memoria->tabla_procesos, nuevo_proceso);
+		cant_lineas = contar_lineas(string);
+		//printf("String:\n %s \n",string);
+		log_info(memoria->logger, "Buscando espacio para pagina/s para script de DTB %d (%d lineas)", id_dtb,cant_lineas);
+
+		int paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cant_lineas);
+		int hay_paginas_necesarias = verificar_si_hay_cantidad_paginas_necesarias(memoria->storage, paginas_necesarias);
+
+
+		if(hay_paginas_necesarias == -1)
+				return -10002;
+		log_info(memoria->logger, "Hay paginas para el  DTB %d (%d lineas)", id_dtb,cant_lineas);
+		int index = 0;
+		for (index = 0; index < paginas_necesarias ; index++){ //Establecer paginas para el script
+			pagina = malloc(sizeof(NodoPagina));
+			pagina->numero_marco = encontrar_marco_libre(memoria->storage);
+			if(pagina->numero_marco == -1)
+				return -10002;
+			list_add(segmento->tabla_paginas,pagina);
+			log_info(memoria->logger, "Agregada una pagina para el segmento %d para el código del DTB %d",(nuevo_proceso->tabla_segmentos->elements_count - 1) ,id_dtb);
+			if(segmento->tabla_paginas->elements_count >= memoria->tamanio_maximo_segmento){ //Agrega un nuevo segmento si el anterior se llenó
+				segmento = NULL;
+				segmento = malloc(sizeof(NodoSegmento));
+				segmento->tabla_paginas = list_create();
+				list_add(nuevo_proceso->tabla_segmentos, segmento);
+				log_info(memoria->logger, "Agregado un nuevo segmento para el código del DTB %d", id_dtb);
+			}
+		}
+		log_info(memoria->logger, "Escribiendo el código del DTB %d en memoria", id_dtb);
+		escribir_archivo_seg_pag(memoria,id_dtb,-1,-1,string);
+
 
 	}
 
@@ -523,7 +564,7 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
     else if(memoria->modo == TPI){
 		nodo_lista_tabla_paginas_invertida = malloc(sizeof(NodoTablaPaginasInvertida));
 		cant_lineas = contar_lineas(string);
-		int pagina_base = list_fold(memoria->lista_tabla_de_paginas_invertida,0,traer_ultima_pagina_id_dtb) + 1;
+		int pagina_base; //= list_fold(memoria->lista_tabla_de_paginas_invertida,0,traer_ultima_pagina_id_dtb) + 1;
 
 		log_info(memoria->logger, "Buscando espacio para pagina/s para script de DTB %d (%d lineas)", id_dtb,cant_lineas);
 
@@ -628,6 +669,28 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
 			return -1;
 		}
 	}
+    else if(memoria->modo == SPA){
+    	bool _is_the_one(NodoProceso* proceso){
+			if(proceso->id_proceso == id_dtb){
+				return true;
+			}else{
+				return false;
+			}
+		}
+    	NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
+    	NodoSegmento* segmento = NULL;
+    	NodoPagina* pagina = NULL;
+    	int numero_pagina_bruto = numero_linea / memoria->storage->cant_lineas_pagina;
+    	int numero_pagina_neto = 0;
+    	int numero_linea_neto = numero_linea % memoria->storage->cant_lineas_pagina;
+    	int i = 0;
+    	for (i = 0; i < proceso->tabla_segmentos->elements_count && numero_pagina_bruto > (memoria->tamanio_maximo_segmento*i) ; i++){}
+    	segmento = list_get(proceso->tabla_segmentos, i);
+    	numero_pagina_neto = numero_pagina_bruto - memoria->tamanio_maximo_segmento*i;
+    	pagina = list_get(segmento->tabla_paginas, numero_pagina_neto);
+    	string_append(&linea, leer_linea_storage(memoria->storage, pagina->numero_marco*memoria->storage->cant_lineas_pagina, numero_linea_neto));
+    	return linea;
+    }
 }
 
 /*!
@@ -674,7 +737,6 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
 			return 0;
 		}
 	}
-
     return 20001;
 }
 
@@ -844,4 +906,63 @@ void dump(Memoria* memoria, int id_dtb){
         printf("Linea %d: %s\n", i, linea);
         free(linea);
     }
+}
+/*!
+ * Busca un marco libre y si lo encuentra lo retorna y lo coloca como ocupado
+ * @param storage
+ * @return -1 en caso de error
+ * @return #marco libre
+ */
+int encontrar_marco_libre(MemoriaReal* storage){
+
+	int index = 0;
+	for(index = 0; index < storage->cant_paginas && storage->estado_paginas[index];index++){}
+	if(storage->estado_paginas[index]){
+		 return -1;
+	}else{
+		storage->estado_paginas[index] = 1;
+		return index;
+	}
+
+}
+void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, int seg_limit, char* buffer){
+	bool _is_the_one(NodoProceso* proceso){
+		if(proceso->id_proceso == pid){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	int tamanio_pagina = memoria->storage->cant_lineas_pagina;
+	NodoSegmento* segmento;
+	NodoPagina* pagina;
+	NodoProceso* proceso;
+	int cantidad_lineas = contar_lineas(buffer);
+	int paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cantidad_lineas);
+	proceso = list_find(memoria->tabla_procesos, &_is_the_one);
+	if(seg_init <= 0){
+		segmento = list_get(proceso->tabla_segmentos,0);
+	} else {
+		segmento = list_get(proceso->tabla_segmentos,seg_init);
+	}
+	char** lineas = string_split(buffer,"\n");
+	int index = 0;
+	for(index = 0; index < paginas_necesarias; index++){
+		int j = 0;
+		pagina = list_get(segmento->tabla_paginas, index);
+		int numero_inicial_pagina = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
+		int indice_lineas = (j+index*tamanio_pagina);
+		for(j = 0; j < tamanio_pagina && lineas[indice_lineas+1] != NULL ; j++){
+			indice_lineas = (j+index*tamanio_pagina);
+			log_info(memoria->logger, "Escribiendo linea #%d del código del DTB %d", indice_lineas , pid);
+			escribir_linea(memoria->storage,lineas[indice_lineas],(j+numero_inicial_pagina),0);
+
+		}
+	}
+
+
+}
+
+int obtener_numero_linea_pagina(int numero_marco, int tamanio_marco){
+	return numero_marco*tamanio_marco;
 }

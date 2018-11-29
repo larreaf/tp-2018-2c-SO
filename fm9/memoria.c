@@ -1036,6 +1036,7 @@ void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, bool inicia
 			}
 		}
 	}
+	liberar_memoria_matriz(lineas);
 
 
 }
@@ -1108,4 +1109,11 @@ int cuenta_saltos_de_linea(char* string){
 	}
 	return contador_saltos_linea;
 }
-
+void liberar_memoria_matriz(char** matriz){
+	int index = 0;
+	while(matriz[index]!= NULL){
+		free(matriz[index]);
+		index++;
+	}
+	free(matriz);
+}

@@ -510,12 +510,12 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
 			return -10002;
 		nuevo_proceso->cantidad_segmentos_codigo = resultado;
 		log_info(memoria->logger, "Escribiendo el código del DTB %d en memoria", id_dtb);
-		escribir_archivo_seg_pag(memoria,id_dtb,-1,false,string);
+		escribir_archivo_seg_pag(memoria,id_dtb,0,false,string);
 
-
+		return 0;
 	}
 
-        return 0;
+        return -1;
     }
 
 /*!
@@ -584,6 +584,7 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 
 		if(hay_paginas_necesarias == -1)
 			return -10002;
+
 
 		for(int a = 0; a < paginas_necesarias;a++){
 
@@ -834,7 +835,7 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
                 log_info(memoria->logger, "Leyendo archivo en segmento %d para DTB %d", segmento->id_segmento,
                         id_dtb);
 
-                for(int j = 0; j<segmento->longitud_segmento; j++){
+                for(int j = 0; j<segmento->longitud_segmento; j++){ // Arreglar para no leer \n demás
                     string_append(&string_archivo, leer_linea_storage(memoria->storage, segmento->inicio_segmento, j));
                     string_append(&string_archivo, "\n");
                 }
@@ -1024,7 +1025,7 @@ int desalojar_script(Memoria* memoria, int id_dtb){
 		int cantidad_paginas = 0;
 
 		cantidad_segmentos = list_size(proceso->tabla_segmentos);
-		for(i = 1; i < cantidad_segmentos ; i++){ // Recorrer segmentos del proceso
+		for(i = 0; i < cantidad_segmentos ; i++){ // Recorrer segmentos del proceso
 			segmento = list_get(proceso->tabla_segmentos, i);
 			cantidad_paginas = list_size(segmento->tabla_paginas);
 			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
@@ -1156,7 +1157,7 @@ void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, bool inicia
 		if(inicializar_archivo){
 			for(j = 0;  j < tamanio_pagina && lineas_escritas < cantidad_lineas ; j++){
 				indice_lineas = (j+index*tamanio_pagina);
-				log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d", indice_lineas, index ,seg_init, pid);
+				log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d: \\n", indice_lineas, index ,seg_init, pid);
 				escribir_linea(memoria->storage,"\n",(j+numero_inicial_pagina),sobreescribir);
 				pagina->lineas_usadas++;
 				lineas_escritas++;
@@ -1164,10 +1165,12 @@ void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, bool inicia
 		} else {
 			for(j = 0; j < tamanio_pagina && lineas_escritas < cantidad_lineas; j++){
 				indice_lineas = (j+index*tamanio_pagina);
-				log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d", indice_lineas, index ,seg_init, pid);
-				if(lineas[indice_lineas+1] != NULL && lineas_escritas < cant_substring ){
+
+				if(lineas[indice_lineas] != NULL && lineas_escritas < cant_substring ){
+					log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d: %s", indice_lineas, index ,seg_init, pid,lineas[indice_lineas]);
 					escribir_linea(memoria->storage,lineas[indice_lineas],(j+numero_inicial_pagina),sobreescribir);
 				} else{
+					log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d: \\n", indice_lineas, index ,seg_init, pid,"\n");
 					escribir_linea(memoria->storage,"\n",(j+numero_inicial_pagina),sobreescribir);
 				}
 				pagina->lineas_usadas++;

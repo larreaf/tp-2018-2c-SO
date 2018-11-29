@@ -108,4 +108,6 @@ int crear_segmento_y_agregarlo_al_proceso(NodoProceso* un_proceso,Memoria* memor
 char** lineas_split_(char* lineas);
 int cuenta_saltos_de_linea(char* string);
 void liberar_memoria_matriz(char** matriz);
+int longitud_matriz(char** matriz);
+int marcos_libres(MemoriaReal* storage, int cantidad_requerida_marcos);
 #endif //FM9_MEMORIA_H

@@ -241,10 +241,13 @@ int obtener_cantidad_paginas_necesarias(MemoriaReal* storage, int cant_lineas){
 	int paginas_necesarias = 0;
 
 	if(storage->cant_lineas_pagina < cant_lineas){
-		paginas_necesarias = storage->cant_lineas_pagina / cant_lineas;
+		paginas_necesarias = cant_lineas / storage->cant_lineas_pagina ;
+		if(cant_lineas % storage->cant_lineas_pagina > 0){
+			paginas_necesarias++;
+		}
+	}else {
+		paginas_necesarias++;
 	}
-	paginas_necesarias++;
-
 	return paginas_necesarias;
 }
 
@@ -598,7 +601,18 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
     	int cantidad_segmentos_nuevos = crear_segmento_y_agregarlo_al_proceso(proceso,memoria,cuenta_saltos_de_linea(string),id_dtb);
     	if(cantidad_segmentos_nuevos == -10002)
 			return -10002;
-    	escribir_archivo_seg_pag(memoria, id_dtb, (proceso->tabla_segmentos->elements_count - cantidad_segmentos_nuevos), true , string);
+    	escribir_archivo_seg_pag(memoria, id_dtb, (list_size(proceso->tabla_segmentos) - cantidad_segmentos_nuevos), true , string);
+    	int direccion = 0;
+    	int index = 0;
+    	for(index = 0; index < list_size(proceso->tabla_segmentos) - cantidad_segmentos_nuevos ; index++){
+    		NodoSegmento* segmento = list_get(proceso->tabla_segmentos, index);
+    		int jndex = 0;
+    		for(jndex = 0; jndex < list_size(segmento->tabla_paginas) ; jndex++){
+    			NodoPagina* pagina = list_get(segmento->tabla_paginas, jndex);
+    			direccion += pagina->lineas_usadas;
+    		}
+    	}
+    	return direccion;
     }
 
 	return 0;
@@ -668,11 +682,11 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     	NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
     	NodoSegmento* segmento = NULL;
     	NodoPagina* pagina = NULL;
-    	int numero_pagina_bruto = numero_linea / memoria->storage->cant_lineas_pagina;
+    	int numero_pagina_bruto = (numero_linea) / memoria->storage->cant_lineas_pagina;
     	int numero_pagina_neto = 0;
-    	int numero_linea_neto = numero_linea % memoria->storage->cant_lineas_pagina;
+    	int numero_linea_neto = (numero_linea) % memoria->storage->cant_lineas_pagina;
     	int i = 0;
-    	for (i = 0; i < proceso->tabla_segmentos->elements_count && numero_pagina_bruto > (memoria->tamanio_maximo_segmento*i) ; i++){}
+    	for (i = 0; i < list_size(proceso->tabla_segmentos) && numero_pagina_bruto > (memoria->tamanio_maximo_segmento*(i+1)) ; i++){}
     	segmento = list_get(proceso->tabla_segmentos, i);
     	numero_pagina_neto = numero_pagina_bruto - memoria->tamanio_maximo_segmento*i;
     	pagina = list_get(segmento->tabla_paginas, numero_pagina_neto);
@@ -742,7 +756,7 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
 		int tamanio_pagina = memoria->storage->cant_lineas_pagina;
 		int cantidad_paginas = 0;
 		cantidad_segmentos = list_size(proceso->tabla_segmentos);
-		for(i = 1; i < cantidad_segmentos; i++){ // Recorrer segmentos del proceso
+		for(i = 0; i < cantidad_segmentos; i++){ // Recorrer segmentos del proceso
 			segmento = list_get(proceso->tabla_segmentos, i);
 			cantidad_paginas = list_size(segmento->tabla_paginas);
 			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
@@ -808,7 +822,7 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 		NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
 		NodoSegmento* segmento = NULL;
 		NodoPagina* pagina = NULL;
-		int i = proceso->cantidad_segmentos_codigo;
+		int i /*= proceso->cantidad_segmentos_codigo*/;
 		int j = 0;
 		int lineas_recorridas = 0;
 		int lineas_leidas = 0;
@@ -816,7 +830,7 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 		int cantidad_paginas = 0;
 
 		cantidad_segmentos = list_size(proceso->tabla_segmentos);
-		for(i = 1; i < cantidad_segmentos && lineas_leidas == 0; i++){ // Recorrer segmentos del proceso
+		for(i = 0; i < cantidad_segmentos && lineas_leidas == 0; i++){ // Recorrer segmentos del proceso
 			segmento = list_get(proceso->tabla_segmentos, i);
 			cantidad_paginas = list_size(segmento->tabla_paginas);
 			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
@@ -1080,6 +1094,11 @@ void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, bool inicia
 	NodoPagina* pagina;
 	NodoProceso* proceso;
 	int cantidad_lineas = cuenta_saltos_de_linea(buffer);
+	//Verificar porque devuelve una linea demas
+	if(inicializar_archivo == false){
+		cantidad_lineas--;
+	}
+
 	int paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cantidad_lineas);
 	proceso = list_find(memoria->tabla_procesos, &_is_the_one);
 	if(seg_init <= 0){

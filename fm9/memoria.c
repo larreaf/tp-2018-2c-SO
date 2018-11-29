@@ -471,6 +471,7 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
 		int resultado = crear_segmento_y_agregarlo_al_proceso(nuevo_proceso,memoria,contar_lineas(string),id_dtb);
 		if(resultado == -10002)
 			return -10002;
+		nuevo_proceso->cantidad_segmentos_codigo = resultado;
 		log_info(memoria->logger, "Escribiendo el código del DTB %d en memoria", id_dtb);
 		escribir_archivo_seg_pag(memoria,id_dtb,-1,false,string);
 
@@ -725,7 +726,38 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
 		}
 	}
     else if(memoria->modo == SPA){
-
+    	bool _is_the_one(NodoProceso* proceso){
+			if(proceso->id_proceso == id_dtb){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
+		NodoSegmento* segmento = NULL;
+		NodoPagina* pagina = NULL;
+		int i = proceso->cantidad_segmentos_codigo;
+		int j = 0;
+		int lineas_recorridas = 0;
+		int tamanio_pagina = memoria->storage->cant_lineas_pagina;
+		int cantidad_paginas = 0;
+		cantidad_segmentos = list_size(proceso->tabla_segmentos);
+		for(i = 1; i < cantidad_segmentos; i++){ // Recorrer segmentos del proceso
+			segmento = list_get(proceso->tabla_segmentos, i);
+			cantidad_paginas = list_size(segmento->tabla_paginas);
+			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
+				pagina = list_get(segmento->tabla_paginas, j);
+				if (direccion < pagina->lineas_usadas){
+					log_info(memoria->logger, "Modificando linea #%d en segmento #%d (direccion %d) para DTB %d", direccion, i, ((pagina->numero_marco)*memoria->storage->cant_lineas_pagina)+direccion, id_dtb);
+					modificar_linea_storage(memoria->storage, obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina), direccion, datos);
+					return 0;
+				} else {
+					direccion -= pagina->lineas_usadas;
+					lineas_recorridas += pagina->lineas_usadas;
+				}
+			}
+		}
+		return 20001;
     }
     return 20001;
 }
@@ -765,6 +797,47 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
         }
         return "";
     }
+    else if(memoria->modo == SPA){
+    	bool _is_the_one(NodoProceso* proceso){
+			if(proceso->id_proceso == id_dtb){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
+		NodoSegmento* segmento = NULL;
+		NodoPagina* pagina = NULL;
+		int i = proceso->cantidad_segmentos_codigo;
+		int j = 0;
+		int lineas_recorridas = 0;
+		int lineas_leidas = 0;
+		int tamanio_pagina = memoria->storage->cant_lineas_pagina;
+		int cantidad_paginas = 0;
+
+		cantidad_segmentos = list_size(proceso->tabla_segmentos);
+		for(i = 1; i < cantidad_segmentos && lineas_leidas == 0; i++){ // Recorrer segmentos del proceso
+			segmento = list_get(proceso->tabla_segmentos, i);
+			cantidad_paginas = list_size(segmento->tabla_paginas);
+			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
+				pagina = list_get(segmento->tabla_paginas, j);
+				if (direccion < pagina->lineas_usadas){
+					int lineas_leidas_en_pagina = 0;
+					int linea = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
+					for(lineas_leidas_en_pagina = 0; lineas_leidas_en_pagina < pagina->lineas_usadas ; lineas_leidas_en_pagina++){
+						log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d", lineas_leidas_en_pagina,j, i, linea+direccion+lineas_leidas_en_pagina, id_dtb);
+						string_append_with_format(&string_archivo,"%s\n",leer_linea_storage(memoria->storage, linea+lineas_leidas_en_pagina, j));
+						lineas_leidas++;
+					}
+				} else {
+					direccion -= pagina->lineas_usadas;
+				}
+				lineas_recorridas += pagina->lineas_usadas;
+			}
+		}
+		return string_archivo;
+    }
+    return "";
 }
 
 /*!
@@ -952,12 +1025,14 @@ void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, bool inicia
 				indice_lineas = (j+index*tamanio_pagina);
 				log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d", indice_lineas, index ,seg_init, pid);
 				escribir_linea(memoria->storage,"\n",(j+numero_inicial_pagina),sobreescribir);
+				pagina->lineas_usadas++;
 			}
 		} else {
 			for(j = 0; j < tamanio_pagina && (lineas[indice_lineas+1] != NULL ); j++){
 				indice_lineas = (j+index*tamanio_pagina);
 				log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d", indice_lineas, index ,seg_init, pid);
 				escribir_linea(memoria->storage,lineas[indice_lineas],(j+numero_inicial_pagina),sobreescribir);
+				pagina->lineas_usadas++;
 			}
 		}
 	}
@@ -990,6 +1065,7 @@ int crear_segmento_y_agregarlo_al_proceso(NodoProceso* un_proceso,Memoria* memor
 	for (index = 0; index < paginas_necesarias ; index++){ //Establecer paginas para el script
 		pagina = malloc(sizeof(NodoPagina));
 		pagina->numero_marco = encontrar_marco_libre(memoria->storage);
+		pagina->lineas_usadas = 0;
 		if(pagina->numero_marco == -1)
 			return -10002;
 		list_add(segmento->tabla_paginas,pagina);

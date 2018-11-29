@@ -58,6 +58,7 @@ typedef struct{
 typedef struct {
 	int id_proceso;
 	t_list* tabla_segmentos;
+	int cantidad_segmentos_codigo;
 }NodoProceso;
 typedef struct {
 	t_list* tabla_paginas;
@@ -65,6 +66,7 @@ typedef struct {
 
 typedef struct {
 	int numero_marco;
+	int lineas_usadas;
 }NodoPagina;
 
 
@@ -98,6 +100,7 @@ int obtener_numero_linea_pagina(int numero_marco, int tamanio_marco);
  * Puede darse el caso de que agregue mas de un segmento
  */
 int crear_segmento_y_agregarlo_al_proceso(NodoProceso* un_proceso,Memoria* memoria, int cant_lineas, int id_dtb);
+
 /*
  * Para separar un string por \n aunque solo contenga puros \n
  */

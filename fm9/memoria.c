@@ -874,6 +874,46 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
         list_remove(tabla_segmentos_proceso->tabla_de_segmentos, i);
         return 0;
     }
+    else if(memoria->modo == SPA){
+		bool _is_the_one(NodoProceso* proceso){
+			if(proceso->id_proceso == id_dtb){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
+		NodoSegmento* segmento = NULL;
+		NodoPagina* pagina = NULL;
+		int i = proceso->cantidad_segmentos_codigo;
+		int j = 0;
+		int lineas_recorridas = 0;
+		int lineas_leidas = 0;
+		int tamanio_pagina = memoria->storage->cant_lineas_pagina;
+		int cantidad_paginas = 0;
+
+		cantidad_segmentos = list_size(proceso->tabla_segmentos);
+		for(i = 1; i < cantidad_segmentos && lineas_leidas == 0; i++){ // Recorrer segmentos del proceso
+			segmento = list_get(proceso->tabla_segmentos, i);
+			cantidad_paginas = list_size(segmento->tabla_paginas);
+			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
+				pagina = list_get(segmento->tabla_paginas, j);
+				if (direccion < pagina->lineas_usadas){
+					int lineas_leidas_en_pagina = 0;
+					memoria->storage->estado_paginas[pagina->numero_marco] = 0;
+					int linea_inicial_pagina = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
+					for(lineas_leidas_en_pagina = 0; lineas_leidas_en_pagina < pagina->lineas_usadas ; lineas_leidas_en_pagina++){
+						escribir_linea(memoria->storage, "", linea_inicial_pagina+j, 1);
+						lineas_leidas++;
+					}
+				} else {
+					direccion -= pagina->lineas_usadas;
+				}
+				lineas_recorridas += pagina->lineas_usadas;
+			}
+		}
+		return 0;
+    }
 
     return 40002;
 }
@@ -917,6 +957,44 @@ int desalojar_script(Memoria* memoria, int id_dtb){
         }
         return 0;
     }
+    else if(memoria->modo == SPA){
+		bool _is_the_one(NodoProceso* proceso){
+			if(proceso->id_proceso == id_dtb){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
+		NodoSegmento* segmento = NULL;
+		NodoPagina* pagina = NULL;
+		int i = proceso->cantidad_segmentos_codigo;
+		int j = 0;
+		int lineas_recorridas = 0;
+		int lineas_leidas = 0;
+		int tamanio_pagina = memoria->storage->cant_lineas_pagina;
+		int cantidad_paginas = 0;
+
+		cantidad_segmentos = list_size(proceso->tabla_segmentos);
+		for(i = 1; i < cantidad_segmentos ; i++){ // Recorrer segmentos del proceso
+			segmento = list_get(proceso->tabla_segmentos, i);
+			cantidad_paginas = list_size(segmento->tabla_paginas);
+			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
+				pagina = list_get(segmento->tabla_paginas, j);
+				memoria->storage->estado_paginas[pagina->numero_marco] = 0;
+				int linea_inicial_pagina = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
+
+				int lineas_leidas_en_pagina = 0;
+				for(lineas_leidas_en_pagina = 0; lineas_leidas_en_pagina < pagina->lineas_usadas ; lineas_leidas_en_pagina++){
+					escribir_linea(memoria->storage, "", linea_inicial_pagina+j, 1);
+					lineas_leidas++;
+				}
+
+				lineas_recorridas += pagina->lineas_usadas;
+			}
+		}
+		return 0;
+	}
 
     return -1;
 }

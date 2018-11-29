@@ -636,7 +636,11 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
     	int cantidad_segmentos_nuevos = crear_segmento_y_agregarlo_al_proceso(proceso,memoria,cuenta_saltos_de_linea(string),id_dtb);
     	if(cantidad_segmentos_nuevos == -10002)
 			return -10002;
-    	escribir_archivo_seg_pag(memoria, id_dtb, (list_size(proceso->tabla_segmentos) - cantidad_segmentos_nuevos), true , string);
+    	bool inicializar = true;
+    	if(string_length(string) > cuenta_saltos_de_linea(string)+1){
+    		inicializar = false;
+    	}
+    	escribir_archivo_seg_pag(memoria, id_dtb, (list_size(proceso->tabla_segmentos) - cantidad_segmentos_nuevos), inicializar , string);
     	int direccion = 0;
     	int index = 0;
     	for(index = 0; index < list_size(proceso->tabla_segmentos) - cantidad_segmentos_nuevos ; index++){
@@ -725,7 +729,7 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     	segmento = list_get(proceso->tabla_segmentos, i);
     	numero_pagina_neto = numero_pagina_bruto - memoria->tamanio_maximo_segmento*i;
     	pagina = list_get(segmento->tabla_paginas, numero_pagina_neto);
-    	string_append(&linea, leer_linea_storage(memoria->storage, pagina->numero_marco*memoria->storage->cant_lineas_pagina, numero_linea_neto));
+    	string_append(&linea, leer_linea_storage(memoria->storage, obtener_numero_linea_pagina(pagina->numero_marco,memoria->storage->cant_lineas_pagina), numero_linea_neto));
     	return linea;
     }
 }
@@ -797,7 +801,7 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
 			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
 				pagina = list_get(segmento->tabla_paginas, j);
 				if (direccion < pagina->lineas_usadas){
-					log_info(memoria->logger, "Modificando linea #%d en segmento #%d (direccion %d) para DTB %d", direccion, i, ((pagina->numero_marco)*memoria->storage->cant_lineas_pagina)+direccion, id_dtb);
+					log_info(memoria->logger, "Modificando linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d", direccion,j , i, ((pagina->numero_marco)*memoria->storage->cant_lineas_pagina)+direccion, id_dtb);
 					modificar_linea_storage(memoria->storage, obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina), direccion, datos);
 					return 0;
 				} else {
@@ -874,8 +878,9 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 					int lineas_leidas_en_pagina = 0;
 					int linea = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
 					for(lineas_leidas_en_pagina = 0; lineas_leidas_en_pagina < pagina->lineas_usadas ; lineas_leidas_en_pagina++){
-						log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d", lineas_leidas_en_pagina,j, i, linea+direccion+lineas_leidas_en_pagina, id_dtb);
-						string_append_with_format(&string_archivo,"%s\n",leer_linea_storage(memoria->storage, linea+lineas_leidas_en_pagina, j));
+						log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d: %s", lineas_leidas_en_pagina,j, i, linea+direccion+lineas_leidas_en_pagina, id_dtb
+								,leer_linea_storage(memoria->storage, linea,lineas_leidas_en_pagina));
+						string_append_with_format(&string_archivo,"%s\n",leer_linea_storage(memoria->storage, linea, lineas_leidas_en_pagina));
 						lineas_leidas++;
 					}
 				} else {

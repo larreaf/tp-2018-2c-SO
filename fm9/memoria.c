@@ -878,10 +878,12 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 					int lineas_leidas_en_pagina = 0;
 					int linea = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
 					for(lineas_leidas_en_pagina = 0; lineas_leidas_en_pagina < pagina->lineas_usadas ; lineas_leidas_en_pagina++){
+						char* linea_leida =leer_linea_storage(memoria->storage, linea,lineas_leidas_en_pagina);
 						log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d: %s", lineas_leidas_en_pagina,j, i, linea+direccion+lineas_leidas_en_pagina, id_dtb
-								,leer_linea_storage(memoria->storage, linea,lineas_leidas_en_pagina));
-						string_append_with_format(&string_archivo,"%s\n",leer_linea_storage(memoria->storage, linea, lineas_leidas_en_pagina));
+								,linea_leida);
+						string_append_with_format(&string_archivo,"%s\n",linea_leida);
 						lineas_leidas++;
+						free(linea_leida);
 					}
 				} else {
 					direccion -= pagina->lineas_usadas;

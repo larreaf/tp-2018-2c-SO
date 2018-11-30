@@ -4,6 +4,7 @@
 extern bool correr;
 extern PLP* plp;
 extern PCP* pcp;
+sem_t semaforo_resumir;
 
 void* consola_safa(void* arg){
 	while(correr){
@@ -46,6 +47,16 @@ void ejecutar_linea(char* linea){
             con_metricas(strtol(strsep(&op_consola->argumento," "), NULL, 10));
 			destroy_operacion(op_consola);
 			break;
+
+	    case PAUSAR:
+            con_pausar();
+            destroy_operacion(op_consola);
+	        break;
+
+	    case RESUMIR:
+	        con_resumir();
+	        destroy_operacion(op_consola);
+	        break;
 
 		case EXIT:
 			destroy_operacion(op_consola);
@@ -103,6 +114,10 @@ tipo_accion_consola_safa string_to_accion(char* string){
 			return FINALIZAR;
 	if(!strcmp(string,"metricas"))
 			return METRICAS;
+	if(!strcmp(string,"pausar"))
+	        return PAUSAR;
+	if(!strcmp(string,"resumir"))
+	        return RESUMIR;
 	if(!strcmp(string,"exit"))
 				return EXIT;
 	return -1;
@@ -236,4 +251,14 @@ void con_metricas(int id_DTB){
     pthread_mutex_unlock(&plp->mutex_metricas);
 
 	return;
+}
+
+void con_pausar(){
+    pthread_mutex_lock(&pcp->mutex_pausa);
+    printf("PCP pausado\n");
+}
+
+void con_resumir(){
+    pthread_mutex_unlock(&pcp->mutex_pausa);
+    printf("PCP resumido\n");
 }

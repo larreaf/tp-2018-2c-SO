@@ -37,6 +37,7 @@ void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_act
 }
 
 int main(int argc, char **argv) {
+
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, resultado, numero_linea, direccion;
     char* linea;
     char* string_archivo;
@@ -45,12 +46,14 @@ int main(int argc, char **argv) {
     MemoriaReal* storage;
 
     remove("fm9.log");
-    t_log *logger = log_create("fm9.log", "fm9", true, log_level_from_string("info"));
 
-    log_info(logger, "Inicializando config...");
+
+
     validar_parametros(argc);
     cfg_fm9 *configuracion = asignar_config(argv[1], fm9);
 
+    t_log *logger = log_create("fm9.log", "fm9", configuracion->logger_consola, log_level_from_string(configuracion->logger_level));
+    log_info(logger, "Configuración cargada");
     log_info(logger, "Inicializando conexiones_activas...");
     conexiones_permitidas[t_cpu] = 10;
     conexiones_permitidas[t_elDiego] = 1;

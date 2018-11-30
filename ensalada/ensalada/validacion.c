@@ -29,7 +29,9 @@ char CONFIGURACION_elDiego[CONFIG_elDiego][TAMANIO_STRING] = {
 		"IP_FM9",
 		"PUERTO_FM9",
 		"TRANSFER_SIZE",
-		"IP"
+		"IP",
+		"LOGGER_LEVEL",
+		"LOGGER_CONSOLA"
 };
 
 char CONFIGURACION_fm9[CONFIG_fm9][TAMANIO_STRING] = {
@@ -39,7 +41,9 @@ char CONFIGURACION_fm9[CONFIG_fm9][TAMANIO_STRING] = {
 		"MAX_LINEA",
 		"TAM_PAGINA",
 		"IP",
-		"TAM_MAX_SEGMENTO"
+		"TAM_MAX_SEGMENTO",
+		"LOGGER_LEVEL",
+		"LOGGER_CONSOLA"
 };
 
 char CONFIGURACION_cpu[CONFIG_cpu][TAMANIO_STRING] = {
@@ -49,14 +53,18 @@ char CONFIGURACION_cpu[CONFIG_cpu][TAMANIO_STRING] = {
 		"PUERTO_DIEGO",
 		"IP_FM9",
 		"PUERTO_FM9",
-		"RETARDO"
+		"RETARDO",
+		"LOGGER_LEVEL",
+		"LOGGER_CONSOLA"
 };
 
 char CONFIGURACION_mdj[CONFIG_mdj][TAMANIO_STRING] = {
 		"PUERTO",
 		"PUNTO_MONTAJE",
 		"RETARDO",
-		"IP"
+		"IP",
+		"LOGGER_LEVEL",
+		"LOGGER_CONSOLA"
 };
 
 algoritmo_planificacion string_to_alg(char* string){
@@ -96,7 +104,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 		case safa :
 			for(i = 0;i < CONFIG_safa; i++){
 				true_value = config_has_property(configuracion, CONFIGURACION_safa[i]);
-				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_safa[i]);
+				mensaje_error = string_from_format("Falta el valor %s\n",CONFIGURACION_safa[i]);
 				atrapar_error(true_value,mensaje_error);
 				free(mensaje_error);
 			}
@@ -105,7 +113,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 		case elDiego :
 			for(i = 0;i < CONFIG_elDiego; i++){
 				true_value = config_has_property(configuracion, CONFIGURACION_elDiego[i]);
-				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_elDiego[i]);
+				mensaje_error = string_from_format("Falta el valor %s\n",CONFIGURACION_elDiego[i]);
 				atrapar_error(true_value,mensaje_error);
 				free(mensaje_error);
 			}
@@ -114,7 +122,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 		case fm9 :
 			for(i = 0;i < CONFIG_fm9; i++){
 				true_value = config_has_property(configuracion, CONFIGURACION_fm9[i]);
-				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_fm9[i]);
+				mensaje_error = string_from_format("Falta el valor %s\n",CONFIGURACION_fm9[i]);
 				atrapar_error(true_value,mensaje_error);
 				free(mensaje_error);
 			}
@@ -124,7 +132,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 		case cpu :
 			for(i = 0;i < CONFIG_cpu; i++){
 				true_value = config_has_property(configuracion, CONFIGURACION_cpu[i]);
-				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_cpu[i]);
+				mensaje_error = string_from_format("Falta el valor %s\n",CONFIGURACION_cpu[i]);
 				atrapar_error(true_value,mensaje_error);
 				free(mensaje_error);
 			}
@@ -133,7 +141,7 @@ t_config* validar_config(char* path, t_process tipo_proceso){
 		case mdj :
 			for(i = 0;i < CONFIG_mdj; i++){
 				true_value = config_has_property(configuracion, CONFIGURACION_mdj[i]);
-				mensaje_error = string_from_format("Falta el valor %s",CONFIGURACION_mdj[i]);
+				mensaje_error = string_from_format("Falta el valor %s\n",CONFIGURACION_mdj[i]);
 				atrapar_error(true_value,mensaje_error);
 				free(mensaje_error);
 			}
@@ -189,6 +197,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_elDiego->ip_fm9 = config_get_string_value(configuracion, CONFIGURACION_elDiego[5]);
 			retorno_elDiego->puerto_fm9 = config_get_int_value(configuracion, CONFIGURACION_elDiego[6]);
 			retorno_elDiego->transfer_size = config_get_int_value(configuracion, CONFIGURACION_elDiego[7]);
+			retorno_elDiego->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[9]);
+			retorno_elDiego->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[10]);
             retorno_elDiego->config = configuracion;
 			retorno = retorno_elDiego;
 			break;
@@ -196,7 +206,7 @@ void* asignar_config(char* path, t_process tipo_proceso){
 		case fm9 :
 			retorno_fm9 = malloc(sizeof(cfg_fm9));
 
-			retorno_fm9->tam_max_segmento = config_get_int_value(configuracion,CONFIGURACION_fm9[6]);
+
 			retorno_fm9->ip = config_get_string_value(configuracion,CONFIGURACION_fm9[5]);
 			retorno_fm9->puerto = config_get_int_value(configuracion,CONFIGURACION_fm9[0]);
 			retorno_fm9->modo = string_to_memory(config_get_string_value(configuracion,CONFIGURACION_fm9[1]));
@@ -204,6 +214,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_fm9->max_linea = config_get_int_value(configuracion,CONFIGURACION_fm9[3]);
 			retorno_fm9->tam_pagina = config_get_int_value(configuracion,CONFIGURACION_fm9[4]);
 			retorno_fm9->tam_max_segmento = config_get_int_value(configuracion, CONFIGURACION_fm9[6]);
+			retorno_fm9->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[7]);
+			retorno_fm9->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[8]);
             retorno_fm9->config = configuracion;
 			retorno = retorno_fm9;
 			break;
@@ -218,6 +230,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_cpu->ip_fm9= config_get_string_value(configuracion,CONFIGURACION_cpu[4]);
 			retorno_cpu->puerto_fm9 = config_get_int_value(configuracion,CONFIGURACION_cpu[5]);
 			retorno_cpu->retardo = config_get_int_value(configuracion,CONFIGURACION_cpu[6]);
+			retorno_cpu->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[7]);
+			retorno_cpu->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[8]);
             retorno_cpu->config = configuracion;
 			retorno = retorno_cpu;
 			break;
@@ -229,6 +243,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_mdj->puerto = config_get_int_value(configuracion,CONFIGURACION_mdj[0]);
 			retorno_mdj->punto_montaje = config_get_string_value(configuracion,CONFIGURACION_mdj[1]);
 			retorno_mdj->retardo = config_get_int_value(configuracion,CONFIGURACION_mdj[2]);
+			retorno_mdj->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[4]);
+			retorno_mdj->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[5]);
             retorno_mdj->config = configuracion;
 			retorno = retorno_mdj;
 			break;

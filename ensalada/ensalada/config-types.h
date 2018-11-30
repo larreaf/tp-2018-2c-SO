@@ -15,10 +15,10 @@
 
 	typedef enum {
 		CONFIG_safa = 9,
-		CONFIG_elDiego = 9,
-		CONFIG_fm9 = 7,
-		CONFIG_cpu = 7,
-		CONFIG_mdj = 4
+		CONFIG_elDiego = 11,
+		CONFIG_fm9 = 9,
+		CONFIG_cpu = 9,
+		CONFIG_mdj = 6
 
 	}cantidad_parametros; //cantidad de strings en su archivo configuracion
 
@@ -63,6 +63,8 @@
 		char* 	ip_fm9;
 		int 	puerto_fm9;
 		int transfer_size;
+		char* logger_level;
+		int logger_consola;
 		t_config* config;
 	}cfg_elDiego;
 
@@ -74,6 +76,8 @@
 		int tamanio;
 		int tam_pagina;
 		int tam_max_segmento;
+		char* logger_level;
+		int logger_consola;
 		t_config* config;
 	}cfg_fm9;
 
@@ -85,6 +89,8 @@
 		char* ip_fm9;
 		int puerto_fm9;
 		int retardo;
+		char* logger_level;
+		int logger_consola;
 		t_config* config;
 	}cfg_cpu;
 
@@ -93,6 +99,8 @@
 		int puerto;
 		char* punto_montaje;
 		int retardo;
+		char* logger_level;
+		int logger_consola;
 		t_config* config;
 	}cfg_mdj;
 

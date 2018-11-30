@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
                 if(string_is_empty(archivo)) {
                     log_warning(logger, "Error al cargar script %s para DTB %d: no existe el script", path, id_dtb);
                     resultado = -4;
-                    mensaje_dinamico = crear_mensaje(ABORTAR_DTB_DE_NEW, socket_safa, 0);
+                    mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
                     agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                     agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
                     enviar_mensaje(mensaje_dinamico);
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
                 }else{
                     log_warning(logger, "Error al cargar script %s para DTB %d", path, id_dtb);
 
-                    mensaje_dinamico = crear_mensaje(ABORTAR_DTB_DE_NEW, socket_safa, 0);
+                    mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
                     agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                     agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
                     enviar_mensaje(mensaje_dinamico);

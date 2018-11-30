@@ -30,8 +30,9 @@ void actualizar_cantidad_instrucciones_en_new(PLP*, int);
 void agregar_a_new(PLP*, DTB*);
 void pasar_new_a_ready(PLP*, int);
 void imprimir_estado_plp(PLP*);
-DTB* encontrar_dtb_plp(PLP*, int);
+DTB* obtener_dtb_de_new(PLP*, int, bool);
 char* codigo_error_a_string(int);
+void abortar_dtb(PLP*, int, int);
 void* ejecutar_plp(void*);
 
 #endif //SAFA_PLP_H

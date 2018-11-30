@@ -187,7 +187,7 @@ DTB* obtener_dtb_de_block(PCP* pcp, int id_dtb){
     dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_dtb, true);
 
     if(dtb_seleccionado == NULL)
-        log_error(pcp->logger, "DTB %d no encontrado en BLOCK", id_dtb);
+        log_trace(pcp->logger, "DTB %d no encontrado en BLOCK", id_dtb);
 
     pthread_mutex_unlock(&(pcp->mutex_block));
 
@@ -358,14 +358,14 @@ void agregar_a_block(PCP* pcp, DTB* dtb){
  * @param id ID del DTB a sacar
  * @return el DTB seleccionado o NULL si no se encuentra un DTB con el ID pasado
  */
-DTB* tomar_de_exec(PCP* pcp, int id){
+DTB* obtener_dtb_de_exec(PCP *pcp, int id){
     DTB* dtb_seleccionado;
 
     pthread_mutex_lock(&(pcp->mutex_exec));
     dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_exec, id, true);
 
     if(dtb_seleccionado == NULL)
-        log_error(pcp->logger, "DTB %d no encontrado en EXEC", id);
+        log_trace(pcp->logger, "DTB %d no encontrado en EXEC", id);
 
     pthread_mutex_unlock(&(pcp->mutex_exec));
     return dtb_seleccionado;
@@ -378,7 +378,7 @@ DTB* tomar_de_exec(PCP* pcp, int id){
  * @return el DTB sacado de exec actualizado con los nuevos datos pasados
  */
 DTB* conseguir_y_actualizar_dtb(PCP* pcp, DTB* datos_actualizados_dtb){
-    DTB* dtb_seleccionado = tomar_de_exec(pcp, datos_actualizados_dtb->id);
+    DTB* dtb_seleccionado = obtener_dtb_de_exec(pcp, datos_actualizados_dtb->id);
 
     list_add_all(dtb_seleccionado->archivos_abiertos, datos_actualizados_dtb->archivos_abiertos);
     list_destroy(datos_actualizados_dtb->archivos_abiertos);

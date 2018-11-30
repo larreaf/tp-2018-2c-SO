@@ -8,6 +8,31 @@ extern PCP* pcp;
 extern t_log* logger;
 extern bool correr;
 
+void abortar_dtb(PLP* plp, int id_dtb, int codigo_error){
+    DTB* dtb_seleccionado;
+    codigo_error = abs(codigo_error);
+
+    char* string_error = codigo_error_a_string(codigo_error);
+
+    dtb_seleccionado = obtener_dtb_de_new(plp, id_dtb, true);
+
+    if(dtb_seleccionado == NULL)
+        dtb_seleccionado = obtener_dtb_de_exec(pcp, id_dtb);
+    if(dtb_seleccionado == NULL)
+        dtb_seleccionado = obtener_dtb_de_block(pcp, id_dtb);
+
+    if(dtb_seleccionado == NULL){
+        log_error(pcp->logger, "Falla al abortar DTB %d", id_dtb);
+        return;
+    }
+
+    log_warning(plp->logger, "DTB %d (Path: %s) produjo un error, abortando (%d: %s)", id_dtb,
+                dtb_seleccionado->path_script, codigo_error, string_error);
+    destruir_dtb(dtb_seleccionado);
+    sem_post(&plp->semaforo_multiprogramacion);
+    free(string_error);
+}
+
 /*!
  * Crea e inicializa un PLP
  * @param multiprogramacion Cuantos procesos puede correr sistema al mismo tiempo
@@ -105,12 +130,14 @@ void imprimir_estado_plp(PLP* plp){
     pthread_mutex_unlock(&(plp->mutex_new));
 }
 
-DTB* encontrar_dtb_plp(PLP* plp, int id_dtb){
+DTB* obtener_dtb_de_new(PLP *plp, int id_dtb, bool eliminar){
     DTB* dtb_seleccionado;
 
     pthread_mutex_lock(&(plp->mutex_new));
-    dtb_seleccionado = encontrar_dtb_en_lista(plp->lista_new, id_dtb, false);
+    dtb_seleccionado = encontrar_dtb_en_lista(plp->lista_new, id_dtb, eliminar);
     pthread_mutex_unlock(&(plp->mutex_new));
+    if(dtb_seleccionado == NULL)
+        log_trace(plp->logger, "DTB %d no encontrado en NEW", id_dtb);
 
     return dtb_seleccionado;
 }
@@ -205,6 +232,7 @@ char* codigo_error_a_string(int codigo_error){
             break;
 
         default:
+            string_append(&string_error, "Codigo de error no reconocido\n");
             break;
     }
     return string_error;

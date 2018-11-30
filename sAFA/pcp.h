@@ -58,12 +58,11 @@ void agregar_a_ready(PCP*, DTB*);
 void agregar_a_ready_aux(PCP*, DTB*);
 void agregar_a_block(PCP*, DTB*);
 DTB* ready_a_exec(PCP*);
-DTB* tomar_de_exec(PCP*, int);
+DTB* obtener_dtb_de_exec(PCP *pcp, int id);
 DTB* conseguir_y_actualizar_dtb(PCP*, DTB*);
 void imprimir_estado_pcp(PCP*);
 DTB* encontrar_dtb_pcp(PCP*, int);
 void* ejecutar_pcp(void*);
-void enviar_datos_dtb(int, DTB*);
 DTB* obtener_dtb_de_block(PCP*, int);
 
 #endif //SAFA_PCP_H

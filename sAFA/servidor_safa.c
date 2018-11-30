@@ -100,10 +100,7 @@ void* ejecutar_servidor(void *arg){
 
                     default:
                         // los datos actualizados del DTB indican que produjo un error
-                        log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando",
-                                datos_dtb.id, dtb_seleccionado->path_script, datos_dtb.status);
-                        destruir_dtb(dtb_seleccionado);
-                        sem_post(&plp->semaforo_multiprogramacion);
+                        abortar_dtb(plp, datos_dtb.id, datos_dtb.status);
                         break;
                 }
                 break;
@@ -118,43 +115,10 @@ void* ejecutar_servidor(void *arg){
                 desbloquear_dtb(pcp, id_dtb);
                 break;
 
-            case ABORTAR_DTB_DE_NEW:
-                recibir_int(&id_dtb, mensaje);
-                recibir_int(&codigo_error, mensaje);
-                dtb_seleccionado = NULL;
-
-                pthread_mutex_lock(&(plp->mutex_new));
-                for(int i = 0; i<list_size(plp->lista_new); i++) {
-                    dtb_seleccionado = list_get(plp->lista_new, i);
-
-                    if (dtb_seleccionado->id == id_dtb){
-                        list_remove(plp->lista_new, i);
-                        break;
-                    }
-                }
-                if(dtb_seleccionado == NULL) {
-                    log_error(logger, "Error al abortar DTB %d de NEW", id_dtb);
-                    break;
-                }
-                pthread_mutex_unlock(&(plp->mutex_new));
-
-                log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando", id_dtb,
-                          dtb_seleccionado->path_script, abs(codigo_error));
-                destruir_dtb(dtb_seleccionado);
-                break;
-
             case ABORTAR_DTB:
                 recibir_int(&id_dtb, mensaje);
                 recibir_int(&codigo_error, mensaje);
-
-                dtb_seleccionado = tomar_de_exec(pcp, id_dtb);
-                if(dtb_seleccionado == NULL)
-                    dtb_seleccionado = obtener_dtb_de_block(pcp, id_dtb);
-                
-                log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando", id_dtb,
-                        dtb_seleccionado->path_script, codigo_error);
-                destruir_dtb(dtb_seleccionado);
-                sem_post(&plp->semaforo_multiprogramacion);
+                abortar_dtb(plp, id_dtb, codigo_error);
                 break;
 
             case RESULTADO_CARGAR_ARCHIVO:
@@ -165,11 +129,7 @@ void* ejecutar_servidor(void *arg){
 
                 if(direccion_archivo==-10002){
                     direccion_archivo = -direccion_archivo;
-                    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_dtb, true);
-                    log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando", id_dtb,
-                              dtb_seleccionado->path_script, direccion_archivo);
-                    destruir_dtb(dtb_seleccionado);
-                    sem_post(&plp->semaforo_multiprogramacion);
+                    abortar_dtb(plp, id_dtb, direccion_archivo);
                 }else
                     desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo, cant_lineas);
 

@@ -151,7 +151,7 @@ void con_status(int id_DTB){
         imprimir_estado_pcp(pcp);
         return;
     }else{
-        dtb_seleccionado = encontrar_dtb_plp(plp, id_DTB);
+        dtb_seleccionado = obtener_dtb_de_new(plp, id_DTB, false);
 
         if(dtb_seleccionado == NULL){
             printf("DTB %d no encontrado en NEW, buscando en BLOCK y EXEC\n", id_DTB);

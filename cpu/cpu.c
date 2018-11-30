@@ -36,11 +36,11 @@ int main(int argc, char **argv) {
     remove("cpu.log");
 
     // TODO nombre CPU + numero de CPU
-    logger = log_create("cpu.log", "cpu", true, log_level_from_string("info"));
 
     validar_parametros(argc);
     cfg_cpu* configuracion = asignar_config(argv[1],cpu);
 
+    logger = log_create("cpu.log", "cpu", configuracion->logger_consola, log_level_from_string(configuracion->logger_level));
     conexiones_activas = inicializar_conexiones_activas(logger, MY_IP,0, conexiones_permitidas, t_cpu);
 
 	socket_fm9 = conectar_como_cliente(conexiones_activas, configuracion->ip_fm9, configuracion->puerto_fm9, t_fm9);

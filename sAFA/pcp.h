@@ -30,6 +30,8 @@ typedef struct {
     pthread_mutex_t mutex_ready_aux;
     pthread_mutex_t mutex_block;
     pthread_mutex_t mutex_exec;
+    pthread_mutex_t mutex_config;
+    pthread_mutex_t mutex_pausa;
     sem_t semaforo_ready;
     sem_t semaforo_dummy;
     t_dictionary* recursos;

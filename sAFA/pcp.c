@@ -66,6 +66,8 @@ PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo, char*
     pthread_mutex_init(&(nuevo_pcp->mutex_ready_aux), NULL);
     pthread_mutex_init(&(nuevo_pcp->mutex_block), NULL);
     pthread_mutex_init(&(nuevo_pcp->mutex_exec), NULL);
+    pthread_mutex_init(&(nuevo_pcp->mutex_config), NULL);
+    pthread_mutex_init(&(nuevo_pcp->mutex_pausa), NULL);
     nuevo_pcp->algoritmo_planificacion = algoritmo_planificador;
     nuevo_pcp->quantum = quantum;
     nuevo_pcp->logger = log_create("safa.log", "PCP", (bool)logger_consola, log_level_from_string(logger_level));
@@ -116,6 +118,8 @@ void destruir_pcp(PCP* pcp_a_destruir){
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_ready_aux));
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_block));
     pthread_mutex_destroy(&(pcp_a_destruir->mutex_exec));
+    pthread_mutex_destroy(&(pcp_a_destruir->mutex_config));
+    pthread_mutex_destroy(&(pcp_a_destruir->mutex_pausa));
 }
 
 /*!
@@ -476,10 +480,13 @@ void* ejecutar_pcp(void* arg){
     MensajeDinamico* mensaje_dtb;
 
     while(correr){
+        pthread_mutex_lock(&pcp->mutex_pausa);
 
         sem_wait(&(pcp->semaforo_ready));
         if(errno == EINTR)
             break;
+
+        pthread_mutex_lock(&pcp->mutex_config);
 
         log_info(pcp->logger, "Esperando CPU disponible...");
         sem_wait(&cantidad_cpus);
@@ -500,6 +507,9 @@ void* ejecutar_pcp(void* arg){
         mensaje_dtb = generar_mensaje_dtb(cpu_seleccionado->socket, dtb_seleccionado);
         enviar_mensaje(mensaje_dtb);
         (cpu_seleccionado->cantidad_procesos_asignados)++;
+
+        pthread_mutex_unlock(&pcp->mutex_config);
+        pthread_mutex_unlock(&pcp->mutex_pausa);
     }
 
     return NULL;

@@ -19,6 +19,7 @@ PLP* inicializar_plp(int multiprogramacion, char* logger_level, int logger_conso
     sem_init(&(nuevo_plp->semaforo_new), 0, 0);
     sem_init(&(nuevo_plp->semaforo_multiprogramacion), 0, (unsigned int)multiprogramacion);
     pthread_mutex_init(&(nuevo_plp->mutex_new), NULL);
+    pthread_mutex_init(&(nuevo_plp->mutex_pausa), NULL);
     pthread_mutex_init(&(nuevo_plp->mutex_metricas), NULL);
     nuevo_plp->logger = log_create("safa.log", "PLP", (bool)logger_consola,
             log_level_from_string(logger_level));
@@ -36,6 +37,7 @@ void destruir_plp(PLP* plp_a_destruir){
     list_destroy_and_destroy_elements(plp_a_destruir->lista_new, destruir_dtb);
     pthread_mutex_unlock(&(plp_a_destruir->mutex_ready));
     pthread_mutex_destroy(&(plp_a_destruir->mutex_ready));
+    pthread_mutex_destroy(&(plp_a_destruir->mutex_pausa));
     pthread_mutex_destroy(&(plp_a_destruir->mutex_metricas));
     list_destroy_and_destroy_elements(plp_a_destruir->metricas_dtbs, free);
 }
@@ -223,6 +225,8 @@ void* ejecutar_plp(void* arg){
         if(errno == EINTR)
             break;
 
+        pthread_mutex_lock(&plp->mutex_pausa);
+
         log_info(plp->logger, "Esperando semaforo multiprogramacion...");
         sem_wait(&(plp->semaforo_multiprogramacion));
         if(errno == EINTR)
@@ -233,6 +237,8 @@ void* ejecutar_plp(void* arg){
         pthread_mutex_unlock(&(plp->mutex_new));
 
         desbloquear_dtb_dummy(pcp, dtb_seleccionado->id, dtb_seleccionado->path_script);
+
+        pthread_mutex_unlock(&plp->mutex_pausa);
     }
 
     return NULL;

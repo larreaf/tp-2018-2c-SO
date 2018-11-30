@@ -21,6 +21,7 @@ typedef struct {
     t_log* logger;
     t_list* metricas_dtbs;
     pthread_mutex_t mutex_metricas;
+    pthread_mutex_t mutex_pausa;
 }PLP;
 
 PLP* inicializar_plp(int, char*, int);

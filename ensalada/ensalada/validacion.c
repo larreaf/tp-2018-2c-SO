@@ -197,8 +197,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_elDiego->ip_fm9 = config_get_string_value(configuracion, CONFIGURACION_elDiego[5]);
 			retorno_elDiego->puerto_fm9 = config_get_int_value(configuracion, CONFIGURACION_elDiego[6]);
 			retorno_elDiego->transfer_size = config_get_int_value(configuracion, CONFIGURACION_elDiego[7]);
-			retorno_elDiego->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[9]);
-			retorno_elDiego->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[10]);
+			retorno_elDiego->logger_level = config_get_string_value(configuracion,CONFIGURACION_elDiego[9]);
+			retorno_elDiego->logger_consola = config_get_int_value(configuracion,CONFIGURACION_elDiego[10]);
             retorno_elDiego->config = configuracion;
 			retorno = retorno_elDiego;
 			break;
@@ -214,8 +214,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_fm9->max_linea = config_get_int_value(configuracion,CONFIGURACION_fm9[3]);
 			retorno_fm9->tam_pagina = config_get_int_value(configuracion,CONFIGURACION_fm9[4]);
 			retorno_fm9->tam_max_segmento = config_get_int_value(configuracion, CONFIGURACION_fm9[6]);
-			retorno_fm9->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[7]);
-			retorno_fm9->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[8]);
+			retorno_fm9->logger_level = config_get_string_value(configuracion,CONFIGURACION_fm9[7]);
+			retorno_fm9->logger_consola = config_get_int_value(configuracion,CONFIGURACION_fm9[8]);
             retorno_fm9->config = configuracion;
 			retorno = retorno_fm9;
 			break;
@@ -230,8 +230,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_cpu->ip_fm9= config_get_string_value(configuracion,CONFIGURACION_cpu[4]);
 			retorno_cpu->puerto_fm9 = config_get_int_value(configuracion,CONFIGURACION_cpu[5]);
 			retorno_cpu->retardo = config_get_int_value(configuracion,CONFIGURACION_cpu[6]);
-			retorno_cpu->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[7]);
-			retorno_cpu->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[8]);
+			retorno_cpu->logger_level = config_get_string_value(configuracion,CONFIGURACION_cpu[7]);
+			retorno_cpu->logger_consola = config_get_int_value(configuracion,CONFIGURACION_cpu[8]);
             retorno_cpu->config = configuracion;
 			retorno = retorno_cpu;
 			break;
@@ -243,8 +243,8 @@ void* asignar_config(char* path, t_process tipo_proceso){
 			retorno_mdj->puerto = config_get_int_value(configuracion,CONFIGURACION_mdj[0]);
 			retorno_mdj->punto_montaje = config_get_string_value(configuracion,CONFIGURACION_mdj[1]);
 			retorno_mdj->retardo = config_get_int_value(configuracion,CONFIGURACION_mdj[2]);
-			retorno_mdj->logger_level = config_get_string_value(configuracion,CONFIGURACION_safa[4]);
-			retorno_mdj->logger_consola = config_get_int_value(configuracion,CONFIGURACION_safa[5]);
+			retorno_mdj->logger_level = config_get_string_value(configuracion,CONFIGURACION_mdj[4]);
+			retorno_mdj->logger_consola = config_get_int_value(configuracion,CONFIGURACION_mdj[5]);
             retorno_mdj->config = configuracion;
 			retorno = retorno_mdj;
 			break;

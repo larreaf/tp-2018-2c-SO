@@ -609,7 +609,7 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 		tabla_filtrada_por_id_dtb = malloc(sizeof(NodoTablaPaginasInvertida));
 		tabla_filtrada_por_id_dtb = traer_tabla_pagina_invertida_por_id_dtb(memoria->lista_tabla_de_paginas_invertida, id_dtb);
 		int pagina_base;
-		pagina_base = list_fold(tabla_filtrada_por_id_dtb,(int) 0, (void*) traer_ultima_pagina_id_dtb);
+		pagina_base = *(int *) list_fold(tabla_filtrada_por_id_dtb,(int) 0, (void*) traer_ultima_pagina_id_dtb);
 
 		log_info(memoria->logger, "Buscando espacio para pagina/s para script de DTB %d (%d lineas)", id_dtb, cant_lineas);
 
@@ -725,26 +725,33 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     }
     else if(memoria->modo == TPI){
 
-		NodoTablaPaginasInvertida * tabla_invertida = memoria->lista_tabla_de_paginas_invertida;
-		NodoTablaPaginasInvertida * tabla_invertida_id_dtb = list_filter(tabla_invertida, tabla_invertida->id_dtb == id_dtb);
+    	NodoTablaPaginasInvertida* nodo_filtrado;
+    	nodo_filtrado = malloc(sizeof(NodoTablaPaginasInvertida*));
+		t_list * tabla_invertida_id_dtb;
+		tabla_invertida_id_dtb = malloc(sizeof(NodoTablaPaginasInvertida*));
+		tabla_invertida_id_dtb = traer_tabla_pagina_invertida_por_id_dtb(memoria->lista_tabla_de_paginas_invertida, id_dtb);
+		int desplazamiento, pagina;
 
-		int desplazamiento = numero_linea % memoria->storage->tamanio_pagina;
-		int pagina = (numero_linea / memoria->storage->tamanio_pagina) + 1;
+		desplazamiento = numero_linea % memoria->storage->tamanio_pagina;
+		pagina = (numero_linea / memoria->storage->tamanio_pagina);
 
-		int _is_the_one(NodoTablaPaginasInvertida* nodo) {
-			   return (nodo->nro_pagina == pagina);
-			}
+		int _is_the_one(NodoTablaPaginasInvertida* nodo){
+			return (nodo->nro_pagina == pagina);
+		}
 
-		NodoTablaPaginasInvertida* nodo_filtrado = list_find(tabla_invertida_id_dtb, (void*) _is_the_one);
+		nodo_filtrado = list_find(tabla_invertida_id_dtb, (void*) _is_the_one);
 
 		if(nodo_filtrado){
-			log_info(memoria->logger, "Leyendo linea %d en pagina %d (direccion %d) para DTB %d", numero_linea,
-					nodo_filtrado->nro_pagina, nodo_filtrado->id_tabla + desplazamiento, id_dtb);
-						string_append(&linea, leer_linea_storage(memoria->storage, nodo_filtrado->id_tabla, desplazamiento));
-						return linea;
+
+			log_info(memoria->logger, "Leyendo linea %d en pagina %d (direccion %d) para DTB %d",
+					numero_linea,nodo_filtrado->nro_pagina, nodo_filtrado->id_tabla + desplazamiento, id_dtb);
+
+			string_append(&linea, leer_linea_storage(memoria->storage, nodo_filtrado->id_tabla, desplazamiento));
+
+			return linea;
 		}
 		else{
-			return -1;
+			return "";
 		}
 	}
     else if(memoria->modo == SPA){
@@ -769,6 +776,7 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     	string_append(&linea, leer_linea_storage(memoria->storage, obtener_numero_linea_pagina(pagina->numero_marco,memoria->storage->cant_lineas_pagina), numero_linea_neto));
     	return linea;
     }
+    return "";
 }
 
 /*!

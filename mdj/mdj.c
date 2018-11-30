@@ -110,8 +110,9 @@ int main(int argc, char **argv) {
 
     validar_parametros(argc);
     remove("mdj.log");
-    logger = log_create("mdj.log", "mdj", true, log_level_from_string("info"));
     configuracion = asignar_config(argv[1],mdj);
+    logger = log_create("mdj.log", "mdj", configuracion->logger_consola, log_level_from_string(configuracion->logger_level));
+
     log_info(logger, "Archivo de configuracion correcto");
 
     abs_to_rel_pto_montaje();

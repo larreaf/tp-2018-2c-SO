@@ -97,7 +97,7 @@ void destruir_dtb(void* arg){
 void destruir_recurso(void *arg){
     Recurso* recurso_seleccionado = (Recurso*)arg;
 
-    queue_destroy_and_destroy_elements(recurso_seleccionado->cola, free);
+    queue_destroy(recurso_seleccionado->cola);
     free(recurso_seleccionado);
 }
 

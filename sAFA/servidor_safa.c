@@ -165,14 +165,14 @@ void* ejecutar_servidor(void *arg){
 
                 if(direccion_archivo==-10002){
                     direccion_archivo = -direccion_archivo;
-                    dtb_seleccionado = tomar_de_exec(pcp, id_dtb);
+                    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_dtb, true);
                     log_error(logger, "El DTB %d (Path: %s) produjo un error (codigo %d), abortando", id_dtb,
                               dtb_seleccionado->path_script, direccion_archivo);
                     destruir_dtb(dtb_seleccionado);
                     sem_post(&plp->semaforo_multiprogramacion);
-                }
+                }else
+                    desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo, cant_lineas);
 
-                desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo, cant_lineas);
                 free(path);
                 break;
 

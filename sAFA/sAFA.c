@@ -6,8 +6,9 @@
 #include "types.h"
 #include "plp.h"
 #include "pcp.h"
+#include "config.h"
 
-pthread_t thread_consola, thread_plp, thread_pcp, thread_servidor;
+pthread_t thread_consola, thread_plp, thread_pcp, thread_servidor, thread_config;
 sem_t cantidad_cpus, arrancar_planificadores;
 t_log *logger;
 ConexionesActivas conexiones_activas;
@@ -61,10 +62,13 @@ int main(int argc, char **argv) {
     plp->cola_ready = pcp->cola_ready;
     plp->mutex_ready = pcp->mutex_ready;
 
+    err = pthread_create(&thread_config, NULL, &monitorear_config, argv[1]);
+    comprobar_error(err, "Error al iniciar thread monitoreo config");
+
     err = pthread_create(&thread_servidor, NULL, &ejecutar_servidor, NULL);
     comprobar_error(err, "Error al iniciar thread servidor");
 
-    log_info(logger, "Esperando conexiones de elDiego y CPU...");
+    printf("Esperando conexiones de elDiego y CPU...\n");
     sem_wait(&arrancar_planificadores);
     log_info(logger, "elDiego y CPU conectados, arrancando planificadores...");
 
@@ -77,10 +81,12 @@ int main(int argc, char **argv) {
     err = pthread_create(&thread_plp, NULL, &ejecutar_plp, plp);
     comprobar_error(err, "Error al iniciar thread PLP");
 
-    log_info(logger, "Listo");
+    printf("Listo\n");
 
     // cerrar todos los hilos
     // TODO mover todo esto a cerrar_safa
+    pthread_cancel(thread_config);
+    pthread_join(thread_config, NULL);
     pthread_join(thread_consola, NULL);
     pthread_cancel(thread_plp);
     pthread_join(thread_plp, NULL);

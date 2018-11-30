@@ -21,7 +21,9 @@ typedef enum{
 	STATUS,
 	FINALIZAR,
 	METRICAS,
-	EXIT
+	EXIT,
+	PAUSAR,
+	RESUMIR
 } tipo_accion_consola_safa;
 
 typedef struct{
@@ -73,6 +75,10 @@ void con_status(int id_DTB);
 void con_finalizar(int id_DTB);
 
 void con_metricas(int id_DTB);
+
+void con_pausar(void);
+
+void con_resumir(void);
 
 /*
  * @NAME: sig_handler

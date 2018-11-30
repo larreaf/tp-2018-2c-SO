@@ -207,12 +207,12 @@ int main(int argc, char **argv) {
                 // si da respuesta ok, notificar a safa para que desbloquee el dtb y mandar direccion del archivo abierto
                 if(resultado>=0){
                     log_info(logger, "Archivo para el DTB %d abierto con exito, notificando a SAFA...", id_dtb);
+                    cant_lineas = contar_lineas(archivo);
                 }else{
                     log_warning(logger, "Error al abrir archivo %s para DTB %d", path, id_dtb);
-                    // TODO enviar error a SAFA para que aborte el DTB
+                    cant_lineas = 0;
                 }
 
-                cant_lineas = contar_lineas(archivo);
                 mensaje_dinamico = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, socket_safa, 0);
                 agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
                 agregar_string(mensaje_dinamico, path);

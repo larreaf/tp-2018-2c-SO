@@ -86,7 +86,7 @@ int calcular_marco_hash(MemoriaReal*, int, int);
 NodoListaTablasSegmentos* encontrar_tabla_segmentos_por_id_dtb(t_list*, int);
 int contar_lineas(char*);
 int cargar_script(Memoria*, int, char*);
-int traer_ultima_pagina_id_dtb(NodoTablaPaginasInvertida*, NodoTablaPaginasInvertida*);
+int traer_ultima_pagina_id_dtb(int, NodoTablaPaginasInvertida*);
 t_list * traer_tabla_pagina_invertida_por_id_dtb(t_list*, int);
 int cargar_archivo(Memoria*, int, char*);
 char* leer_linea(Memoria*, int, int);

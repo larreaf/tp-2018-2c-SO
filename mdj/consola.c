@@ -209,6 +209,7 @@ bool verificar_path(char* linea, bool dir){
 	free(path_split);
 	free(carpeta);
 	return ret;
+
 }
 
 void con_ls(char* linea){
@@ -359,7 +360,7 @@ void con_cat(char* linea){
         lineas_leidas = obtener_datos(mdj_interface);
         printf("%s",lineas_leidas);
         free(lineas_leidas);
-        printf("\n");
+        //printf("\n");
     }else {
         printf("El archivo no existe\n");
     }

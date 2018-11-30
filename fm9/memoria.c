@@ -532,8 +532,9 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
  * @return devuelve un numero entero con el nro de la ultima pagina
  */
 
-int traer_ultima_pagina_id_dtb(NodoTablaPaginasInvertida* registro1,NodoTablaPaginasInvertida* registro2){
-	return (registro1->nro_pagina > registro2->nro_pagina)? registro1->nro_pagina : registro2->nro_pagina;
+int traer_ultima_pagina_id_dtb(int max, NodoTablaPaginasInvertida* registro){
+	int pagina = (max > registro->nro_pagina)? max : registro->nro_pagina;
+	return pagina + 0;
 }
 
 /*!
@@ -607,7 +608,8 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 		t_list* tabla_filtrada_por_id_dtb;
 		tabla_filtrada_por_id_dtb = malloc(sizeof(NodoTablaPaginasInvertida));
 		tabla_filtrada_por_id_dtb = traer_tabla_pagina_invertida_por_id_dtb(memoria->lista_tabla_de_paginas_invertida, id_dtb);
-		int pagina_base = list_fold(tabla_filtrada_por_id_dtb, 0, traer_ultima_pagina_id_dtb) + 1;
+		int pagina_base;
+		pagina_base = list_fold(tabla_filtrada_por_id_dtb,(int) 0, (void*) traer_ultima_pagina_id_dtb);
 
 		log_info(memoria->logger, "Buscando espacio para pagina/s para script de DTB %d (%d lineas)", id_dtb, cant_lineas);
 

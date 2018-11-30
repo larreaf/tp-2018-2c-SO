@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 	cfg_elDiego* configuracion = asignar_config(argv[1],elDiego);
 
 	remove("elDiego.log");
-	logger = log_create("elDiego.log", "elDiego", true, log_level_from_string("info"));
+	logger = log_create("elDiego.log", "elDiego", configuracion->logger_consola, log_level_from_string(configuracion->logger_level));
 
 	conexiones_permitidas[t_cpu] = 10;
 	conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto, conexiones_permitidas, t_elDiego);

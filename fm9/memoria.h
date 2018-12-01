@@ -51,7 +51,9 @@ typedef struct{
 	int id_tabla;
 	int id_dtb;
     int nro_pagina;
+    int lineas_usadas;
     int encadenamiento;
+    int tamanio_archivo;
 }NodoTablaPaginasInvertida;
 
 // Estructuras para segmentacion paginada

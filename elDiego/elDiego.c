@@ -163,6 +163,10 @@ int main(int argc, char **argv) {
                     agregar_int(mensaje_dinamico, id_dtb);
                 }else{
                     log_warning(logger, "Error al crear archivo para DTB %d", id_dtb);
+                    mensaje_dinamico = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, configuracion->transfer_size);
+                    agregar_int(mensaje_dinamico, id_dtb);
+                    enviar_mensaje(mensaje_dinamico);
+
                     mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
                     agregar_int(mensaje_dinamico, id_dtb);
                     agregar_int(mensaje_dinamico, 50002);
@@ -212,6 +216,9 @@ int main(int argc, char **argv) {
                 }else{
                     log_warning(logger, "Error al abrir archivo %s para DTB %d", path, id_dtb);
                     cant_lineas = 0;
+                    mensaje_dinamico = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, configuracion->transfer_size);
+                    agregar_int(mensaje_dinamico, id_dtb);
+                    enviar_mensaje(mensaje_dinamico);
                 }
 
                 mensaje_dinamico = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, socket_safa, 0);
@@ -249,6 +256,9 @@ int main(int argc, char **argv) {
                         mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
                         agregar_int(mensaje_dinamico, id_dtb);
                         agregar_int(mensaje_dinamico, codigo_error);
+                        enviar_mensaje(mensaje_dinamico);
+                        mensaje_dinamico = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, configuracion->transfer_size);
+                        agregar_int(mensaje_dinamico, id_dtb);
                         enviar_mensaje(mensaje_dinamico);
                 }else{
                         log_info(logger, "Se Borro el Archivo %s - BORRRAR ARCHIVO en mdj OK", path);

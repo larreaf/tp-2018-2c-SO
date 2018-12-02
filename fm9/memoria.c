@@ -762,7 +762,7 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;
     int cantidad_segmentos;
-    char* linea = string_new();
+    char* linea = string_new(), *linea_leida;
 
     if(memoria->modo == SEG){
         tabla_segmentos_proceso = encontrar_tabla_segmentos_por_id_dtb(memoria->lista_tablas_de_segmentos, id_dtb);
@@ -774,7 +774,10 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
             if(numero_linea<segmento->longitud_segmento){
                 log_info(memoria->logger, "Leyendo linea %d en segmento %d (direccion %d) para DTB %d", numero_linea,
                         segmento->id_segmento, segmento->inicio_segmento+numero_linea, id_dtb);
-                string_append(&linea, leer_linea_storage(memoria->storage, segmento->inicio_segmento, numero_linea));
+
+                linea_leida = leer_linea_storage(memoria->storage, segmento->inicio_segmento, numero_linea);
+                string_append(&linea, linea_leida);
+                free(linea_leida);
                 return linea;
             }else
                 numero_linea -= segmento->longitud_segmento;
@@ -827,6 +830,8 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     	segmento = list_get(proceso->tabla_segmentos, i);
     	numero_pagina_neto = numero_pagina_bruto - memoria->tamanio_maximo_segmento*i;
     	pagina = list_get(segmento->tabla_paginas, numero_pagina_neto);
+
+    	// TODO arreglar este leak
     	string_append(&linea, leer_linea_storage(memoria->storage, obtener_numero_linea_pagina(pagina->numero_marco,memoria->storage->cant_lineas_pagina), numero_linea_neto));
     	return linea;
     }
@@ -937,7 +942,7 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;
     int cantidad_segmentos;
-    char* string_archivo = string_new();
+    char* string_archivo = string_new(), *linea_leida;
 
     if(memoria->modo == SEG){
         tabla_segmentos_proceso = encontrar_tabla_segmentos_por_id_dtb(memoria->lista_tablas_de_segmentos, id_dtb);
@@ -951,8 +956,11 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
                         id_dtb);
 
                 for(int j = 0; j<segmento->longitud_segmento; j++){ // Arreglar para no leer \n demás
-                    string_append(&string_archivo, leer_linea_storage(memoria->storage, segmento->inicio_segmento, j));
+                	linea_leida = leer_linea_storage(memoria->storage, segmento->inicio_segmento, j);
+
+                    string_append(&string_archivo, linea_leida);
                     string_append(&string_archivo, "\n");
+                    free(linea_leida);
                 }
 
                 return string_archivo;
@@ -981,6 +989,7 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 				log_info(memoria->logger, "Leyendo linea %d en pagina %d (direccion %d) para DTB %d flush archivo",
 						linea,nodo_filtrado->nro_pagina, nodo_filtrado->id_tabla + desplazamiento, id_dtb);
 
+				// TODO arreglar leak
 				string_append(&string_archivo, leer_linea_storage(memoria->storage, nodo_filtrado->id_tabla, desplazamiento + linea));
 
 				string_append(&string_archivo, "\n");
@@ -1251,7 +1260,7 @@ void dump(Memoria* memoria, int id_dtb){
     NodoListaTablasSegmentos* tabla_segmentos_proceso;
     NodoTablaSegmentos* segmento;
     int cantidad_segmentos;
-    char* linea;
+    char* linea, *linea_leida;
 
     printf("-------DUMP DTB %d-------\n", id_dtb);
 
@@ -1270,7 +1279,9 @@ void dump(Memoria* memoria, int id_dtb){
                        segmento->longitud_segmento);
 
                 for (int j = 0; j < segmento->longitud_segmento; j++) {
-                    printf("%s\n", leer_linea_storage(memoria->storage, segmento->inicio_segmento, j));
+                	linea_leida = leer_linea_storage(memoria->storage, segmento->inicio_segmento, j);
+                    printf("%s\n", linea_leida);
+                	free(linea_leida);
                 }
 
             }
@@ -1314,7 +1325,8 @@ void dump(Memoria* memoria, int id_dtb){
     for(int i = 0; i<memoria->storage->cant_lineas; i++){
         linea = string_new();
 
-        string_append(&linea, leer_linea_storage(memoria->storage, i, 0));
+        linea_leida = leer_linea_storage(memoria->storage, i, 0);
+        string_append(&linea, linea_leida);
         if(string_is_empty(linea) && !memoria->storage->estado_lineas[i])
             string_append(&linea, "*vacio*");
         if(string_equals_ignore_case(linea, "\n"))
@@ -1322,6 +1334,7 @@ void dump(Memoria* memoria, int id_dtb){
         else
         	printf("Linea %d: %s\n", i, linea);
         free(linea);
+        free(linea_leida);
     }
 }
 /*!

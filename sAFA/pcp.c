@@ -20,10 +20,8 @@ CPU* seleccionar_cpu(t_list* lista_cpus){
     for(int i = 0; i<tamanio_lista_cpus; i++){
         cpu_seleccionado = list_get(lista_cpus, i);
 
-        if(!(cpu_seleccionado->cantidad_procesos_asignados)) {
-            cpu_seleccionado->id = i;
+        if(!(cpu_seleccionado->cantidad_procesos_asignados))
             return cpu_seleccionado;
-        }
     }
 }
 

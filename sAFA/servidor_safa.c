@@ -19,7 +19,7 @@ extern bool correr;
  */
 void* ejecutar_servidor(void *arg){
     int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, direccion_archivo, codigo_error, resultado,
-    cant_lineas, cantidad_instrucciones_ejecutadas, cantidad_instrucciones_dma;
+    cant_lineas, cantidad_instrucciones_ejecutadas, cantidad_instrucciones_dma, identificador_cpu;
     int* copia_id_dtb;
     MensajeDinamico* mensaje_respuesta, *mensaje;
     char* str = NULL, *path, *nombre_recurso;
@@ -100,7 +100,7 @@ void* ejecutar_servidor(void *arg){
 
                     default:
                         // los datos actualizados del DTB indican que produjo un error
-                        abortar_dtb(plp, datos_dtb.id, datos_dtb.status);
+                        abortar_dtb_seleccionado(plp, dtb_seleccionado, datos_dtb.status, archivos_abiertos);
                         break;
                 }
                 break;
@@ -118,7 +118,7 @@ void* ejecutar_servidor(void *arg){
             case ABORTAR_DTB:
                 recibir_int(&id_dtb, mensaje);
                 recibir_int(&codigo_error, mensaje);
-                abortar_dtb(plp, id_dtb, codigo_error);
+                abortar_dtb(plp, id_dtb, codigo_error, archivos_abiertos);
                 break;
 
             case RESULTADO_CARGAR_ARCHIVO:
@@ -129,9 +129,11 @@ void* ejecutar_servidor(void *arg){
 
                 if(direccion_archivo==-10002){
                     direccion_archivo = -direccion_archivo;
-                    abortar_dtb(plp, id_dtb, direccion_archivo);
-                }else
+                    abortar_dtb(plp, id_dtb, direccion_archivo, archivos_abiertos);
+                }else {
                     desbloquear_dtb_cargando_archivo(pcp, id_dtb, path, direccion_archivo, cant_lineas);
+                    dictionary_put(archivos_abiertos, path, NULL);
+                }
 
                 free(path);
                 break;
@@ -148,7 +150,7 @@ void* ejecutar_servidor(void *arg){
                     queue_push(recurso_seleccionado->cola, copia_id_dtb);
                     recurso_seleccionado->disponibilidad = 0;
                     dictionary_put(pcp->recursos, nombre_recurso, recurso_seleccionado);
-                    resultado = 0;
+                    resultado = 1;
                 }else{
                     recurso_seleccionado = dictionary_get(pcp->recursos, nombre_recurso);
                     if(recurso_seleccionado->disponibilidad > 0) {
@@ -201,10 +203,8 @@ void* ejecutar_servidor(void *arg){
 
                 if(dictionary_has_key(archivos_abiertos, path))
                     resultado = 0;
-                else{
+                else
                     resultado = 1;
-                    dictionary_put(archivos_abiertos, path, NULL);
-                }
 
                 mensaje_respuesta = crear_mensaje(CONSULTA_ARCHIVO_ABIERTO, mensaje->socket, 0);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
@@ -224,6 +224,11 @@ void* ejecutar_servidor(void *arg){
                 if(mensaje->t_proceso == t_cpu) {
                     log_info(logger, "Aumentando cantidad de CPUs disponibles...");
                     sem_post(&cantidad_cpus);
+
+                    identificador_cpu = list_size(conexiones_activas.lista_cpus)-1;
+                    mensaje_respuesta = crear_mensaje(IDENTIFICADOR_CPU, mensaje->socket, 0);
+                    agregar_dato(mensaje_respuesta, sizeof(int), &identificador_cpu);
+                    enviar_mensaje(mensaje_respuesta);
                 }
 
                 if(conexiones_activas.procesos_conectados[t_elDiego] && conexiones_activas.procesos_conectados[t_cpu])

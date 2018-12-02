@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
                 if (!resultado)
                     log_info(logger, "Script cargado en memoria correctamente, enviando mensaje respuesta");
                 else
-                    log_error(logger, "Falla al cargar script en memoria (codigo error %d)", abs(resultado));
+                    log_warning(logger, "Falla al cargar script en memoria (codigo error %d)", abs(resultado));
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_SCRIPT, mensaje->socket, mensaje->particionado);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
@@ -114,8 +114,10 @@ int main(int argc, char **argv) {
 
                 if (resultado >= 0)
                     log_info(logger, "Archivo cargado en memoria correctamente, enviando mensaje respuesta");
-                else
-                    log_error(logger, "Falla al cargar archivo en memoria (codigo error %d)", abs(resultado));
+                else {
+                    log_warning(logger, "Falla al cargar archivo en memoria (codigo error %d)", abs(resultado));
+                    desalojar_script(memoria, id_dtb);
+                }
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, mensaje->socket, mensaje->particionado);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
@@ -133,8 +135,10 @@ int main(int argc, char **argv) {
 
                 if (!resultado)
                     log_info(logger, "Archivo modificado exitosamente, enviando mensaje respuesta");
-                else
-                    log_error(logger, "Falla al modificar archivo en memoria (codigo error %d)", resultado);
+                else {
+                    log_warning(logger, "Falla al modificar archivo en memoria (codigo error %d)", resultado);
+                    desalojar_script(memoria, id_dtb);
+                }
 
                 mensaje_respuesta = crear_mensaje(ASIGNAR_ARCHIVO_CPU_FM9, mensaje->socket, 0);
                 agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
@@ -150,7 +154,8 @@ int main(int argc, char **argv) {
                 string_append(&string_archivo, flush_archivo(memoria, id_dtb, direccion));
 
                 if (string_is_empty(string_archivo)) {
-                    log_error(memoria->logger, "Falla en flush archivo");
+                    log_warning(memoria->logger, "Falla en flush archivo");
+                    desalojar_script(memoria, id_dtb);
                 }
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_FLUSH_ARCHIVO, mensaje->socket, mensaje->particionado);
@@ -169,8 +174,10 @@ int main(int argc, char **argv) {
 
                 if (!resultado)
                     log_info(memoria->logger, "Archivo en direccion %d liberado con exito", direccion);
-                else
-                    log_error(memoria->logger, "Falla al cerrar archivo en direccion %d", direccion);
+                else {
+                    log_warning(memoria->logger, "Falla al cerrar archivo en direccion %d", direccion);
+                    desalojar_script(memoria, id_dtb);
+                }
 
                 break;
 
@@ -182,7 +189,7 @@ int main(int argc, char **argv) {
                 if(!resultado)
                     log_info(memoria->logger, "Script de DTB %d desalojado con exito", id_dtb);
                 else
-                    log_error(memoria->logger, "Falla al desalojar script de DTB %d", id_dtb);
+                    log_warning(memoria->logger, "Falla al desalojar script de DTB %d", id_dtb);
 
                 break;
 

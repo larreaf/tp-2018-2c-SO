@@ -22,6 +22,7 @@ typedef struct{
     int program_counter;
     int inicializado;
     int quantum;
+    int cargando;
     t_accion_post_instruccion status;
     t_list* archivos_abiertos;
 }DTB;

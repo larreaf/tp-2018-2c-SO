@@ -76,7 +76,7 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_
     else if(modo == TPI)
         memoria->logger = log_create("fm9.log", "MemoriaPaginacionInvertida", true, log_level_from_string("info"));
 
-    log_info(memoria->logger, "Memoria inicializada correctamente");ejecutar scripts/complejo.escriptorio
+    log_info(memoria->logger, "Memoria inicializada correctamente");
     return memoria;
 }
 
@@ -1323,14 +1323,15 @@ void dump(Memoria* memoria, int id_dtb){
     		for (int i = 0; i < cantidad_segmentos; i++) {
 				NodoSegmento* seg = list_get(proceso->tabla_segmentos, i);
 				int cantidad_paginas = list_size(seg->tabla_paginas);
-				printf("Contenido del segmento #%d (%d paginas):\n", i, cantidad_paginas);
+				printf("\tContenido del segmento #%d (%d paginas):\n", i, cantidad_paginas);
 				for (int j = 0; j < cantidad_paginas; j++) {
 					NodoPagina* pagina = list_get(seg->tabla_paginas, j);
 					int tamanio_pagina = memoria->storage->cant_lineas_pagina;
 					int linea_marco = obtener_numero_linea_pagina(pagina->numero_marco, tamanio_pagina);
+					printf("\t\tContenido de la pagina #%d:\n", j);
 					for(int k = 0; k < tamanio_pagina ; k++){
 						char* linea_leida = leer_linea_storage(memoria->storage, linea_marco, k);
-						printf("%s\n", linea_leida );
+						printf("\t\t\t%s\n", linea_leida );
 						free(linea_leida);
 					}// dentro de pagina
 				}// dentro de segmento

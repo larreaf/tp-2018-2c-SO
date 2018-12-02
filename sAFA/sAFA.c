@@ -62,9 +62,6 @@ int main(int argc, char **argv) {
     plp->cola_ready = pcp->cola_ready;
     plp->mutex_ready = pcp->mutex_ready;
 
-    err = pthread_create(&thread_config, NULL, &monitorear_config, argv[1]);
-    comprobar_error(err, "Error al iniciar thread monitoreo config");
-
     err = pthread_create(&thread_servidor, NULL, &ejecutar_servidor, NULL);
     comprobar_error(err, "Error al iniciar thread servidor");
 
@@ -81,12 +78,13 @@ int main(int argc, char **argv) {
     err = pthread_create(&thread_plp, NULL, &ejecutar_plp, plp);
     comprobar_error(err, "Error al iniciar thread PLP");
 
+    err = pthread_create(&thread_config, NULL, &monitorear_config, argv[1]);
+    comprobar_error(err, "Error al iniciar thread monitoreo config");
+
     printf("Listo\n");
 
     // cerrar todos los hilos
     // TODO mover todo esto a cerrar_safa
-    pthread_cancel(thread_config);
-    pthread_join(thread_config, NULL);
     pthread_join(thread_consola, NULL);
     pthread_cancel(thread_plp);
     pthread_join(thread_plp, NULL);
@@ -94,6 +92,8 @@ int main(int argc, char **argv) {
     pthread_join(thread_pcp, NULL);
     pthread_cancel(thread_servidor);
     pthread_join(thread_servidor, NULL);
+    pthread_cancel(thread_config);
+    pthread_join(thread_config, NULL);
 
     destruir_plp(plp);
     destruir_pcp(pcp);

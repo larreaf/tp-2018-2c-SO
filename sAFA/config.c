@@ -35,7 +35,9 @@ void* monitorear_config(void *arg) {
     }
 
     // Creamos un monitor sobre un path indicando que eventos queremos escuchar
-    int watch_descriptor = inotify_add_watch(file_descriptor, ".", IN_MODIFY);
+    int watch_descriptor = inotify_add_watch(file_descriptor, "./safa.cfg", IN_MODIFY);
+
+    log_info(logger, "Monitoreando config...");
 
     // El file descriptor creado por inotify, es el que recibe la información sobre los eventos ocurridos
     // para leer esta información el descriptor se lee como si fuera un archivo comun y corriente pero
@@ -60,37 +62,36 @@ void* monitorear_config(void *arg) {
             event = (struct inotify_event *) &buffer[offset];
 
             // El campo "len" nos indica la longitud del tamaño del nombre
-            if (event->len) {
+            if (!event->len) {
                 // Dentro de "mask" tenemos el evento que ocurrio y sobre donde ocurrio
                 // sea un archivo o un directorio
                 if (event->mask & IN_MODIFY) {
-                    if(!strcmp(event->name, filename)){
-                        log_info(logger, "Actualizando config...");
+                    log_info(logger, "Actualizando config...");
 
-                        sem_getvalue(&plp->semaforo_multiprogramacion, &buffer_semaforo);
-                        buffer_semaforo = configuracion->multiprogramacion - buffer_semaforo;
+                    sem_getvalue(&plp->semaforo_multiprogramacion, &buffer_semaforo);
+                    buffer_semaforo = configuracion->multiprogramacion - buffer_semaforo;
 
-                        configuracion = asignar_config(filename, safa);
+                    configuracion = asignar_config(filename, safa);
 
-                        pthread_mutex_lock(&plp->mutex_pausa);
-                        pthread_mutex_lock(&pcp->mutex_config);
+                    //pthread_mutex_lock(&plp->mutex_pausa);
+                    pthread_mutex_lock(&pcp->mutex_config);
 
-                        pcp->algoritmo_planificacion = configuracion->algoritmo;
-                        pcp->cantidad_lineas_equipo_grande = configuracion->cant_lineas_equipo_grande;
-                        pcp->quantum = configuracion->quantum;
-                        pcp->retardo_planificacion = configuracion->retardo;
+                    pcp->algoritmo_planificacion = configuracion->algoritmo;
+                    pcp->cantidad_lineas_equipo_grande = configuracion->cant_lineas_equipo_grande;
+                    pcp->quantum = configuracion->quantum;
+                    pcp->retardo_planificacion = configuracion->retardo;
 
-                        sem_destroy(&plp->semaforo_multiprogramacion);
-                        sem_init(&plp->semaforo_multiprogramacion, 0, (unsigned int)configuracion->multiprogramacion);
+                    sem_destroy(&plp->semaforo_multiprogramacion);
+                    sem_init(&plp->semaforo_multiprogramacion, 0, (unsigned int)configuracion->multiprogramacion);
 
-                        for(int i = 0; i<buffer_semaforo; i++)
-                            sem_wait(&plp->semaforo_multiprogramacion);
+                    for(int i = 0; i<buffer_semaforo; i++)
+                        sem_wait(&plp->semaforo_multiprogramacion);
 
-                        pthread_mutex_unlock(&pcp->mutex_config);
-                        pthread_mutex_unlock(&plp->mutex_pausa);
+                    pthread_mutex_unlock(&pcp->mutex_config);
+                    //pthread_mutex_unlock(&plp->mutex_pausa);
 
-                        log_info(logger, "Config actualizada");
-                    }
+                    log_info(logger, "Config actualizada");
+
                 }
             }
             offset += sizeof(struct inotify_event) + event->len;

@@ -166,17 +166,22 @@ void desbloquear_dtb(PCP* pcp, int id_DTB){
     dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_DTB, true);
 
     if(dtb_seleccionado != NULL) {
-        if (dtb_seleccionado->quantum && pcp->algoritmo_planificacion == VRR) {
-            log_info(pcp->logger, "Pasando DTB %d a READY AUX", id_DTB);
-            agregar_a_ready_aux(pcp, dtb_seleccionado);
-        } else {
-            log_info(pcp->logger, "Pasando DTB %d a READY", id_DTB);
-            agregar_a_ready(pcp, dtb_seleccionado);
-        }
+        desbloquear_dtb_seleccionado(pcp, dtb_seleccionado);
     } else
         log_error(pcp->logger, "DTB %d no encontrado en BLOCK", id_DTB);
 
     pthread_mutex_unlock(&(pcp->mutex_block));
+}
+
+void desbloquear_dtb_seleccionado(PCP* pcp, DTB* dtb_seleccionado){
+    if (dtb_seleccionado->quantum && pcp->algoritmo_planificacion == VRR && dtb_seleccionado->inicializado) {
+        log_info(pcp->logger, "Pasando DTB %d a READY AUX (quantum %d)", dtb_seleccionado->id,
+                dtb_seleccionado->quantum);
+        agregar_a_ready_aux(pcp, dtb_seleccionado);
+    } else {
+        log_info(pcp->logger, "Pasando DTB %d a READY (quantum %d)", dtb_seleccionado->id, dtb_seleccionado->quantum);
+        agregar_a_ready(pcp, dtb_seleccionado);
+    }
 }
 
 DTB* obtener_dtb_de_block(PCP* pcp, int id_dtb){
@@ -214,11 +219,7 @@ void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int dire
         else
             archivo_a_cargar->equipo_grande = 0;
 
-        if (dtb_seleccionado->quantum && pcp->algoritmo_planificacion == VRR) {
-            agregar_a_ready_aux(pcp, dtb_seleccionado);
-        } else {
-            agregar_a_ready(pcp, dtb_seleccionado);
-        }
+        desbloquear_dtb_seleccionado(pcp, dtb_seleccionado);
     } else
         log_error(pcp->logger, "DTB %d no encontrado en BLOCK", id_DTB);
 
@@ -272,10 +273,7 @@ void agregar_a_ready(PCP* pcp, DTB* dtb){
 
             if(archivo_seleccionado->equipo_grande){
                 log_info(pcp->logger, "Pasando DTB %d a READY AUX", dtb->id);
-                pthread_mutex_lock(&(pcp->mutex_ready_aux));
-                queue_push(pcp->cola_ready_aux, dtb);
-                pthread_mutex_unlock(&(pcp->mutex_ready_aux));
-                sem_post(&(pcp->semaforo_ready));
+                agregar_a_ready_aux(pcp, dtb);
                 return;
             }
         }

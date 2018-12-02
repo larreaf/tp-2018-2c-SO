@@ -933,7 +933,7 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
 		pagina = list_get(segmento->tabla_paginas, num_pagina);
 		if(pagina != NULL){
 			int dir_marco = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
-			log_info(memoria->logger, "Modificando linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d", offset_pagina, num_pagina, num_segmento, direccion/*(dir_marco)+offset_pagina*/, id_dtb);
+			log_info(memoria->logger, "Modificando linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d", offset_pagina, num_pagina, num_segmento, dir_marco+offset_pagina, id_dtb);
 			modificar_linea_storage(memoria->storage, dir_marco, offset_pagina, datos);
 			return 0;
 		}
@@ -1049,9 +1049,9 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 					for (i_offset_pagina = 0; i_offset_pagina < pagina->lineas_usadas ; i_offset_pagina++){
 						char* linea_leida =leer_linea_storage(memoria->storage, linea_marco,i_offset_pagina);
 						if(string_equals_ignore_case(linea_leida,"\n")){
-							log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d: \\n", i_offset_pagina,i_paginas, i_segmentos, linea_marco+i_offset_pagina, id_dtb);
+							log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion: %d) para DTB %d: \\n", i_offset_pagina,i_paginas, i_segmentos, linea_marco+i_offset_pagina, id_dtb);
 						}else {
-							log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d: %s", i_offset_pagina,i_paginas, i_segmentos, linea_marco+i_offset_pagina, id_dtb, linea_leida);
+							log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion: %d) para DTB %d: %s", i_offset_pagina,i_paginas, i_segmentos, linea_marco+i_offset_pagina, id_dtb, linea_leida);
 						}
 						string_append_with_format(&string_archivo,"%s\n",linea_leida);
 						free(linea_leida);
@@ -1426,13 +1426,14 @@ void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, bool inicia
 		} else {
 			for(j = 0; j < tamanio_pagina && lineas_escritas < cantidad_lineas; j++){
 				indice_lineas = (j+index*tamanio_pagina);
+				int dir_marco = (j+numero_inicial_pagina);
 
 				if(lineas[indice_lineas] != NULL && lineas_escritas < cant_substring ){
-					log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d: %s", indice_lineas, index ,seg_init, pid,lineas[indice_lineas]);
-					escribir_linea(memoria->storage,lineas[indice_lineas],(j+numero_inicial_pagina),sobreescribir);
+					log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d (direccion: %d) del DTB %d: %s", j, index ,seg_init, dir_marco, pid,lineas[indice_lineas]);
+					escribir_linea(memoria->storage,lineas[indice_lineas],dir_marco,sobreescribir);
 				} else{
-					log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d del DTB %d: \\n", indice_lineas, index ,seg_init, pid,"\n");
-					escribir_linea(memoria->storage,"\n",(j+numero_inicial_pagina),sobreescribir);
+					log_info(memoria->logger, "Escribiendo linea #%d en pagina #%d del segmento #%d (direccion: %d) del DTB %d: \\n", j, index ,seg_init, dir_marco, pid,"\n");
+					escribir_linea(memoria->storage,"\n",dir_marco,sobreescribir);
 				}
 				pagina->lineas_usadas++;
 				lineas_escritas++;

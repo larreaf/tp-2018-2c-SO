@@ -11,7 +11,7 @@
  * @return struct MemoriaReal*
  */
 
-	MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea, int tamanio_pagina){
+MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea, int tamanio_pagina){
     MemoriaReal* memoria_real = malloc(sizeof(MemoriaReal));
 
     memoria_real->logger = log_create("fm9.log", "MemoriaReal", true, log_level_from_string("info"));
@@ -1207,6 +1207,8 @@ int desalojar_script(Memoria* memoria, int id_dtb){
     NodoTablaSegmentos* segmento;
     int cantidad_segmentos;
 
+    log_info(memoria->logger, "Desalojando script y archivos de DTB %d", id_dtb);
+
     if(memoria->modo == SEG) {
         tabla_segmentos_proceso = encontrar_tabla_segmentos_por_id_dtb(memoria->lista_tablas_de_segmentos, id_dtb);
         cantidad_segmentos = list_size(tabla_segmentos_proceso->tabla_de_segmentos);
@@ -1214,7 +1216,7 @@ int desalojar_script(Memoria* memoria, int id_dtb){
         for(int i = 0; i<cantidad_segmentos; i++) {
             segmento = list_get(tabla_segmentos_proceso->tabla_de_segmentos, 0);
 
-            log_info(memoria->logger, "Liberando archivo en segmento %d para DTB %d", segmento->id_segmento,
+            log_trace(memoria->logger, "Liberando archivo en segmento %d para DTB %d", segmento->id_segmento,
                      id_dtb);
 
             for (int j = 0; j < segmento->longitud_segmento; j++) {
@@ -1223,6 +1225,7 @@ int desalojar_script(Memoria* memoria, int id_dtb){
             }
 
             list_remove(tabla_segmentos_proceso->tabla_de_segmentos, 0);
+            // TODO free?
         }
 
         for(int i = 0; i<list_size(memoria->lista_tablas_de_segmentos); i++){

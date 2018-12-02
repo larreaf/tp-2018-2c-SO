@@ -135,6 +135,7 @@ DTB* crear_dtb(int id, int inicializado){
     nuevo_dtb->program_counter = 0;
     nuevo_dtb->status = READY;
     nuevo_dtb->quantum = 0;
+    nuevo_dtb->cargando = 0;
 
     return nuevo_dtb;
 }

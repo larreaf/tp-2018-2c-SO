@@ -256,7 +256,7 @@ char* codigo_error_a_string(int codigo_error){
  */
 void* ejecutar_plp(void* arg){
     PLP* plp = (PLP*)arg;
-    DTB* dtb_seleccionado;
+    DTB* dtb_seleccionado = NULL;
 
     while(correr){
         log_info(plp->logger, "Esperando nuevo DTB en NEW...");
@@ -265,19 +265,25 @@ void* ejecutar_plp(void* arg){
             break;
 
         pthread_mutex_lock(&(plp->mutex_new));
-        dtb_seleccionado = list_get(plp->lista_new, list_size(plp->lista_new)-1);
+        for(int i = 0; i<list_size(plp->lista_new); i++) {
+            dtb_seleccionado = list_get(plp->lista_new, i);
+
+            if(!dtb_seleccionado->cargando)
+                break;
+        }
         pthread_mutex_unlock(&(plp->mutex_new));
 
-        pthread_mutex_lock(&plp->mutex_pausa);
+        //pthread_mutex_lock(&plp->mutex_pausa);
 
         log_info(plp->logger, "Esperando semaforo multiprogramacion...");
         sem_wait(&(plp->semaforo_multiprogramacion));
         if(errno == EINTR)
             break;
 
+        dtb_seleccionado->cargando = 1;
         desbloquear_dtb_dummy(pcp, dtb_seleccionado->id, dtb_seleccionado->path_script);
 
-        pthread_mutex_unlock(&plp->mutex_pausa);
+        //pthread_mutex_unlock(&plp->mutex_pausa);
     }
 
     return NULL;

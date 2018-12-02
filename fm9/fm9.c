@@ -39,7 +39,7 @@ void cerrar_fm9(t_log* logger, cfg_fm9* config, ConexionesActivas conexiones_act
 int main(int argc, char **argv) {
 
 	int conexiones_permitidas[cantidad_tipos_procesos] = {0}, id_dtb, resultado, numero_linea, direccion;
-    char* linea;
+    char* linea, *linea_leida;
     char* string_archivo;
     MensajeDinamico* mensaje, *mensaje_respuesta;
     ConexionesActivas conexiones_activas;
@@ -96,13 +96,16 @@ int main(int argc, char **argv) {
                 recibir_int(&numero_linea, mensaje);
 
                 linea = string_new();
-                string_append(&linea, leer_linea(memoria, id_dtb, numero_linea));
+                linea_leida = leer_linea(memoria, id_dtb, numero_linea);
+                string_append(&linea, linea_leida);
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_LEER_LINEA, mensaje->socket, mensaje->particionado);
                 agregar_string(mensaje_respuesta, linea);
                 if(enviar_mensaje(mensaje_respuesta)==1)
                     log_trace(logger, "Mensaje respuesta enviado correctamente");
 
+                free(linea);
+                free(linea_leida);
                 break;
 
             case CARGAR_ARCHIVO:

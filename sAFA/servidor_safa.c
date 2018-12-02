@@ -11,6 +11,7 @@ extern PCP* pcp;
 extern PLP* plp;
 extern sem_t cantidad_cpus, arrancar_planificadores;
 extern bool correr;
+extern t_dictionary* archivos_abiertos;
 
 /*!
  * Ejecuta el servidor de safa para comunicarse con CPUs y elDiego
@@ -23,8 +24,6 @@ void* ejecutar_servidor(void *arg){
     int* copia_id_dtb;
     MensajeDinamico* mensaje_respuesta, *mensaje;
     char* str = NULL, *path, *nombre_recurso;
-    t_dictionary* archivos_abiertos;
-    t_queue* cola_recurso;
     DTB datos_dtb;
     DTB* dtb_seleccionado;
     MetricasDTB* metricas;
@@ -35,7 +34,6 @@ void* ejecutar_servidor(void *arg){
     conexiones_permitidas[t_cpu] = 10;
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto,
             conexiones_permitidas, t_safa);
-    archivos_abiertos = dictionary_create();
 
     while (correr) {
 
@@ -272,6 +270,5 @@ void* ejecutar_servidor(void *arg){
 
         destruir_mensaje(mensaje);
     }
-    dictionary_destroy(archivos_abiertos);
     return NULL;
 }

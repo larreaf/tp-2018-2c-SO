@@ -73,7 +73,7 @@ void ejecutar_linea(char* linea){
 operacionConsolaSafa* parsear_linea(char* linea){
 	operacionConsolaSafa* retorno = malloc(sizeof(operacionConsolaSafa));
 	retorno->accion = 9999;
-	retorno->argumento = malloc(1);
+	retorno->argumento = string_new();
 	int offset = 0;
 	int i = 0;
 	char* word;
@@ -85,17 +85,12 @@ operacionConsolaSafa* parsear_linea(char* linea){
 			retorno->accion = string_to_accion(word);
 		}
 		else {
-			int longitudWord = strlen(word);
-			retorno->argumento = realloc(retorno->argumento, (size_t)offset+longitudWord+1);
-			memcpy(retorno->argumento+offset, word, (size_t)longitudWord);
-			offset += longitudWord;
-			retorno->argumento[offset] = ' ' ;
+			string_append(&retorno->argumento, word);
+            string_append(&retorno->argumento, " ");
 		}
 
 		i++;
 	}
-	retorno->argumento[offset] = '\0' ;
-
 	return retorno;
 }
 

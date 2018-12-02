@@ -158,15 +158,16 @@ int main(int argc, char **argv) {
                 recibir_int(&cant_lineas, mensaje_dinamico);
                 destruir_mensaje(mensaje_dinamico);
 
-                if(cant_lineas) {
+                if(cant_lineas>0) {
                     mensaje_dinamico = crear_mensaje(DESBLOQUEAR_DTB, socket_safa, 0);
                     agregar_int(mensaje_dinamico, id_dtb);
-                    enviar_mensaje(mensaje_dinamico);
                 }else{
                     log_warning(logger, "Error al crear archivo para DTB %d", id_dtb);
-                    // TODO enviar error a SAFA para que aborte el DTB
+                    mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
+                    agregar_int(mensaje_dinamico, id_dtb);
+                    agregar_int(mensaje_dinamico, 50002);
                 }
-
+                enviar_mensaje(mensaje_dinamico);
                 break;
 
             case ABRIR_ARCHIVO_CPU_DIEGO:
@@ -242,7 +243,7 @@ int main(int argc, char **argv) {
                 destruir_mensaje(mensaje_dinamico);
 
                 //Segun el resultado de MDJ enviar a SAFA - Dsbloquear DTB o codigo de error
-                if (resultado==-1){
+                if (!resultado){
                     	codigo_error=60001;
                     	log_error(logger, "Falla en BORRRAR ARCHIVO en mdj para id_dtb %d- Error %d",id_dtb,codigo_error);
                         mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);

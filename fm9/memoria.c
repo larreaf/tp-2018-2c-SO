@@ -1003,41 +1003,11 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 		NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
 		NodoSegmento* segmento = NULL;
 		NodoPagina* pagina = NULL;
-		int i /*= proceso->cantidad_segmentos_codigo*/;
-		/*int j = 0;
-		int lineas_recorridas = 0;
-		int lineas_leidas = 0;
-		int tamanio_pagina = memoria->storage->cant_lineas_pagina;
-		int cantidad_paginas = 0;
 
-		cantidad_segmentos = list_size(proceso->tabla_segmentos);
-		for(i = 0; i < cantidad_segmentos && lineas_leidas == 0; i++){ // Recorrer segmentos del proceso
-			segmento = list_get(proceso->tabla_segmentos, i);
-			cantidad_paginas = list_size(segmento->tabla_paginas);
-			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
-				pagina = list_get(segmento->tabla_paginas, j);
-				if (direccion < pagina->lineas_usadas){
-					int lineas_leidas_en_pagina = 0;
-					int linea = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
-					for(lineas_leidas_en_pagina = 0; lineas_leidas_en_pagina < pagina->lineas_usadas ; lineas_leidas_en_pagina++){
-						char* linea_leida =leer_linea_storage(memoria->storage, linea,lineas_leidas_en_pagina);
-						log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d: %s", lineas_leidas_en_pagina,j, i, linea+direccion+lineas_leidas_en_pagina, id_dtb
-								,linea_leida);
-						string_append_with_format(&string_archivo,"%s\n",linea_leida);
-						lineas_leidas++;
-						free(linea_leida);
-					}
-				} else {
-					direccion -= pagina->lineas_usadas;
-				}
-				lineas_recorridas += pagina->lineas_usadas;
-			}
-		}*/
-
-		int numero_segmento = direccion / memoria->tamanio_maximo_segmento;
+		int numero_segmento = direccion / (memoria->tamanio_maximo_segmento * memoria->storage->cant_lineas_pagina);
 		//int offset_segmento = direccion % memoria->tamanio_maximo_segmento;
 		bool _archivo_is_the_one(NodoArchivo* un_file_cualquiera){
-			if(un_file_cualquiera->seg_inicial == numero_segmento){
+			if(un_file_cualquiera->seg_inicial == (numero_segmento)){
 			return true;
 		}else{
 			return false;
@@ -1056,8 +1026,13 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 					int i_offset_pagina = 0;
 					for (i_offset_pagina = 0; i_offset_pagina < pagina->lineas_usadas ; i_offset_pagina++){
 						char* linea_leida =leer_linea_storage(memoria->storage, linea_marco,i_offset_pagina);
-						log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d: %s", i_offset_pagina,i_paginas, i_segmentos, linea_marco+i_offset_pagina, id_dtb, linea_leida);
+						if(string_equals_ignore_case(linea_leida,"\n")){
+							log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d: \\n", i_offset_pagina,i_paginas, i_segmentos, linea_marco+i_offset_pagina, id_dtb);
+						}else {
+							log_info(memoria->logger, "Leyendo linea #%d en pagina #%d en segmento #%d (direccion %d) para DTB %d: %s", i_offset_pagina,i_paginas, i_segmentos, linea_marco+i_offset_pagina, id_dtb, linea_leida);
+						}
 						string_append_with_format(&string_archivo,"%s\n",linea_leida);
+						free(linea_leida);
 					}// dentro de la pagina
 				}// dentro del segmento
 			}//iterar los segmentos
@@ -1192,7 +1167,8 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
 				int linea_inicial_marco = obtener_numero_linea_pagina(pagina->numero_marco, tamanio_pagina);
 				int i_offset_pag = 0;
 				for(i_offset_pag = 0; i_offset_pag < pagina->lineas_usadas; i_offset_pag++){
-					escribir_linea(memoria->storage,"", linea_inicial_marco + i_offset_pag, 1);
+					escribir_linea(memoria->storage,"\0", linea_inicial_marco + i_offset_pag, 1);
+					memoria->storage->estado_lineas[linea_inicial_marco + i_offset_pag] = 0;
 				}// dentro del marco
 			}//dentro del segmento
 			list_clean_and_destroy_elements(segmento->tabla_paginas, free);
@@ -1253,34 +1229,13 @@ int desalojar_script(Memoria* memoria, int id_dtb){
 				return false;
 			}
 		}
-		NodoProceso* proceso = list_find(memoria->tabla_procesos,&_is_the_one);
-		NodoSegmento* segmento = NULL;
-		NodoPagina* pagina = NULL;
-		int i = proceso->cantidad_segmentos_codigo;
-		int j = 0;
-		int lineas_recorridas = 0;
-		int lineas_leidas = 0;
-		int tamanio_pagina = memoria->storage->cant_lineas_pagina;
-		int cantidad_paginas = 0;
-
-		cantidad_segmentos = list_size(proceso->tabla_segmentos);
-		for(i = 0; i < cantidad_segmentos ; i++){ // Recorrer segmentos del proceso
-			segmento = list_get(proceso->tabla_segmentos, i);
-			cantidad_paginas = list_size(segmento->tabla_paginas);
-			for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
-				pagina = list_get(segmento->tabla_paginas, j);
-				memoria->storage->estado_paginas[pagina->numero_marco] = 0;
-				int linea_inicial_pagina = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
-
-				int lineas_leidas_en_pagina = 0;
-				for(lineas_leidas_en_pagina = 0; lineas_leidas_en_pagina < pagina->lineas_usadas ; lineas_leidas_en_pagina++){
-					escribir_linea(memoria->storage, "", linea_inicial_pagina+j, 1);
-					lineas_leidas++;
-				}
-
-				lineas_recorridas += pagina->lineas_usadas;
-			}
+		void _destuir_proceso_aux(NodoProceso* _un_proceso){
+			_destruir_proceso(memoria, _un_proceso);
+			return;
 		}
+
+
+		list_remove_and_destroy_by_condition(memoria->tabla_procesos, &_is_the_one, &_destuir_proceso_aux);
 		return 0;
 	}
 
@@ -1362,8 +1317,10 @@ void dump(Memoria* memoria, int id_dtb){
         string_append(&linea, leer_linea_storage(memoria->storage, i, 0));
         if(string_is_empty(linea) && !memoria->storage->estado_lineas[i])
             string_append(&linea, "*vacio*");
-
-        printf("Linea %d: %s\n", i, linea);
+        if(string_equals_ignore_case(linea, "\n"))
+        	printf("Linea %d: \\n \n", i);
+        else
+        	printf("Linea %d: %s\n", i, linea);
         free(linea);
     }
 }
@@ -1519,12 +1476,48 @@ int crear_segmento_y_agregarlo_al_proceso(NodoProceso* un_proceso,Memoria* memor
 	}
 	NodoArchivo* archivo = malloc(sizeof(NodoArchivo));
 	archivo->seg_inicial = segmentos_existentes;
-	archivo->seg_final = segmentos_existentes + segmentos_necesarios - 1;
+	archivo->seg_final = archivo->seg_inicial + segmentos_necesarios - 1;
 
 
 	list_add(un_proceso->tabla_archivos, archivo);
 	return cantidad_segmentos_agregados;
 }
+
+
+void _destruir_proceso (Memoria* memoria,NodoProceso* un_proceso){
+	void _destruir_segmento(NodoSegmento* un_seg){
+		list_destroy_and_destroy_elements(un_seg->tabla_paginas, free);
+		free(un_seg);
+	}
+	NodoSegmento* segmento = NULL;
+	NodoPagina* pagina = NULL;
+	int i = 0;
+	int j = 0;
+	int tamanio_pagina = memoria->storage->cant_lineas_pagina;
+	int cantidad_paginas = 0;
+	int cantidad_segmentos = list_size(un_proceso->tabla_segmentos);
+
+	for(i = 0; i < cantidad_segmentos ; i++){ // Recorrer segmentos del proceso
+		segmento = list_get(un_proceso->tabla_segmentos, i);
+		cantidad_paginas = list_size(segmento->tabla_paginas);
+		for(j = 0; j < cantidad_paginas; j++){ // Recorrer las paginas del segmento
+			pagina = list_get(segmento->tabla_paginas, j);
+			memoria->storage->estado_paginas[pagina->numero_marco] = 0;
+			int linea_inicial_pagina = obtener_numero_linea_pagina(pagina->numero_marco,tamanio_pagina);
+
+			int lineas_leidas_en_pagina = 0;
+			for(lineas_leidas_en_pagina = 0; lineas_leidas_en_pagina < pagina->lineas_usadas ; lineas_leidas_en_pagina++){
+				escribir_linea(memoria->storage, "", linea_inicial_pagina+lineas_leidas_en_pagina, 1);
+				memoria->storage->estado_lineas[linea_inicial_pagina + lineas_leidas_en_pagina] = 0;
+			}
+
+		}
+	}
+	list_destroy_and_destroy_elements(un_proceso->tabla_archivos, free);
+	list_destroy_and_destroy_elements(un_proceso->tabla_segmentos, & _destruir_segmento);
+	free(un_proceso);
+}
+
 
 char** lineas_split_(char* lineas){
 	int saltos = cuenta_saltos_de_linea(lineas);

@@ -655,7 +655,7 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 		tabla_filtrada_por_id_dtb = traer_tabla_pagina_invertida_por_id_dtb(memoria->lista_tabla_de_paginas_invertida, id_dtb);
 		int pagina_base;
 
-		pagina_base = *(int *) list_fold(tabla_filtrada_por_id_dtb,(int) 0, (void*) traer_ultima_pagina_id_dtb) + 1;
+		pagina_base /*= *(int *) list_fold(tabla_filtrada_por_id_dtb,(int) 0, (void*) traer_ultima_pagina_id_dtb) + 1*/;
 
 
 		log_info(memoria->logger, "Buscando espacio para pagina/s para script de DTB %d (%d lineas)", id_dtb, cant_lineas);
@@ -1185,7 +1185,8 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
 				int linea_inicial_marco = obtener_numero_linea_pagina(pagina->numero_marco, tamanio_pagina);
 				int i_offset_pag = 0;
 				for(i_offset_pag = 0; i_offset_pag < pagina->lineas_usadas; i_offset_pag++){
-					escribir_linea(memoria->storage,"", linea_inicial_marco + i_offset_pag, 1);
+					escribir_linea(memoria->storage,"\0", linea_inicial_marco + i_offset_pag, 1);
+					memoria->storage->estado_lineas[linea_inicial_marco + i_offset_pag] = 0;
 				}// dentro del marco
 			}//dentro del segmento
 			list_clean_and_destroy_elements(segmento->tabla_paginas, free);

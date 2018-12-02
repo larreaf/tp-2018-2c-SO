@@ -80,6 +80,13 @@ PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo, char*
     return nuevo_pcp;
 }
 
+void destruir_archivo_abierto(void* arg){
+    ArchivoAbierto* archivo = (ArchivoAbierto*)arg;
+
+    free(archivo->path);
+    free(archivo);
+}
+
 /*!
  * Destruye un DTB liberando memoria
  * @param arg Puntero al DTB a destruir
@@ -88,14 +95,14 @@ void destruir_dtb(void* arg){
     DTB* dtb = (DTB*)arg;
 
     free(dtb->path_script);
-    list_destroy_and_destroy_elements(dtb->archivos_abiertos, free);
+    list_destroy_and_destroy_elements(dtb->archivos_abiertos, destruir_archivo_abierto);
     free(dtb);
 }
 
 void destruir_recurso(void *arg){
     Recurso* recurso_seleccionado = (Recurso*)arg;
 
-    queue_destroy(recurso_seleccionado->cola);
+    queue_destroy_and_destroy_elements(recurso_seleccionado->cola, free);
     free(recurso_seleccionado);
 }
 

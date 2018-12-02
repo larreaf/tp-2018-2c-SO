@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
             			log_info(logger, "Bytes asignados al archivo: %d",cantidad_bytes_asignados):
 						log_error(logger,"Espacio insuficiente para crear el archivo");
             	mensaje_respuesta = crear_mensaje(CREAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
-            	agregar_dato(mensaje_respuesta, sizeof(int) ,&cantidad_bytes_asignados );
+                agregar_int(mensaje_respuesta, cantidad_bytes_asignados);
             	log_info(logger,"Enviando respuesta...");
 				enviar_mensaje(mensaje_respuesta);
 				log_info(logger,"Respuesta enviada...");
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
                 log_info(logger,"Archivo %s Borrado", data_operacion->path) :
                 log_error(logger,"Error al intentar borrar el archivo %s, data_operacion->path");
                 mensaje_respuesta = crear_mensaje(BORRAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
-                agregar_dato(mensaje_respuesta,sizeof(int),&borrar);
+                agregar_int(mensaje_respuesta, borrar);
                 log_info(logger,"Enviando respuesta...");
                 enviar_mensaje(mensaje_respuesta);
                 log_info(logger,"Respuesta enviada...");
@@ -284,7 +284,7 @@ int main(int argc, char **argv) {
                     int bytes_guardados = guardar_datos(data_operacion);
                     log_info(logger, "Se guardaron %d bytes", bytes_guardados);
                     mensaje_respuesta = crear_mensaje(GUARDAR_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
-                    agregar_dato(mensaje_respuesta, sizeof(int) ,&bytes_guardados);
+                    agregar_int(mensaje_respuesta, bytes_guardados);
                     log_info(logger,"Enviando respuesta...");
                     enviar_mensaje(mensaje_respuesta);
                     log_info(logger,"Respuesta enviada...");
@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
                     log_error(logger, "El archivo %s no existe",data_operacion->path);
                     mensaje_respuesta = crear_mensaje(GUARDAR_DATOS,mensaje_recibido->socket, mensaje_recibido->particionado);
                     int rta = -1;
-                    agregar_dato(mensaje_respuesta,sizeof(int),&rta);
+                    agregar_int(mensaje_respuesta, rta);
                     log_info(logger,"Enviando respuesta...");
                     enviar_mensaje(mensaje_respuesta);
                     log_info(logger,"Respuesta enviada...");

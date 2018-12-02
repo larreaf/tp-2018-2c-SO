@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
                         log_info(logger, "Ejecutando DTB dummy, enviando peticion abrir %s", datos_dtb.path_script);
                         peticion_abrir_script = crear_mensaje(ABRIR_SCRIPT_CPU_DIEGO, socket_elDiego, 0);
-                        agregar_dato(peticion_abrir_script, sizeof(int), &datos_dtb.id);
+                        agregar_int(peticion_abrir_script, datos_dtb.id);
                         agregar_string(peticion_abrir_script, datos_dtb.path_script);
                         if(enviar_mensaje(peticion_abrir_script)==1)
                             log_info(logger, "Enviada peticion de abrir script");
@@ -104,8 +104,8 @@ int main(int argc, char **argv) {
 
 	                        // fetch de instruccion
                             mensaje_respuesta = crear_mensaje(LEER_LINEA, socket_fm9, 0);
-                            agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.id));
-                            agregar_dato(mensaje_respuesta, sizeof(int), &(datos_dtb.program_counter));
+                            agregar_int(mensaje_respuesta, datos_dtb.id);
+                            agregar_int(mensaje_respuesta, datos_dtb.program_counter);
                             enviar_mensaje(mensaje_respuesta);
 
                             log_trace(logger, "Esperando respuesta de FM9...");
@@ -157,13 +157,13 @@ int main(int argc, char **argv) {
 
                 if(datos_dtb.status != READY && datos_dtb.status != BLOQUEAR){
                     mensaje_respuesta = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, 0);
-                    agregar_dato(mensaje_respuesta, sizeof(int), &datos_dtb.id);
+                    agregar_int(mensaje_respuesta, datos_dtb.id);
                     enviar_mensaje(mensaje_respuesta);
                     // TODO flush archivos abiertos?
                 }
                 mensaje_respuesta = generar_mensaje_dtb(socket_safa, &datos_dtb);
-                agregar_dato(mensaje_respuesta, sizeof(int), &cantidad_instrucciones_ejecutadas);
-                agregar_dato(mensaje_respuesta, sizeof(int), &cantidad_instrucciones_dma);
+                agregar_int(mensaje_respuesta, cantidad_instrucciones_ejecutadas);
+                agregar_int(mensaje_respuesta, cantidad_instrucciones_dma);
                 enviar_mensaje(mensaje_respuesta);
 	            break;
 

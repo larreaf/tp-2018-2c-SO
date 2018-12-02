@@ -13,6 +13,7 @@ sem_t cantidad_cpus, arrancar_planificadores;
 t_log *logger;
 ConexionesActivas conexiones_activas;
 cfg_safa *configuracion;
+t_dictionary* archivos_abiertos;
 PLP* plp;
 PCP* pcp;
 bool correr = 1;
@@ -25,6 +26,7 @@ void cerrar_safa(t_log* logger, cfg_safa* configuracion, ConexionesActivas serve
     destruir_conexiones_activas(server);
     log_destroy(logger);
     destroy_cfg(configuracion, t_safa);
+    dictionary_destroy(archivos_abiertos);
     exit(0);
 }
 
@@ -36,6 +38,7 @@ void sig_handler(int signo){
 
 int main(int argc, char **argv) {
     int err;
+    archivos_abiertos = dictionary_create();
 
     validar_parametros(argc);
     configuracion = asignar_config(argv[1], safa);

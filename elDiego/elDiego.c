@@ -95,8 +95,8 @@ int main(int argc, char **argv) {
                     log_warning(logger, "Error al cargar script %s para DTB %d: no existe el script", path, id_dtb);
                     resultado = -4;
                     mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
+                    agregar_int(mensaje_dinamico, id_dtb);
+                    agregar_int(mensaje_dinamico, resultado);
                     enviar_mensaje(mensaje_dinamico);
                     break;
                 }
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
 
                 // enviar mensaje a FM9 para cargar el script
                 mensaje_dinamico = crear_mensaje(CARGAR_SCRIPT,socket_fm9, configuracion->transfer_size);
-                agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                agregar_int(mensaje_dinamico, id_dtb);
                 agregar_string(mensaje_dinamico, archivo);
                 enviar_mensaje(mensaje_dinamico);
 
@@ -125,14 +125,14 @@ int main(int argc, char **argv) {
                     log_info(logger, "Script para el DTB %d abierto con exito, notificando a SAFA...", id_dtb);
 
                     mensaje_dinamico = crear_mensaje(PASAR_DTB_A_READY, socket_safa, 0);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                    agregar_int(mensaje_dinamico, id_dtb);
                     enviar_mensaje(mensaje_dinamico);
                 }else{
                     log_warning(logger, "Error al cargar script %s para DTB %d", path, id_dtb);
 
                     mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
+                    agregar_int(mensaje_dinamico, id_dtb);
+                    agregar_int(mensaje_dinamico, resultado);
                     enviar_mensaje(mensaje_dinamico);
                 }
                 free(archivo);
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 
                 if(cant_lineas) {
                     mensaje_dinamico = crear_mensaje(DESBLOQUEAR_DTB, socket_safa, 0);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                    agregar_int(mensaje_dinamico, id_dtb);
                     enviar_mensaje(mensaje_dinamico);
                 }else{
                     log_warning(logger, "Error al crear archivo para DTB %d", id_dtb);
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
 
                 // enviar mensaje a FM9 para cargar el archivo
                 mensaje_dinamico = crear_mensaje(CARGAR_ARCHIVO,socket_fm9, configuracion->transfer_size);
-                agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                agregar_int(mensaje_dinamico, id_dtb);
                 agregar_string(mensaje_dinamico, archivo);
                 enviar_mensaje(mensaje_dinamico);
 
@@ -214,10 +214,10 @@ int main(int argc, char **argv) {
                 }
 
                 mensaje_dinamico = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, socket_safa, 0);
-                agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                agregar_int(mensaje_dinamico, id_dtb);
                 agregar_string(mensaje_dinamico, path);
-                agregar_dato(mensaje_dinamico, sizeof(int), &resultado);
-                agregar_dato(mensaje_dinamico, sizeof(int), &cant_lineas);
+                agregar_int(mensaje_dinamico, resultado);
+                agregar_int(mensaje_dinamico, cant_lineas);
                 enviar_mensaje(mensaje_dinamico);
                 free(archivo);
                 break;
@@ -246,13 +246,13 @@ int main(int argc, char **argv) {
                     	codigo_error=60001;
                     	log_error(logger, "Falla en BORRRAR ARCHIVO en mdj para id_dtb %d- Error %d",id_dtb,codigo_error);
                         mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
-                        agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
-                        agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
+                        agregar_int(mensaje_dinamico, id_dtb);
+                        agregar_int(mensaje_dinamico, codigo_error);
                         enviar_mensaje(mensaje_dinamico);
                 }else{
                         log_info(logger, "Se Borro el Archivo %s - BORRRAR ARCHIVO en mdj OK", path);
                         mensaje_dinamico = crear_mensaje(DESBLOQUEAR_DTB, socket_safa, 0);
-                        agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                        agregar_int(mensaje_dinamico, id_dtb);
                         enviar_mensaje(mensaje_dinamico);
                 }
             	break;
@@ -264,8 +264,8 @@ int main(int argc, char **argv) {
 
                 //pedir archivo a FM9
                 mensaje_dinamico = crear_mensaje(FLUSH_ARCHIVO, socket_fm9, configuracion->transfer_size);
-                agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
-                agregar_dato(mensaje_dinamico, sizeof(int), &direccion_memoria);
+                agregar_int(mensaje_dinamico, id_dtb);
+                agregar_int(mensaje_dinamico, direccion_memoria);
 
                 enviar_mensaje(mensaje_dinamico);
 
@@ -282,11 +282,11 @@ int main(int argc, char **argv) {
                 	codigo_error=40002;
                     log_error(logger, "Falla en flush archivo");
                     mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
+                    agregar_int(mensaje_dinamico, id_dtb);
+                    agregar_int(mensaje_dinamico, codigo_error);
                     enviar_mensaje(mensaje_dinamico);
                     mensaje_dinamico = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, configuracion->transfer_size);
-                    agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                    agregar_int(mensaje_dinamico, id_dtb);
                     enviar_mensaje(mensaje_dinamico);
                 }else{
                 	int size = strlen(archivo);
@@ -306,16 +306,16 @@ int main(int argc, char **argv) {
                     	codigo_error=40001;
                         log_error(logger, "Falla en flush archivo guardar datos en mdj para id_dtb %d- Error %d",id_dtb,codigo_error);
                         mensaje_dinamico = crear_mensaje(ABORTAR_DTB, socket_safa, 0);
-                        agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
-                        agregar_dato(mensaje_dinamico, sizeof(int), &codigo_error);
+                        agregar_int(mensaje_dinamico, id_dtb);
+                        agregar_int(mensaje_dinamico, codigo_error);
                         enviar_mensaje(mensaje_dinamico);
                         mensaje_dinamico = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, configuracion->transfer_size);
-                        agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                        agregar_int(mensaje_dinamico, id_dtb);
                         enviar_mensaje(mensaje_dinamico);
                     }else{
                         log_info(logger, "Flush archivo guardar datos en mdj - OK");
                         mensaje_dinamico = crear_mensaje(DESBLOQUEAR_DTB, socket_safa, 0);
-                        agregar_dato(mensaje_dinamico, sizeof(int), &id_dtb);
+                        agregar_int(mensaje_dinamico, id_dtb);
                         enviar_mensaje(mensaje_dinamico);
                     }
                 }

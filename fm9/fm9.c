@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
                     log_warning(logger, "Falla al cargar script en memoria (codigo error %d)", abs(resultado));
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_SCRIPT, mensaje->socket, mensaje->particionado);
-                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                agregar_int(mensaje_respuesta, resultado);
                 if(enviar_mensaje(mensaje_respuesta)==1)
                     log_trace(logger, "Mensaje respuesta enviado correctamente");
 
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
                 }
 
                 mensaje_respuesta = crear_mensaje(RESULTADO_CARGAR_ARCHIVO, mensaje->socket, mensaje->particionado);
-                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                agregar_int(mensaje_respuesta, resultado);
                 enviar_mensaje(mensaje_respuesta);
                 log_trace(logger, "Mensaje respuesta enviado correctamente");
 
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
                 }
 
                 mensaje_respuesta = crear_mensaje(ASIGNAR_ARCHIVO_CPU_FM9, mensaje->socket, 0);
-                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                agregar_int(mensaje_respuesta, resultado);
                 enviar_mensaje(mensaje_respuesta);
 
                 break;

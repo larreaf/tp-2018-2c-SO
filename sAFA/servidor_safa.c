@@ -11,6 +11,7 @@ extern PCP* pcp;
 extern PLP* plp;
 extern sem_t cantidad_cpus, arrancar_planificadores;
 extern bool correr;
+extern t_dictionary* archivos_abiertos;
 
 /*!
  * Ejecuta el servidor de safa para comunicarse con CPUs y elDiego
@@ -23,8 +24,6 @@ void* ejecutar_servidor(void *arg){
     int* copia_id_dtb;
     MensajeDinamico* mensaje_respuesta, *mensaje;
     char* str = NULL, *path, *nombre_recurso;
-    t_dictionary* archivos_abiertos;
-    t_queue* cola_recurso;
     DTB datos_dtb;
     DTB* dtb_seleccionado;
     MetricasDTB* metricas;
@@ -35,7 +34,6 @@ void* ejecutar_servidor(void *arg){
     conexiones_permitidas[t_cpu] = 10;
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto,
             conexiones_permitidas, t_safa);
-    archivos_abiertos = dictionary_create();
 
     while (correr) {
 
@@ -169,7 +167,7 @@ void* ejecutar_servidor(void *arg){
                     log_info(logger, "DTB %d intento solicitar recurso '%s' no disponible", id_dtb, nombre_recurso);
 
                 mensaje_respuesta = crear_mensaje(SOLICITUD_RECURSO, mensaje->socket, 0);
-                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                agregar_int(mensaje_respuesta, resultado);
                 enviar_mensaje(mensaje_respuesta);
                 free(nombre_recurso);
                 break;
@@ -207,7 +205,7 @@ void* ejecutar_servidor(void *arg){
                     resultado = 1;
 
                 mensaje_respuesta = crear_mensaje(CONSULTA_ARCHIVO_ABIERTO, mensaje->socket, 0);
-                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                agregar_int(mensaje_respuesta, resultado);
                 enviar_mensaje(mensaje_respuesta);
                 free(path);
                 break;
@@ -227,7 +225,7 @@ void* ejecutar_servidor(void *arg){
 
                     identificador_cpu = list_size(conexiones_activas.lista_cpus)-1;
                     mensaje_respuesta = crear_mensaje(IDENTIFICADOR_CPU, mensaje->socket, 0);
-                    agregar_dato(mensaje_respuesta, sizeof(int), &identificador_cpu);
+                    agregar_int(mensaje_respuesta, identificador_cpu);
                     enviar_mensaje(mensaje_respuesta);
                 }
 
@@ -272,6 +270,5 @@ void* ejecutar_servidor(void *arg){
 
         destruir_mensaje(mensaje);
     }
-    dictionary_destroy(archivos_abiertos);
     return NULL;
 }

@@ -59,7 +59,12 @@ typedef struct {
 	int id_proceso;
 	t_list* tabla_segmentos;
 	int cantidad_segmentos_codigo;
+	t_list* tabla_archivos;
 }NodoProceso;
+typedef struct {
+	int seg_inicial;
+	int seg_final;
+}NodoArchivo;
 typedef struct {
 	t_list* tabla_paginas;
 }NodoSegmento;

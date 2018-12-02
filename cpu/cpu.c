@@ -27,20 +27,19 @@ void cerrar_cpu(t_log* logger, cfg_cpu* configuracion, ConexionesActivas conexio
 }
 
 int main(int argc, char **argv) {
-	int conexiones_permitidas[cantidad_tipos_procesos] = {0};
+	int conexiones_permitidas[cantidad_tipos_procesos] = {0}, identificador;
     t_accion_post_instruccion resultado_instruccion;
 	DTB datos_dtb;
 	MensajeDinamico *peticion_abrir_script, *mensaje, *mensaje_respuesta;
-    char* linea = "";
-
-    remove("cpu.log");
+    char* linea = "", nombre_cpu[17], string_identificador[12], nombre_log_cpu[20];
 
     // TODO nombre CPU + numero de CPU
 
     validar_parametros(argc);
     cfg_cpu* configuracion = asignar_config(argv[1],cpu);
 
-    logger = log_create("cpu.log", "cpu", configuracion->logger_consola, log_level_from_string(configuracion->logger_level));
+    remove("cpu.log");
+    logger = log_create("cpu.log", "CPU-?", (bool)configuracion->logger_consola, log_level_from_string(configuracion->logger_level));
     conexiones_activas = inicializar_conexiones_activas(logger, MY_IP,0, conexiones_permitidas, t_cpu);
 
 	socket_fm9 = conectar_como_cliente(conexiones_activas, configuracion->ip_fm9, configuracion->puerto_fm9, t_fm9);
@@ -166,6 +165,24 @@ int main(int argc, char **argv) {
                 agregar_dato(mensaje_respuesta, sizeof(int), &cantidad_instrucciones_ejecutadas);
                 agregar_dato(mensaje_respuesta, sizeof(int), &cantidad_instrucciones_dma);
                 enviar_mensaje(mensaje_respuesta);
+	            break;
+
+	        case IDENTIFICADOR_CPU:
+	            recibir_int(&identificador, mensaje);
+                log_destroy(logger);
+                strcpy(nombre_cpu, "CPU-");
+                sprintf(string_identificador, "%d", identificador);
+                strcat(nombre_cpu, string_identificador);
+                strcpy(nombre_log_cpu, "cpu");
+                strcat(nombre_log_cpu, string_identificador);
+                strcat(nombre_log_cpu, ".log");
+
+                remove(nombre_log_cpu);
+
+                logger = log_create(nombre_log_cpu, nombre_cpu, (bool)configuracion->logger_consola,
+                        log_level_from_string(configuracion->logger_level));
+                conexiones_activas.logger = logger;
+                log_info(logger, "Identificador recibido de SAFA (%d)", identificador);
 	            break;
 
             case CONEXION_CERRADA:

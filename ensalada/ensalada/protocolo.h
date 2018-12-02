@@ -51,7 +51,8 @@ typedef enum {
     DESALOJAR_SCRIPT,
     SOLICITUD_RECURSO,
     LIBERAR_RECURSO,
-    CONSULTA_ARCHIVO_ABIERTO
+    CONSULTA_ARCHIVO_ABIERTO,
+    IDENTIFICADOR_CPU
 }protocolo_header;
 
 typedef enum {

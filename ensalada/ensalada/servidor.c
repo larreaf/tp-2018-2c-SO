@@ -195,6 +195,7 @@ MensajeDinamico* esperar_mensajes(ConexionesActivas servidor){
                                         cpu = malloc(sizeof(CPU));
                                         cpu->socket = cliente_seleccionado->socket;
                                         cpu->cantidad_procesos_asignados = 0;
+                                        cpu->id = list_size(servidor.lista_cpus);
                                         list_add(servidor.lista_cpus, cpu);
 
                                     }else{

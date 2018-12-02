@@ -822,12 +822,17 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     	int numero_pagina_bruto = (numero_linea) / memoria->storage->cant_lineas_pagina;
     	int numero_pagina_neto = 0;
     	int numero_linea_neto = (numero_linea) % memoria->storage->cant_lineas_pagina;
+    	int linea_marco = 0;
     	int i = 0;
     	for (i = 0; i < list_size(proceso->tabla_segmentos) && numero_pagina_bruto > (memoria->tamanio_maximo_segmento*(i+1)) ; i++){}
     	segmento = list_get(proceso->tabla_segmentos, i);
     	numero_pagina_neto = numero_pagina_bruto - memoria->tamanio_maximo_segmento*i;
     	pagina = list_get(segmento->tabla_paginas, numero_pagina_neto);
-    	string_append(&linea, leer_linea_storage(memoria->storage, obtener_numero_linea_pagina(pagina->numero_marco,memoria->storage->cant_lineas_pagina), numero_linea_neto));
+    	linea_marco = obtener_numero_linea_pagina(pagina->numero_marco,memoria->storage->cant_lineas_pagina);
+    	char* linea_storage = leer_linea_storage(memoria->storage, linea_marco, numero_linea_neto);
+    	log_info(memoria->logger,"Leyendo línea #%d en página #%d en segmento #%d (direccion: %d) para DTB #%d",numero_linea_neto, numero_pagina_neto, i, linea_marco+numero_linea_neto, id_dtb);
+    	string_append(&linea, linea_storage );
+    	free(linea_storage);
     	return linea;
     }
     return "";

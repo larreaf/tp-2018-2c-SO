@@ -219,12 +219,15 @@ int main(int argc, char **argv) {
             case BORRAR_ARCHIVO:
                 data_operacion = crear_data_mdj_operacion(mensaje_recibido);
                 log_info(logger, "Borrando archivo %s...", data_operacion->path);
-                int borrar = borrar_archivo(data_operacion);
-                (borrar == 0)?
-                log_info(logger,"Archivo %s Borrado", data_operacion->path) :
-                log_error(logger,"Error al intentar borrar el archivo %s, data_operacion->path");
+                bool existe_archivo = validar_archivo(data_operacion);
+                if(existe_archivo){
+                	borrar_archivo(data_operacion);
+                	log_info(logger,"Archivo %s Borrado", data_operacion->path);
+                }else{
+                	log_error(logger,"Error al intentar borrar el archivo %s", data_operacion->path);
+                }
                 mensaje_respuesta = crear_mensaje(BORRAR_ARCHIVO,mensaje_recibido->socket, mensaje_recibido->particionado);
-                agregar_int(mensaje_respuesta, borrar);
+                agregar_int(mensaje_respuesta, existe_archivo);
                 log_info(logger,"Enviando respuesta...");
                 enviar_mensaje(mensaje_respuesta);
                 log_info(logger,"Respuesta enviada...");

@@ -148,8 +148,9 @@ bool validar_archivo(t_mdj_interface* mdj_interface){
 
 	if(mdj_interface->path[0] == '/'){
 		mdj_interface->path[0] = ' ';
-		string_trim(&mdj_interface->path);
+
 	}
+	string_trim(&mdj_interface->path);
 
 	string_append_with_format(&path_absoluto,"%s%s",path_fifa_archivos,mdj_interface->path);
 	FILE* ptr = fopen(path_absoluto, "r+");

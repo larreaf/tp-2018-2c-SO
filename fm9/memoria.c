@@ -1311,6 +1311,37 @@ void dump(Memoria* memoria, int id_dtb){
             }
         }
     }
+    else if(memoria->modo == SPA){
+    	bool _is_the_one(NodoProceso* proceso){
+			if(proceso->id_proceso == id_dtb){
+				return true;
+			}else{
+				return false;
+			}
+		}
+    	NodoProceso* proceso = list_find(memoria->tabla_procesos, (void*) _is_the_one);
+    	if(proceso == NULL){
+    		printf("No se encuentran datos del DTB %d en memoria\n", id_dtb);
+    	} else {
+    		cantidad_segmentos = list_size(proceso->tabla_segmentos);
+    		printf("Cantidad de segmentos: %d\n", cantidad_segmentos);
+    		for (int i = 0; i < cantidad_segmentos; i++) {
+				NodoSegmento* seg = list_get(proceso->tabla_segmentos, i);
+				int cantidad_paginas = list_size(seg->tabla_paginas);
+				printf("Contenido del segmento #%d (%d paginas):\n", i, cantidad_paginas);
+				for (int j = 0; j < cantidad_paginas; j++) {
+					NodoPagina* pagina = list_get(seg->tabla_paginas, j);
+					int tamanio_pagina = memoria->storage->cant_lineas_pagina;
+					int linea_marco = obtener_numero_linea_pagina(pagina->numero_marco, tamanio_pagina);
+					for(int k = 0; k < tamanio_pagina ; k++){
+						char* linea_leida = leer_linea_storage(memoria->storage, linea_marco, k);
+						printf("%s\n", linea_leida );
+						free(linea_leida);
+					}// dentro de pagina
+				}// dentro de segmento
+			}// dentro del proceso
+    	}//Existe el proceso
+    }// SPA
 
     printf("------------------------\n");
     printf("------DUMP STORAGE------\n");

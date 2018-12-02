@@ -110,7 +110,9 @@ void destruir_memoria(Memoria* memoria){
  */
 NodoListaTablasSegmentos* encontrar_tabla_segmentos_por_id_dtb(t_list* lista, int id_dtb){
 
-    int _is_the_one(NodoListaTablasSegmentos*nodo) {
+    int _is_the_one(void* arg) {
+    	NodoListaTablasSegmentos* nodo = (NodoListaTablasSegmentos*)arg;
+
         return (nodo->id_dtb == id_dtb);
     }
 
@@ -432,7 +434,8 @@ int buscar_marco_tabla_paginas_invertida(Memoria* memoria,int posicion_marco, in
 	NodoTablaPaginasInvertida* nodo_filtrado;
 	nodo_filtrado = malloc(sizeof(NodoTablaPaginasInvertida));
 
-	int _is_the_one(NodoTablaPaginasInvertida*nodo) {
+	int _is_the_one(void* arg) {
+		NodoTablaPaginasInvertida* nodo = (NodoTablaPaginasInvertida*)arg;
 	   return (nodo->id_tabla == posicion_marco) && (nodo->id_dtb == id_dtb);
 	}
 
@@ -718,7 +721,8 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 		return direccion_logica;
 	}
     else if(memoria->modo == SPA){
-    	bool _is_the_one(NodoProceso* proceso){
+    	bool _is_the_one(void* arg){
+    		NodoProceso* proceso = (NodoProceso*)arg;
 			if(proceso->id_proceso == id_dtb){
 				return true;
 			}else{
@@ -812,7 +816,8 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
 		}
 	}
     else if(memoria->modo == SPA){
-    	bool _is_the_one(NodoProceso* proceso){
+    	bool _is_the_one(void* arg){
+    		NodoProceso* proceso = (NodoProceso*)arg;
 			if(proceso->id_proceso == id_dtb){
 				return true;
 			}else{
@@ -883,7 +888,8 @@ int modificar_linea_archivo(Memoria* memoria, int id_dtb, int direccion, char* d
 		}
 	}
     else if(memoria->modo == SPA){
-    	bool _is_the_one(NodoProceso* proceso){
+    	bool _is_the_one(void* arg){
+    		NodoProceso* proceso = (NodoProceso*)arg;
 			if(proceso->id_proceso == id_dtb){
 				return true;
 			}else{
@@ -1002,7 +1008,8 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 		}
     }
     else if(memoria->modo == SPA){
-    	bool _is_the_one(NodoProceso* proceso){
+    	bool _is_the_one(void* arg){
+    		NodoProceso* proceso = (NodoProceso*)arg;
 			if(proceso->id_proceso == id_dtb){
 				return true;
 			}else{
@@ -1015,7 +1022,8 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 
 		int numero_segmento = direccion / (memoria->tamanio_maximo_segmento * memoria->storage->cant_lineas_pagina);
 		//int offset_segmento = direccion % memoria->tamanio_maximo_segmento;
-		bool _archivo_is_the_one(NodoArchivo* un_file_cualquiera){
+		bool _archivo_is_the_one(void* arg){
+			NodoArchivo* un_file_cualquiera = (NodoArchivo*)arg;
 			if(un_file_cualquiera->seg_inicial == (numero_segmento)){
 			return true;
 		}else{
@@ -1114,7 +1122,8 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
 
     }
     else if(memoria->modo == SPA){
-		bool _is_the_one(NodoProceso* proceso){
+		bool _is_the_one(void* arg){
+			NodoProceso* proceso = (NodoProceso*)arg;
 			if(proceso->id_proceso == id_dtb){
 				return true;
 			}else{
@@ -1132,7 +1141,8 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
 		int cantidad_paginas = 0;
 
 		int numero_segmento = direccion / memoria->tamanio_maximo_segmento - 1;
-		bool _archivo_is_the_one(NodoArchivo* un_file_cualquiera){
+		bool _archivo_is_the_one(void* arg){
+			NodoArchivo* un_file_cualquiera = (NodoArchivo*)arg;
 			if(un_file_cualquiera->seg_inicial == numero_segmento){
 				return true;
 			}else{
@@ -1231,14 +1241,16 @@ int desalojar_script(Memoria* memoria, int id_dtb){
         return 0;
     }
     else if(memoria->modo == SPA){
-		bool _is_the_one(NodoProceso* proceso){
+		bool _is_the_one(void* arg){
+			NodoProceso* proceso = (NodoProceso*)arg;
 			if(proceso->id_proceso == id_dtb){
 				return true;
 			}else{
 				return false;
 			}
 		}
-		void _destuir_proceso_aux(NodoProceso* _un_proceso){
+		void _destuir_proceso_aux(void* arg){
+			NodoProceso* _un_proceso = (NodoProceso*)arg;
 			_destruir_proceso(memoria, _un_proceso);
 			return;
 		}
@@ -1288,7 +1300,9 @@ void dump(Memoria* memoria, int id_dtb){
         }
     }
     else if(memoria->modo == SPA){
-    	bool _is_the_one(NodoProceso* proceso){
+    	bool _is_the_one(void* arg){
+    		NodoProceso* proceso = (NodoProceso*)arg;
+
 			if(proceso->id_proceso == id_dtb){
 				return true;
 			}else{
@@ -1356,7 +1370,8 @@ int encontrar_marco_libre(MemoriaReal* storage){
 
 }
 void escribir_archivo_seg_pag(Memoria* memoria,int pid,int seg_init, bool inicializar_archivo, char* buffer){
-	bool _is_the_one(NodoProceso* proceso){
+	bool _is_the_one(void* arg){
+		NodoProceso* proceso = (NodoProceso*)arg;
 		if(proceso->id_proceso == pid){
 			return true;
 		}else{
@@ -1498,7 +1513,8 @@ int crear_segmento_y_agregarlo_al_proceso(NodoProceso* un_proceso,Memoria* memor
 
 
 void _destruir_proceso (Memoria* memoria,NodoProceso* un_proceso){
-	void _destruir_segmento(NodoSegmento* un_seg){
+	void _destruir_segmento(void* arg){
+		NodoSegmento* un_seg = (NodoSegmento*)arg;
 		list_destroy_and_destroy_elements(un_seg->tabla_paginas, free);
 		free(un_seg);
 	}

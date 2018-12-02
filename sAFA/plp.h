@@ -32,7 +32,8 @@ void pasar_new_a_ready(PLP*, int);
 void imprimir_estado_plp(PLP*);
 DTB* obtener_dtb_de_new(PLP*, int, bool);
 char* codigo_error_a_string(int);
-void abortar_dtb(PLP*, int, int);
+void abortar_dtb(PLP*, int, int, t_dictionary*);
+void abortar_dtb_seleccionado(PLP*, DTB*, int, t_dictionary*);
 void* ejecutar_plp(void*);
 
 #endif //SAFA_PLP_H

@@ -8,11 +8,9 @@ extern PCP* pcp;
 extern t_log* logger;
 extern bool correr;
 
-void abortar_dtb(PLP* plp, int id_dtb, int codigo_error){
+void abortar_dtb(PLP* plp, int id_dtb, int codigo_error, t_dictionary* archivos_abiertos){
     DTB* dtb_seleccionado;
     codigo_error = abs(codigo_error);
-
-    char* string_error = codigo_error_a_string(codigo_error);
 
     dtb_seleccionado = obtener_dtb_de_new(plp, id_dtb, true);
 
@@ -25,9 +23,22 @@ void abortar_dtb(PLP* plp, int id_dtb, int codigo_error){
         log_error(pcp->logger, "Falla al abortar DTB %d", id_dtb);
         return;
     }
+    abortar_dtb_seleccionado(plp, dtb_seleccionado, codigo_error, archivos_abiertos);
+}
 
-    log_warning(plp->logger, "DTB %d (Path: %s) produjo un error, abortando (%d: %s)", id_dtb,
+void abortar_dtb_seleccionado(PLP* plp, DTB* dtb_seleccionado, int codigo_error, t_dictionary* archivos_abiertos){
+    char* string_error = codigo_error_a_string(codigo_error);
+    ArchivoAbierto* archivo;
+
+    log_warning(plp->logger, "DTB %d (Path: %s) produjo un error, abortando (%d: %s)", dtb_seleccionado->id,
                 dtb_seleccionado->path_script, codigo_error, string_error);
+
+    for(int i = 0; i<list_size(dtb_seleccionado->archivos_abiertos); i++){
+        archivo = list_get(dtb_seleccionado->archivos_abiertos, i);
+        dictionary_remove(archivos_abiertos, archivo->path);
+    }
+
+    printf("El DTB %d fue abortado por error, revisar log para mas informacion\n", dtb_seleccionado->id);
     destruir_dtb(dtb_seleccionado);
     sem_post(&plp->semaforo_multiprogramacion);
     free(string_error);
@@ -253,16 +264,16 @@ void* ejecutar_plp(void* arg){
         if(errno == EINTR)
             break;
 
+        pthread_mutex_lock(&(plp->mutex_new));
+        dtb_seleccionado = list_get(plp->lista_new, list_size(plp->lista_new)-1);
+        pthread_mutex_unlock(&(plp->mutex_new));
+
         pthread_mutex_lock(&plp->mutex_pausa);
 
         log_info(plp->logger, "Esperando semaforo multiprogramacion...");
         sem_wait(&(plp->semaforo_multiprogramacion));
         if(errno == EINTR)
             break;
-
-        pthread_mutex_lock(&(plp->mutex_new));
-        dtb_seleccionado = list_get(plp->lista_new, list_size(plp->lista_new)-1);
-        pthread_mutex_unlock(&(plp->mutex_new));
 
         desbloquear_dtb_dummy(pcp, dtb_seleccionado->id, dtb_seleccionado->path_script);
 

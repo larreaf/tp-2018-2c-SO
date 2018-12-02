@@ -76,7 +76,7 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_
     else if(modo == TPI)
         memoria->logger = log_create("fm9.log", "MemoriaPaginacionInvertida", true, log_level_from_string("info"));
 
-    log_info(memoria->logger, "Memoria inicializada correctamente");ejecutar scripts/complejo.escriptorio
+    log_info(memoria->logger, "Memoria inicializada correctamente");
     return memoria;
 }
 

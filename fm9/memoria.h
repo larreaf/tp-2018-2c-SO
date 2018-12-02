@@ -83,7 +83,7 @@ void destruir_tabla_segmentos(void*);
 Memoria* inicializar_memoria(MemoriaReal*, int, int);
 void destruir_memoria(Memoria*);
 void escribir_linea(MemoriaReal*, char*, int, char);
-void escribir_archivo_en_storage(MemoriaReal*, char*, int);
+void escribir_archivo_en_storage(MemoriaReal*, char*, int, bool);
 void modificar_linea_storage(MemoriaReal*, int, int, char*);
 int encontrar_espacio_para_segmento(MemoriaReal*, int);
 int obtener_cantidad_paginas_necesarias(MemoriaReal*, int);

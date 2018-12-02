@@ -167,16 +167,13 @@ void modificar_linea_storage(MemoriaReal* storage, int base, int offset, char* d
  * @return cantidad de \n
  */
 int contar_lineas(char* string){
-    int i = 0;
-    char* copia_string = string_new();
+	int count = 0, len = strlen(string);
 
-    string_append(&copia_string, string);
+	for(int i = 0; i<len; i++)
+		if(string[i] == '\n')
+			count++;
 
-    while(strsep(&copia_string, "\n") != NULL)
-        i++;
-
-    free(copia_string);
-    return i;
+	return count;
 }
 
 /*!
@@ -185,15 +182,25 @@ int contar_lineas(char* string){
  * @param script string con el archivo
  * @param base numero de linea base
  */
-void escribir_archivo_en_storage(MemoriaReal *storage, char *script, int base){
-    int i = 0;
+void escribir_archivo_en_storage(MemoriaReal *storage, char *script, int base, bool es_script){
+    int i = 0, lineas = contar_lineas(script);
     char* word;
 
     while((word=strsep(&script, "\n")) != NULL) {
         escribir_linea(storage, word, base+i, 0);
         log_info(storage->logger, "Linea escrita en posicion %d: %s", base+i, word);
         i++;
+        if(!strcmp(word, "") && es_script)
+            break;
     }
+
+    /*
+    for(int i = 0; i<lineas; i++){
+		word=strsep(&script, "\n");
+		escribir_linea(storage, word, base+i, 0);
+		log_info(storage->logger, "Linea escrita en posicion %d: %s", base+i, word);
+		i++;
+    }*/
 }
 
 /*!
@@ -475,7 +482,7 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
             return -10002;
 
         log_info(memoria->logger, "Escribiendo segmento 0 a partir de linea %d", posicion_segmento);
-        escribir_archivo_en_storage(memoria->storage, string, posicion_segmento);
+        escribir_archivo_en_storage(memoria->storage, string, posicion_segmento, true);
 
         log_info(memoria->logger, "Guardando segmento en tabla de segmentos del DTB %d", id_dtb);
         segmento_script->id_segmento = nodo_lista_tablas_segmentos->contador_segmentos++;
@@ -530,7 +537,7 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
     				contador ++;
     			}
 
-    			escribir_archivo_en_storage(memoria->storage, particion_string, posicion_definitiva_marco);
+    			escribir_archivo_en_storage(memoria->storage, particion_string, posicion_definitiva_marco, true);
 
     			log_info(memoria->logger, "Guardando pagina en tabla de paginas invertida");
 
@@ -624,7 +631,7 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 
         log_info(memoria->logger, "Escribiendo segmento %d a partir de linea %d",
                 tabla_segmentos_proceso->contador_segmentos, posicion_segmento);
-        escribir_archivo_en_storage(memoria->storage, string, posicion_segmento);
+        escribir_archivo_en_storage(memoria->storage, string, posicion_segmento, false);
 
         log_info(memoria->logger, "Guardando segmento en tabla de segmentos del DTB %d", id_dtb);
         segmento_script->id_segmento = tabla_segmentos_proceso->contador_segmentos++;
@@ -691,7 +698,7 @@ int cargar_archivo(Memoria* memoria, int id_dtb, char* string){
 				contador ++;
 			}
 
-			escribir_archivo_en_storage(memoria->storage, particion_string, posicion_definitiva_marco);
+			escribir_archivo_en_storage(memoria->storage, particion_string, posicion_definitiva_marco, false);
 
 			log_info(memoria->logger, "Guardando pagina %d en tabla de paginas invertida", pagina_base + pagina);
 

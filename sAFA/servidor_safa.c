@@ -167,7 +167,7 @@ void* ejecutar_servidor(void *arg){
                     log_info(logger, "DTB %d intento solicitar recurso '%s' no disponible", id_dtb, nombre_recurso);
 
                 mensaje_respuesta = crear_mensaje(SOLICITUD_RECURSO, mensaje->socket, 0);
-                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                agregar_int(mensaje_respuesta, resultado);
                 enviar_mensaje(mensaje_respuesta);
                 free(nombre_recurso);
                 break;
@@ -205,7 +205,7 @@ void* ejecutar_servidor(void *arg){
                     resultado = 1;
 
                 mensaje_respuesta = crear_mensaje(CONSULTA_ARCHIVO_ABIERTO, mensaje->socket, 0);
-                agregar_dato(mensaje_respuesta, sizeof(int), &resultado);
+                agregar_int(mensaje_respuesta, resultado);
                 enviar_mensaje(mensaje_respuesta);
                 free(path);
                 break;
@@ -225,7 +225,7 @@ void* ejecutar_servidor(void *arg){
 
                     identificador_cpu = list_size(conexiones_activas.lista_cpus)-1;
                     mensaje_respuesta = crear_mensaje(IDENTIFICADOR_CPU, mensaje->socket, 0);
-                    agregar_dato(mensaje_respuesta, sizeof(int), &identificador_cpu);
+                    agregar_int(mensaje_respuesta, identificador_cpu);
                     enviar_mensaje(mensaje_respuesta);
                 }
 

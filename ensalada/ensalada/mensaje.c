@@ -120,6 +120,10 @@ void agregar_string(MensajeDinamico* mensaje, char* str){
     agregar_dato(mensaje, strlen(str)+1, str);
 }
 
+void agregar_int(MensajeDinamico* mensaje, int entero){
+    agregar_dato(mensaje, sizeof(int), &entero);
+}
+
 /*!
  * Envia el mensaje al socket elegido cuando se creo y libera memoria
  * La estructura del mensaje sera siempre: int header, int longitud dato, puntero a dato,

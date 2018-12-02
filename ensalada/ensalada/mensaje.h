@@ -47,6 +47,7 @@ void agregar_dato(MensajeDinamico*, int, void*);
 void recibir_int(int*, MensajeDinamico*);
 void recibir_string(char**, MensajeDinamico*);
 void agregar_string(MensajeDinamico*, char*);
+void agregar_int(MensajeDinamico*, int);
 DatoParticionado particionar_dato(void*, int, int);
 int enviar_mensaje(MensajeDinamico*);
 MensajeDinamico* recibir_mensaje(int);

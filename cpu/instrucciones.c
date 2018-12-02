@@ -37,7 +37,7 @@ int in_abrir(DTB* dtb, char* path){
         return 10003;
 
     peticion_abrir = crear_mensaje(ABRIR_ARCHIVO_CPU_DIEGO, socket_elDiego, 0);
-    agregar_dato(peticion_abrir, sizeof(int), &dtb->id);
+    agregar_int(peticion_abrir, dtb->id);
     agregar_string(peticion_abrir, path);
     enviar_mensaje(peticion_abrir);
     // TODO verificar error en enviar_mensaje
@@ -77,8 +77,8 @@ int in_close(DTB* dtb, char* path){
     enviar_mensaje(notificacion_safa);
 
     peticion_cerrar = crear_mensaje(CERRAR_ARCHIVO_CPU_FM9, socket_fm9, 0);
-    agregar_dato(peticion_cerrar, sizeof(int), &dtb->id);
-    agregar_dato(peticion_cerrar, sizeof(int), &nodo_aux->direccion_memoria);
+    agregar_int(peticion_cerrar, dtb->id);
+    agregar_int(peticion_cerrar, nodo_aux->direccion_memoria);
     enviar_mensaje(peticion_cerrar);
     // TODO verificar error en enviar_mensaje
 
@@ -111,8 +111,8 @@ int in_flush(DTB* dtb, char* path){
         return error;
 
     peticion_flush = crear_mensaje(FLUSH_ARCHIVO, socket_elDiego, 0);
-    agregar_dato(peticion_flush, sizeof(int), &dtb->id);
-    agregar_dato(peticion_flush, sizeof(int), &nodo_aux->direccion_memoria);
+    agregar_int(peticion_flush, dtb->id);
+    agregar_int(peticion_flush, nodo_aux->direccion_memoria);
     agregar_string(peticion_flush, nodo_aux->path);
     enviar_mensaje(peticion_flush);
 
@@ -130,9 +130,9 @@ int in_crear(int dtb_id, char* path, int cant_lineas){
     MensajeDinamico* peticion_crear;
 
     peticion_crear = crear_mensaje(CREAR_ARCHIVO_CPU_DIEGO, socket_elDiego, 0);
-    agregar_dato(peticion_crear, sizeof(int), &dtb_id);
+    agregar_int(peticion_crear, dtb_id);
     agregar_string(peticion_crear, path);
-    agregar_dato(peticion_crear, sizeof(int), &cant_lineas);
+    agregar_int(peticion_crear, cant_lineas);
     enviar_mensaje(peticion_crear);
     // TODO verificar error en enviar_mensaje
 
@@ -149,7 +149,7 @@ int in_borrar(int dtb_id, char* path){
     MensajeDinamico* peticion_borrar;
 
     peticion_borrar = crear_mensaje(BORRAR_ARCHIVO_CPU_DIEGO, socket_elDiego, 0);
-    agregar_dato(peticion_borrar, sizeof(int), &dtb_id);
+    agregar_int(peticion_borrar, dtb_id);
     agregar_string(peticion_borrar, path);
     enviar_mensaje(peticion_borrar);
     // TODO verificar error en enviar_mensaje
@@ -185,8 +185,8 @@ int in_asignar(DTB* dtb, char* path, int linea, char* datos){
     direccion = (nodo_aux->direccion_memoria)+(linea-1);
 
     peticion_asignar = crear_mensaje(ASIGNAR_ARCHIVO_CPU_FM9, socket_fm9, 0);
-    agregar_dato(peticion_asignar, sizeof(int), &dtb->id);
-    agregar_dato(peticion_asignar, sizeof(int), &direccion);
+    agregar_int(peticion_asignar, dtb->id);
+    agregar_int(peticion_asignar, direccion);
     agregar_string(peticion_asignar, datos);
     enviar_mensaje(peticion_asignar);
 
@@ -207,7 +207,7 @@ int in_wait(DTB* dtb, char* nombre_recurso){
     int resultado;
 
     peticion_wait = crear_mensaje(SOLICITUD_RECURSO, socket_safa, 0);
-    agregar_dato(peticion_wait, sizeof(int), &dtb->id);
+    agregar_int(peticion_wait, dtb->id);
     agregar_string(peticion_wait, nombre_recurso);
     enviar_mensaje(peticion_wait);
 

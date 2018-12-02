@@ -39,21 +39,21 @@ MensajeDinamico* generar_mensaje_dtb(int socket_cpu, DTB *dtb){
     int tamanio_lista_archivos_abiertos = list_size(dtb->archivos_abiertos);
     ArchivoAbierto* archivo_abierto_seleccionado;
 
-    agregar_dato(mensaje, sizeof(int), &(dtb->id));
-    agregar_dato(mensaje, sizeof(int), &(dtb->program_counter));
-    agregar_dato(mensaje, sizeof(int), &(dtb->inicializado));
-    agregar_dato(mensaje, sizeof(int), &(dtb->status));
-    agregar_dato(mensaje, sizeof(int), &(dtb->quantum));
+    agregar_int(mensaje, dtb->id);
+    agregar_int(mensaje, dtb->program_counter);
+    agregar_int(mensaje, dtb->inicializado);
+    agregar_int(mensaje, dtb->status);
+    agregar_int(mensaje, dtb->quantum);
     agregar_string(mensaje, dtb->path_script);
 
-    agregar_dato(mensaje, sizeof(int), &tamanio_lista_archivos_abiertos);
+    agregar_int(mensaje, tamanio_lista_archivos_abiertos);
 
     for(int i = 0; i<tamanio_lista_archivos_abiertos; i++){
         archivo_abierto_seleccionado = list_get(dtb->archivos_abiertos, i);
 
         agregar_string(mensaje, archivo_abierto_seleccionado->path);
-        agregar_dato(mensaje, sizeof(int), &(archivo_abierto_seleccionado->direccion_memoria));
-        agregar_dato(mensaje, sizeof(int), &(archivo_abierto_seleccionado->equipo_grande));
+        agregar_int(mensaje, archivo_abierto_seleccionado->direccion_memoria);
+        agregar_int(mensaje, archivo_abierto_seleccionado->equipo_grande);
     }
 
     return mensaje;

@@ -159,7 +159,7 @@ void* ejecutar_servidor(void *arg){
                         free(copia_id_dtb);
                     }else {
                         resultado = 0;
-                        queue_push(recurso_seleccionado->cola, &copia_id_dtb);
+                        queue_push(recurso_seleccionado->cola, copia_id_dtb);
                     }
                 }
                 if(resultado)

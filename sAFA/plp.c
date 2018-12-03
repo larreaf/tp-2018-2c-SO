@@ -202,83 +202,83 @@ char* codigo_error_a_string(int codigo_error){
 
     switch(codigo_error){
         case -1:
-            string_append(&string_error, "Cantidad de argumentos erroneos en una linea (detalle en cpu.log)\n");
+            string_append(&string_error, "Cantidad de argumentos erroneos en una linea (detalle en cpu.log)");
             break;
 
         case -2:
-            string_append(&string_error, "Instruccion no reconocida (detalle en cpu.log)\n");
+            string_append(&string_error, "Instruccion no reconocida (detalle en cpu.log)");
             break;
 
         case -3:
-            string_append(&string_error, "Flag inicializado de DTB invalida\n");
+            string_append(&string_error, "Flag inicializado de DTB invalida");
             break;
 
         case -4:
-            string_append(&string_error, "Un mensaje de comunicacion de una instruccion de CPU no fue enviado correctamente\n");
+            string_append(&string_error, "Un mensaje de comunicacion de una instruccion de CPU no fue enviado correctamente");
             break;
 
         case 10001:
-            string_append(&string_error, "Path inexistente en instruccion abrir\n");
+            string_append(&string_error, "Path inexistente en instruccion abrir");
             break;
 
         case 10002:
-            string_append(&string_error, "Espacio insuficiente en FM9 para instruccion abrir\n");
+            string_append(&string_error, "Espacio insuficiente en FM9 para instruccion abrir");
             break;
 
         case 10003:
-            string_append(&string_error, "Se intento abrir un archivo ya abierto\n");
+            string_append(&string_error, "Se intento abrir un archivo ya abierto");
             break;
 
         case 20001:
-            string_append(&string_error, "El archivo no se encuentra abierto para instruccion asignar\n");
+            string_append(&string_error, "El archivo no se encuentra abierto para instruccion asignar");
             break;
 
         case 20002:
-            string_append(&string_error, "Fallo de segmento/memoria en instruccion asignar\n");
+            string_append(&string_error, "Fallo de segmento/memoria en instruccion asignar");
             break;
 
         case 20003:
-            string_append(&string_error, "Espacio insuficiente para instruccion asignar\n");
+            string_append(&string_error, "Espacio insuficiente para instruccion asignar");
             break;
 
         case 30001:
-            string_append(&string_error, "El archivo no se encuentra abierto para instruccion flush\n");
+            string_append(&string_error, "El archivo no se encuentra abierto para instruccion flush");
             break;
 
         case 30002:
-            string_append(&string_error, "Fallo de segmento/memoria para instruccion flush\n");
+            string_append(&string_error, "Fallo de segmento/memoria para instruccion flush");
             break;
 
         case 30003:
-            string_append(&string_error, "Espacio insuficiente en MDJ para instruccion flush\n");
+            string_append(&string_error, "Espacio insuficiente en MDJ para instruccion flush");
             break;
 
         case 30004:
-            string_append(&string_error, "El archivo no existe en MDJ para instruccion flush\n");
+            string_append(&string_error, "El archivo no existe en MDJ para instruccion flush");
             break;
 
         case 40001:
-            string_append(&string_error, "El archivo no se encuentra abierto para instruccion close\n");
+            string_append(&string_error, "El archivo no se encuentra abierto para instruccion close");
             break;
 
         case 40002:
-            string_append(&string_error, "Fallo de segmento/memoria para instruccion close\n");
+            string_append(&string_error, "Fallo de segmento/memoria para instruccion close");
             break;
 
         case 50001:
-            string_append(&string_error, "Archivo ya existente para instruccion crear\n");
+            string_append(&string_error, "Archivo ya existente para instruccion crear");
             break;
 
         case 50002:
-            string_append(&string_error, "Espacio insuficiente en MDJ para instruccion crear\n");
+            string_append(&string_error, "Espacio insuficiente en MDJ para instruccion crear");
             break;
 
         case 60001:
-            string_append(&string_error, "Archivo no existe para instruccion borrar\n");
+            string_append(&string_error, "Archivo no existe para instruccion borrar");
             break;
 
         default:
-            string_append(&string_error, "Codigo de error no reconocido\n");
+            string_append(&string_error, "Codigo de error no reconocido");
             break;
     }
     return string_error;

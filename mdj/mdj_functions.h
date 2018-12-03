@@ -110,5 +110,18 @@ void bitmap_clean();
  */
 char* get_bitmap_to_string();
 
+/*
+ * @NAME:	asignar_bloques
+ * @DESC:	genera un string con los bloques que tendrá el archivo y colocan como usados en el bitmap
+ * @RET:	int de la cantidad de bytes bruta de los bloques
+ */
+char* asignar_bloques(int cantidad_de_bloques);
+
+/*
+ * @NAME:	obtener_un_nuevo_bloque
+ * @DESC:	devuelve un bloque para agregar al archivo y se coloca como usado en el bitmap
+ * @RET:	int de la cantidad de bytes bruta de los bloques
+ */
+int obtener_un_nuevo_bloque();
 
 #endif /* MDJ_FUNCTIONS_C_ */

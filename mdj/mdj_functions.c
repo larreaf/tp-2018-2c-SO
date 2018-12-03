@@ -397,6 +397,12 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 	t_config* toGet_cfg = config_create(path_absoluto);
 	int tamanio_archivo = config_get_int_value(toGet_cfg,"TAMANIO");
 	char** bloques = obtener_bloques(toGet_cfg);
+	int cantidad_bloques = 0;
+
+	while(bloques[cantidad_bloques] != NULL){
+		cantidad_bloques++;
+	}
+
 	char* path_bloque;
 
 	if(mdj_interface->size <= 0){
@@ -414,9 +420,26 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 	int index = 0;
 	int buffer_index = 0;
 	int caracter = 0;
-
+	int cantidad_bloques_necesarios = (mdj_interface->size - mdj_interface->offset)/metadata.tamanio_bloques;
+	if((mdj_interface->size - mdj_interface->offset)%metadata.tamanio_bloques > 0){
+		cantidad_bloques_necesarios++;
+	}
+	if(cantidad_bloques_necesarios > cantidad_bloques){
+		bloques = realloc(bloques,cantidad_bloques_necesarios+1); // +1 por el NULL
+		int indice = cantidad_bloques;
+		while(indice < cantidad_bloques_necesarios){
+			bloques[indice] = string_new();
+			string_append_with_format(&bloques[indice], "%d", obtener_un_nuevo_bloque());
+			indice++;
+		}
+		bloques[cantidad_bloques_necesarios] = NULL;
+	}
+	int saltos_de_linea_totales = 0;
+	index = 0;
+	/*
+	 * Contar todos los saltos de linea de todos los bloques asociados al archivo
+	 */
 	while(bloques[index]!=NULL){
-		int saltos_de_linea_bloque_totales = 0;
 		/**
 		 * Obtener path de un bloque
 		 */
@@ -432,14 +455,35 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 		 */
 		while( (caracter = fgetc(ptr_filebloque)) != EOF ){
 			if(caracter == '\n'){
-				saltos_de_linea_bloque_totales++;
+				saltos_de_linea_totales++;
 			}
 		}
 		fseek(ptr_filebloque,0,SEEK_SET);
+		fclose(ptr_filebloque);
+		index++;
+	}
+	index = 0;
+	int saltos_de_linea_buffer = 0;
+	/*
+	 * Acá empezamos a recorrer los bloques para guardar los datos
+	 */
+	while(bloques[index]!=NULL){
+
+		int caracteres_escritos = 0;
+		/**
+		 * Obtener path de un bloque
+		 */
+		path_bloque = string_new();
+		string_append_with_format(&path_bloque,"%s%s.bin",path_fifa_bloques,bloques[index]);
+		/**
+		 * Abrir bloque
+		 */
+		ptr_filebloque = fopen(path_bloque,"r+");
+		fseek(ptr_filebloque,0,SEEK_SET);
+
 		/*
 		 * Moverse al offset en bytes
 		 */
-		int saltos_de_linea_buffer = 0;
 		if( i < mdj_interface->offset ){
 			for(i = 0; i < mdj_interface->offset && (caracter = fgetc(ptr_filebloque)) != EOF ; i++){
 				if(caracter == '\n'){
@@ -447,17 +491,18 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 				}
 			}//for (apuntar al offset)
 		}
+
 		/*
 		 * Guardar bytes
 		 */
-
-		while( saltos_de_linea_buffer < saltos_de_linea_bloque_totales && (size > 0 || mdj_interface->buffer[buffer_index] != '\0')){
+		while( saltos_de_linea_buffer < saltos_de_linea_totales && caracteres_escritos < metadata.tamanio_bloques && (size > 0 || mdj_interface->buffer[buffer_index] != '\0')){
 			if(mdj_interface->buffer[buffer_index] == '\n'){
 				saltos_de_linea_buffer++;
 			}
 			fprintf(ptr_filebloque,"%c",mdj_interface->buffer[buffer_index]);
 			buffer_index++;
 			size--;
+			caracteres_escritos++;
 		}
 		/*if(mdj_interface->buffer[buffer_index] == '\n'){
 			buffer_index++;
@@ -469,6 +514,17 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 		free(path_bloque);
 		index++;
 	}//while (para recorrer bloque por bloque)
+	char* bloques_final = string_new();
+	string_append(&bloques_final,"[");
+	index = 0;
+	while(bloques[index] != NULL){
+		string_append(&bloques_final,bloques[index]);
+		if(bloques[index] != NULL && bloques[index+1]!=NULL){
+			string_append(&bloques_final,",");
+		}
+		index++;
+	}
+	string_append(&bloques_final,"]");
 	index = 0;
 	while(bloques[index]!=NULL){
 		free(bloques[index]);
@@ -481,13 +537,15 @@ int guardar_datos(t_mdj_interface* mdj_interface){
 	/*
 	 * Guardar tamaño nuevo en bytes
 	 */
-	tamanio_archivo += (mdj_interface->size - size);
+	tamanio_archivo = (mdj_interface->size - size);
 	char* tam = string_new();
 	string_append_with_format(&tam,"%d",tamanio_archivo);
 	config_set_value(toGet_cfg,"TAMANIO",tam);
+	config_set_value(toGet_cfg,"BLOQUES",bloques_final);
 	config_save(toGet_cfg);
 	free(tam);
 	config_destroy(toGet_cfg);
+	free(bloques_final);
 	/*if(lineas_obtenidas[string_length(lineas_obtenidas)-1] != '\n'){
 		string_append(&lineas_obtenidas,"\n");
 	}*/
@@ -555,4 +613,48 @@ void interface_mdj(MensajeDinamico* mensaje_dinamico){
 	}
 
 }
+
+char* asignar_bloques(int cantidad_bloques){
+	/*
+	 * Inicializar su metadata de bloques asignados
+	 */
+	char* bloques = string_new();
+	int bytes_asignados;
+	string_append(&bloques,"[");
+	int index = 0;
+
+	/*
+	 * Asignar los bloques
+	 */
+	for(index = 0; index < bitarray_get_max_bit(bitmap) && cantidad_bloques!=0 ; index++){
+		if(!bitarray_test_bit(bitmap,index)){
+			bitarray_set_bit(bitmap,index);
+			string_append_with_format(&bloques,"%d",index);
+			if(cantidad_bloques!=1 && index+1 < bitarray_get_max_bit(bitmap)){
+				string_append(&bloques,",");
+			}
+			cantidad_bloques--;
+			bytes_asignados += metadata.tamanio_bloques;
+		}
+	}
+
+	string_append(&bloques,"]");
+
+	return bloques;
+}
+
+int obtener_un_nuevo_bloque(){
+	int cantidad_bloques = 1;
+	int bloque_agregado = 0;
+	int index = 0;
+	for(index = 0; index < bitarray_get_max_bit(bitmap) && cantidad_bloques!=0 ; index++){
+		if(!bitarray_test_bit(bitmap,index)){
+			bitarray_set_bit(bitmap,index);
+			bloque_agregado = index;
+			cantidad_bloques--;
+		}
+	}
+	return bloque_agregado;
+}
+
 

@@ -15,10 +15,6 @@
 #include <ensalada/mensaje.h>
 #include <ensalada/validacion.h>
 
-
-//TODO ver tamanio de linea
-#define TAM_LINEA		35
-
 pthread_t thread_consola;
 t_bitarray* bitmap;
 cfg_mdj* configuracion;
@@ -101,7 +97,7 @@ void abs_to_rel_pto_montaje(){
 
 int main(int argc, char **argv) {
 
-    int conexiones_permitidas[cantidad_tipos_procesos]={0}, header, retsocket=0;
+    int conexiones_permitidas[cantidad_tipos_procesos]={0};
     t_log* logger;
     ConexionesActivas conexiones_activas;
 
@@ -304,30 +300,6 @@ int main(int argc, char **argv) {
                     log_info(logger,"Respuesta enviada...");
                 }
                 break;
-
-                /*case STRING_CONSOLA_PROPIA:
-                    // este header indica que vamos a recibir un string leido de nuestra propia consola
-    
-                    // entonces recibimos el string y lo imprimimos, y ademas si es "exit" cerramos el programa
-                    //str = recibir_string(mensaje_respuesta->socket);
-                    comprobar_error(retsocket, "Error en recv de consola de MDJ");
-                    printf("MDJ recibio de su propia consola: %s\n", str);
-    
-                    if(!strcmp(str, "exit")) {
-                        free(str);
-                      //  pthread_join(thread_consola, NULL);
-                        cerrar_mdj(logger, configuracion, conexiones_activas);
-                    }
-                    free(str);
-    
-                    // TODO parsear string para interpretar comandos
-                    // cuando terminamos de ejecutar lo que nos pidio la consola le mandamos un header
-                    // OPERACION_CONSOLA_TERMINADA que le indica que terminamos en este caso
-                    // tambien le podriamos mandar un mensaje cualquiera dependiendo de lo que nos haya pedido
-                    header = OPERACION_CONSOLA_TERMINADA;
-                    retsocket = send(mensaje_recibido->socket, &header, sizeof(OPERACION_CONSOLA_TERMINADA), 0);
-                    comprobar_error(retsocket, "Error en send a consola de MDJ");
-                    break;*/
 
             case CONEXION_CERRADA:
                 // el header CONEXION_CERRADA indica que el que nos envio ese mensaje se desconecto, idealmente los

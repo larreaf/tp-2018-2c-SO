@@ -33,8 +33,6 @@ int main(int argc, char **argv) {
 	MensajeDinamico *peticion_abrir_script, *mensaje, *mensaje_respuesta;
     char* linea = "", nombre_cpu[17], string_identificador[12], nombre_log_cpu[20];
 
-    // TODO nombre CPU + numero de CPU
-
     validar_parametros(argc);
     cfg_cpu* configuracion = asignar_config(argv[1],cpu);
 
@@ -134,6 +132,7 @@ int main(int argc, char **argv) {
 
                             if(resultado_instruccion != -2)
                                 cantidad_instrucciones_ejecutadas++;
+                            free(linea);
                         }
 
                         if(resultado_instruccion == -1){
@@ -159,12 +158,13 @@ int main(int argc, char **argv) {
                     mensaje_respuesta = crear_mensaje(DESALOJAR_SCRIPT, socket_fm9, 0);
                     agregar_int(mensaje_respuesta, datos_dtb.id);
                     enviar_mensaje(mensaje_respuesta);
-                    // TODO flush archivos abiertos?
                 }
                 mensaje_respuesta = generar_mensaje_dtb(socket_safa, &datos_dtb);
                 agregar_int(mensaje_respuesta, cantidad_instrucciones_ejecutadas);
                 agregar_int(mensaje_respuesta, cantidad_instrucciones_dma);
                 enviar_mensaje(mensaje_respuesta);
+                free(datos_dtb.path_script);
+                list_destroy_and_destroy_elements(datos_dtb.archivos_abiertos, destruir_archivo_abierto);
 	            break;
 
 	        case IDENTIFICADOR_CPU:

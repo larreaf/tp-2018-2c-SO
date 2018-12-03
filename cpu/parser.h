@@ -39,6 +39,8 @@ typedef struct{
     t_opcode opcode;
     int argc;
     t_list* argv;
+    char* puntero_string;
+    char* puntero_string_aux;
 }Instruccion;
 
 static const int cant_argumentos_instruccion[] = {1, 1, 0, 3, 1, 1, 1, 2, 1};

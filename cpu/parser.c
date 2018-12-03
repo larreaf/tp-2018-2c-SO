@@ -10,11 +10,12 @@ extern int cantidad_instrucciones_dma;
 Instruccion* parsear_linea(char* linea){
     Instruccion* retorno = malloc(sizeof(Instruccion));
     int argc;
-    char* word, *copia_linea, *linea_final;
+    char* word, *copia_linea, *linea_final, *linea_temp;
 
     copia_linea = string_new();
     string_append(&copia_linea, linea);
     retorno->argv = list_create();
+    retorno->puntero_string = copia_linea;
 
     for(argc = 0; (word = strsep(&copia_linea, " ")) != NULL; argc++){
 
@@ -32,7 +33,9 @@ Instruccion* parsear_linea(char* linea){
         linea_final = string_new();
 
         for(int i = 2; i<retorno->argc; i++){
-            string_append(&linea_final, (char*)list_get(retorno->argv, 2));
+            linea_temp = (char*)list_get(retorno->argv, 2);
+
+            string_append(&linea_final, linea_temp);
 
             if(i<retorno->argc-1)
                 string_append(&linea_final, " ");
@@ -40,10 +43,11 @@ Instruccion* parsear_linea(char* linea){
             list_remove(retorno->argv, 2);
         }
         list_add(retorno->argv, linea_final);
+        retorno->puntero_string_aux = linea_final;
         retorno->argc = 3;
-    }
+    }else
+        retorno->puntero_string_aux = NULL;
 
-    free(copia_linea);
     return retorno;
 }
 
@@ -52,6 +56,9 @@ Instruccion* parsear_linea(char* linea){
  * @param instruccion instruccion a destruir
  */
 void destruir_instruccion(Instruccion* instruccion){
+    if(instruccion->puntero_string_aux != NULL)
+        free(instruccion->puntero_string_aux);
+    free(instruccion->puntero_string);
     list_destroy(instruccion->argv);
     free(instruccion);
 }

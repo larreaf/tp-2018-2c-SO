@@ -64,7 +64,6 @@ int in_close(DTB* dtb, char* path){
         if (!strcmp(path, nodo_aux->path)) {
             error = 0;
             list_remove(dtb->archivos_abiertos, i);
-            free(nodo_aux);
             break;
         }
     }
@@ -80,6 +79,8 @@ int in_close(DTB* dtb, char* path){
     agregar_int(peticion_cerrar, dtb->id);
     agregar_int(peticion_cerrar, nodo_aux->direccion_memoria);
     enviar_mensaje(peticion_cerrar);
+    free(nodo_aux->path);
+    free(nodo_aux);
     // TODO verificar error en enviar_mensaje
 
     return READY;

@@ -90,3 +90,10 @@ MetricasDTB* encontrar_metricas_en_lista(t_list* lista, int id_dtb, bool remover
     }
     return NULL;
 }
+
+void destruir_archivo_abierto(void* arg){
+    ArchivoAbierto* archivo = (ArchivoAbierto*)arg;
+
+    free(archivo->path);
+    free(archivo);
+}

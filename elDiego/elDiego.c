@@ -90,6 +90,7 @@ int main(int argc, char **argv) {
                     cerrar_elDiego(logger, configuracion, conexiones_activas);
                 }
                 recibir_string(&archivo, mensaje_dinamico);
+                destruir_mensaje(mensaje_dinamico);
 
                 if(string_is_empty(archivo)) {
                     log_warning(logger, "Error al cargar script %s para DTB %d: no existe el script", path, id_dtb);
@@ -136,7 +137,7 @@ int main(int argc, char **argv) {
                     enviar_mensaje(mensaje_dinamico);
                 }
                 free(archivo);
-
+                free(path);
                 break;
 
             case CREAR_ARCHIVO_CPU_DIEGO:
@@ -172,6 +173,7 @@ int main(int argc, char **argv) {
                     agregar_int(mensaje_dinamico, 50002);
                 }
                 enviar_mensaje(mensaje_dinamico);
+                free(path);
                 break;
 
             case ABRIR_ARCHIVO_CPU_DIEGO:
@@ -189,6 +191,7 @@ int main(int argc, char **argv) {
                     cerrar_elDiego(logger, configuracion, conexiones_activas);
                 }
                 recibir_string(&archivo, mensaje_dinamico);
+                destruir_mensaje(mensaje_dinamico);
 
                 log_info(logger, "Recibido archivo %s de MDJ para DTB %d, enviando datos a FM9", path, id_dtb);
 
@@ -228,6 +231,7 @@ int main(int argc, char **argv) {
                 agregar_int(mensaje_dinamico, cant_lineas);
                 enviar_mensaje(mensaje_dinamico);
                 free(archivo);
+                free(path);
                 break;
 
             case BORRAR_ARCHIVO_CPU_DIEGO:
@@ -288,6 +292,7 @@ int main(int argc, char **argv) {
                 }
 
                 recibir_string(&archivo, mensaje_dinamico);
+                destruir_mensaje(mensaje_dinamico);
 
                 if (string_is_empty(archivo)) {
                 	codigo_error=40002;
@@ -312,6 +317,8 @@ int main(int argc, char **argv) {
                         cerrar_elDiego(logger, configuracion, conexiones_activas);
                     }
                     recibir_int(&resultado, mensaje_dinamico);
+                	destruir_mensaje(mensaje_dinamico);
+
                 	size--;
                     if (resultado==-1){
                     	codigo_error=40001;

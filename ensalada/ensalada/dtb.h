@@ -2,6 +2,7 @@
 #define DTB_H
 
 #include <commons/collections/list.h>
+#include <time.h>
 #include "mensaje.h"
 
 typedef enum {
@@ -25,6 +26,7 @@ typedef struct{
     int cargando;
     t_accion_post_instruccion status;
     t_list* archivos_abiertos;
+    time_t ready_ts;
 }DTB;
 
 typedef struct{
@@ -38,6 +40,7 @@ typedef struct{
 void desempaquetar_dtb(MensajeDinamico*, DTB*);
 MensajeDinamico* generar_mensaje_dtb(int, DTB *);
 DTB* encontrar_dtb_en_lista(t_list*, int, bool);
-MetricasDTB* encontrar_metricas_en_lista(t_list* lista, int id_dtb, bool);
+MetricasDTB* encontrar_metricas_en_lista(t_list*, int, bool);
+void destruir_archivo_abierto(void*);
 
 #endif //DTB_H

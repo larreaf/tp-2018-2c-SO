@@ -5,6 +5,8 @@
 #ifndef SAFA_PCP_H
 #define SAFA_PCP_H
 
+#define TIEMPOS_RESPUESTA_SIZE 1024
+
 #include <commons/collections/queue.h>
 #include <commons/collections/list.h>
 #include <ensalada/com.h>
@@ -41,6 +43,8 @@ typedef struct {
     int finalizar_dtb;
     int cantidad_lineas_equipo_grande;
     t_log* logger;
+    int tiempos_respuesta[TIEMPOS_RESPUESTA_SIZE];
+    int cantidad_tiempos_respuesta;
 }PCP;
 
 CPU* seleccionar_cpu(t_list*);

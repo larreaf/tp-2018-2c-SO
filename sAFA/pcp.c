@@ -73,18 +73,13 @@ PCP* inicializar_pcp(int algoritmo_planificador, int quantum, int retardo, char*
     nuevo_pcp->finalizar_dtb = 0;
     nuevo_pcp->recursos = dictionary_create();
     nuevo_pcp->cantidad_lineas_equipo_grande = cantidad_lineas_equipo_grande;
+    nuevo_pcp->cantidad_tiempos_respuesta = 0;
+    memset(nuevo_pcp->tiempos_respuesta, -1, TIEMPOS_RESPUESTA_SIZE);
 
     dtb_dummy = crear_dtb(0, 0);
     agregar_a_block(nuevo_pcp, dtb_dummy);
 
     return nuevo_pcp;
-}
-
-void destruir_archivo_abierto(void* arg){
-    ArchivoAbierto* archivo = (ArchivoAbierto*)arg;
-
-    free(archivo->path);
-    free(archivo);
 }
 
 /*!
@@ -266,6 +261,7 @@ void agregar_a_ready(PCP* pcp, DTB* dtb){
 
     dtb->status = READY;
     dtb->quantum = pcp->quantum;
+    dtb->ready_ts = time(NULL);
 
     if(pcp->algoritmo_planificacion != PROPIO) {
         log_info(pcp->logger, "Pasando DTB %d a READY", dtb->id);
@@ -298,6 +294,7 @@ void agregar_a_ready(PCP* pcp, DTB* dtb){
  */
 void agregar_a_ready_aux(PCP* pcp, DTB* dtb){
     dtb->status = READY;
+    dtb->ready_ts = time(NULL);
 
     pthread_mutex_lock(&(pcp->mutex_ready_aux));
     queue_push(pcp->cola_ready_aux, dtb);
@@ -482,6 +479,8 @@ void* ejecutar_pcp(void* arg){
     DTB* dtb_seleccionado;
     CPU* cpu_seleccionado;
     MensajeDinamico* mensaje_dtb;
+    time_t ts_actual;
+    int timediff;
 
     while(correr){
         pthread_mutex_lock(&pcp->mutex_pausa);
@@ -507,6 +506,15 @@ void* ejecutar_pcp(void* arg){
                     cpu_seleccionado->id, dtb_seleccionado->path_script, dtb_seleccionado->id);
 
         usleep((__useconds_t)(pcp->retardo_planificacion*1000));
+
+        // calculo tiempo de respuesta para metricas
+        if(pcp->cantidad_tiempos_respuesta >= TIEMPOS_RESPUESTA_SIZE)
+            pcp->cantidad_tiempos_respuesta = 0;
+
+        ts_actual = time(NULL);
+        timediff = (int)difftime(ts_actual, dtb_seleccionado->ready_ts);
+        pcp->tiempos_respuesta[pcp->cantidad_tiempos_respuesta] = timediff;
+        pcp->cantidad_tiempos_respuesta++;
 
         mensaje_dtb = generar_mensaje_dtb(cpu_seleccionado->socket, dtb_seleccionado);
         enviar_mensaje(mensaje_dtb);

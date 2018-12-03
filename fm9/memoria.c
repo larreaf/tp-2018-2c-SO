@@ -782,9 +782,9 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
 
 			log_info(memoria->logger, "Leyendo linea %d en pagina %d (direccion %d) para DTB %d",
 					numero_linea,nodo_filtrado->nro_pagina, nodo_filtrado->id_tabla + desplazamiento, id_dtb);
-
-			string_append(&linea, leer_linea_storage(memoria->storage, nodo_filtrado->id_tabla * memoria->storage->cant_lineas_pagina, desplazamiento));
-
+			linea_leida = leer_linea_storage(memoria->storage, nodo_filtrado->id_tabla * memoria->storage->cant_lineas_pagina, desplazamiento);
+			string_append(&linea, linea_leida);
+			free(linea_leida);
 			return linea;
 		}
 		else{
@@ -956,10 +956,10 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 				log_info(memoria->logger, "Leyendo linea %d en pagina %d (direccion %d) para DTB %d flush archivo",
 						linea,nodo_filtrado->nro_pagina, nodo_filtrado->id_tabla + desplazamiento, id_dtb);
 
-				// TODO arreglar leak
-				string_append(&string_archivo, leer_linea_storage(memoria->storage, nodo_filtrado->id_tabla, desplazamiento + linea));
-
+				linea_leida = leer_linea_storage(memoria->storage, nodo_filtrado->id_tabla, desplazamiento + linea);
+				string_append(&string_archivo, linea_leida);
 				string_append(&string_archivo, "\n");
+				free(linea_leida);
 			}
 
 			return string_archivo;
@@ -1295,7 +1295,7 @@ void dump(Memoria* memoria, int id_dtb){
 				printf("Contenidos de la pagina %d (longitud pagina usada %d, correspondiente al marco %d):\n", pagina->nro_pagina , pagina->lineas_usadas, pagina->id_tabla);
 
 				for (int j = 0; j < pagina->lineas_usadas; j++) {
-					linea_leida = leer_linea(memoria->storage, pagina->id_tabla, j);
+					linea_leida = leer_linea_storage(memoria->storage, pagina->id_tabla, j);
 					printf("%s\n", linea_leida);
 					free(linea_leida);
 				}

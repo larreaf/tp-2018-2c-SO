@@ -113,7 +113,6 @@ void inicializar_tabla_de_paginas_invertida(Memoria* memoria){
 		nodo_inicializado->id_tabla = i;
 
 		list_add_in_index(memoria->lista_tabla_de_paginas_invertida, i ,nodo_inicializado);
-		free(nodo_inicializado);
 	}
 }
 

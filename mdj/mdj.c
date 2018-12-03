@@ -272,6 +272,8 @@ int main(int argc, char **argv) {
                 // el socket, liberar memoria, etc
                 // cerrar_mdj(logger, configuracion, conexiones_activas);
                 break;
+            case NUEVA_CONEXION:
+            	break;
 
             default:
                 log_error(logger, "Se recibio un header invalido (%d)", mensaje_recibido->header);

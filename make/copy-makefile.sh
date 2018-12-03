@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -a arr=("ensalada" "mdj" "fm9" "cpu" "elDiego" "sAFA")
+declare -a arr=("ensalada" "mdj" "fm9" "cpu" "elDiego" "sAFA" "edit-cfg")
 
 for i in "${arr[@]}"
 do

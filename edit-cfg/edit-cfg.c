@@ -5,13 +5,14 @@
 #include <commons/config.h>
 
 void validar_parametros(int argc){
-	if(argc < 3){
+	if(argc < 4){
 		printf("La cantidad de parametros es incorrecta!\n");
 		exit(1);
 	}
 }
 
 int main(int argc, char **argv) {
+	validar_parametros(argc);
 	t_config* configuracion = config_create(argv[1]);
 	if(configuracion != NULL){
 		if(config_has_property(configuracion,argv[2])){

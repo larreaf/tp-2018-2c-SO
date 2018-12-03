@@ -77,10 +77,11 @@ typedef struct {
 }NodoPagina;
 
 
-MemoriaReal* inicializar_memoria_real(int, int, int, char*, int);
+MemoriaReal* inicializar_memoria_real(int, int, int);
 void destruir_memoria_real(MemoriaReal*);
 void destruir_tabla_segmentos(void*);
-Memoria* inicializar_memoria(MemoriaReal*, int, int, char*, int);
+Memoria* inicializar_memoria(MemoriaReal*, int, int);
+void inicializar_tabla_de_paginas_invertida(Memoria*);
 void destruir_memoria(Memoria*);
 void escribir_linea(MemoriaReal*, char*, int, char);
 void escribir_archivo_en_storage(MemoriaReal*, char*, int, bool);

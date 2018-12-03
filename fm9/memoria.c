@@ -11,11 +11,10 @@
  * @return struct MemoriaReal*
  */
 
-MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea, int tamanio_pagina, char* logger_level,
-		int logger_consola){
+MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea, int tamanio_pagina){
     MemoriaReal* memoria_real = malloc(sizeof(MemoriaReal));
 
-    memoria_real->logger = log_create("fm9.log", "MemoriaReal", (bool)logger_consola, log_level_from_string(logger_level));
+    memoria_real->logger = log_create("fm9.log", "MemoriaReal", true, log_level_from_string("info"));
 
     if(tamanio % tamanio_linea)
         log_warning(memoria_real->logger, "Tamanio (%d) no divisible por tamanio de linea (%d)", tamanio, tamanio_linea);
@@ -60,8 +59,7 @@ void destruir_memoria_real(MemoriaReal* storage){
  * @param modo Modo de ejecucion
  * @return Memoria* inicializado
  */
-Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_segmento, char* logger_level,
-		int logger_consola){
+Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_segmento){
     Memoria* memoria = malloc(sizeof(Memoria));
 
     memoria->storage = storage;
@@ -72,23 +70,44 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_
     memoria->tamanio_maximo_segmento = tamanio_maximo_segmento;
 
     if(modo == SEG){
-        memoria->logger = log_create("fm9.log", "MemoriaSegmentada", (bool)logger_consola,
-        		log_level_from_string(logger_level));
+        memoria->logger = log_create("fm9.log", "MemoriaSegmentada", true, log_level_from_string("info"));
 	}
     else if(modo == SPA){
-        memoria->logger = log_create("fm9.log", "MemoriaSegmentacionPaginada", (bool)logger_consola,
-        		log_level_from_string(logger_level));
+        memoria->logger = log_create("fm9.log", "MemoriaSegmentacionPaginada", true, log_level_from_string("info"));
     }
     else if(modo == TPI){
-        memoria->logger = log_create("fm9.log", "MemoriaPaginacionInvertida", (bool)logger_consola,
-        		log_level_from_string(logger_level));
-    	log_info(memoria->logger, "TPI tiene %d páginas de %d líneas cada una.", storage->cant_paginas,
-    			storage->cant_lineas_pagina);
-	}
+    	memoria->logger = log_create("fm9.log", "MemoriaPaginacionInvertida", true, log_level_from_string("info"));
+		log_info(memoria->logger, "TPI tiene %d páginas de %d líneas cada una.", storage->cant_paginas, storage->cant_lineas_pagina);
+		log_info(memoria->logger, "inicializando tabla de páginas invertida");
+		inicializar_tabla_de_paginas_invertida(memoria);
+    }
 
     log_info(memoria->logger, "Memoria inicializada correctamente");
 
     return memoria;
+}
+
+/*!
+ * Inicializa tabla de páginas invertida ya que debe tener la misma cantidad que páginas en memoria
+ * @param memoria
+ */
+
+void inicializar_tabla_de_paginas_invertida(Memoria* memoria){
+
+	for(int i = 0; i < memoria->storage->cant_paginas; i++){
+		NodoTablaPaginasInvertida* nodo_inicializado;
+		nodo_inicializado = malloc(sizeof(NodoTablaPaginasInvertida));
+
+		nodo_inicializado->id_dtb = -1;
+		nodo_inicializado->lineas_usadas = -1;
+		nodo_inicializado->encadenamiento = -1;
+		nodo_inicializado->nro_pagina = -1;
+		nodo_inicializado->tamanio_archivo = -1;
+		nodo_inicializado->id_tabla = i;
+
+		list_add_in_index(memoria->lista_tabla_de_paginas_invertida, i ,nodo_inicializado);
+		free(nodo_inicializado);
+	}
 }
 
 /*!
@@ -339,13 +358,15 @@ int encontrar_marco(Memoria* memoria,int pagina,int id_dtb){
 	NodoTablaPaginasInvertida* nodo;
 	nodo = malloc(sizeof(NodoTablaPaginasInvertida));
 
-	marco = calcular_marco_hash(memoria, pagina, id_dtb);
+	marco = calcular_marco_hash(memoria->storage, pagina, id_dtb);
 
 	nodo = list_get(memoria->lista_tabla_de_paginas_invertida, marco);
 
-	while(nodo && nodo->id_dtb != id_dtb){
+	while(nodo->id_dtb != id_dtb){
 		nodo = list_get(memoria->lista_tabla_de_paginas_invertida, nodo->encadenamiento);
 	}
+
+	marco = nodo->id_tabla;
 
 	return marco;
 }
@@ -368,13 +389,16 @@ int encadenamiento_tabla_paginas_invertida(Memoria* memoria,int posicion_marco){
 
 	nodo_filtrado = list_get(memoria->lista_tabla_de_paginas_invertida, posicion_marco);
 
-	if(nodo_filtrado){
+	if(nodo_filtrado->id_dtb != -1){
 
-		posicion_marco ++;
-		posicion_marco = encadenamiento_tabla_paginas_invertida(memoria, posicion_marco);
+		for(int i = 0; i < list_size(memoria->lista_tabla_de_paginas_invertida); i++){
 
-		return posicion_marco;
+			nodo_filtrado = list_get(memoria->lista_tabla_de_paginas_invertida, i);
 
+			if(nodo_filtrado->id_dtb == -1){
+				return i;
+			}
+		}
 	}
 
 	return posicion_marco;
@@ -461,79 +485,80 @@ int cargar_script(Memoria* memoria, int id_dtb, char* string){
         return 0;
     }
     else if(memoria->modo == TPI){
+    	int paginas_necesarias = 0;
+    	    		int hay_paginas_necesarias = -1;
+    	    		int pagina;
+    	    		int posicion_marco;
+    	    		int posicion_definitiva_marco;
+    	        	NodoTablaPaginasInvertida * nodo_lista_tabla_paginas_invertida;
+    	    	    nodo_lista_tabla_paginas_invertida = malloc(sizeof(NodoTablaPaginasInvertida));
+    	    		cant_lineas = contar_lineas(string);
 
-    		int paginas_necesarias = 0;
-    		int hay_paginas_necesarias = -1;
-    		int pagina;
-    		int posicion_marco;
-    		int posicion_definitiva_marco;
-        	NodoTablaPaginasInvertida * nodo_lista_tabla_paginas_invertida;
-    	    nodo_lista_tabla_paginas_invertida = malloc(sizeof(NodoTablaPaginasInvertida));
-    		cant_lineas = contar_lineas(string);
+    	    		log_info(memoria->logger, "Buscando paginas necesarias para script de DTB %d (%d lineas)", id_dtb,cant_lineas);
 
-    		log_info(memoria->logger, "Buscando paginas necesarias para script de DTB %d (%d lineas)", id_dtb,cant_lineas);
+    	    		paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cant_lineas);
 
-    		paginas_necesarias = obtener_cantidad_paginas_necesarias(memoria->storage, cant_lineas);
+    	    		log_info(memoria->logger, "Se necesitan %d página/s para cargar el script en memoria, buscamos si tenemos las mismas...", paginas_necesarias);
 
-    		log_info(memoria->logger, "Se necesitan %d página/s para cargar el script en memoria, buscamos si tenemos las mismas...", paginas_necesarias);
+    	    		hay_paginas_necesarias = verificar_si_hay_cantidad_paginas_necesarias(memoria->storage, paginas_necesarias);
 
-    		hay_paginas_necesarias = verificar_si_hay_cantidad_paginas_necesarias(memoria->storage, paginas_necesarias);
+    	    		if(hay_paginas_necesarias == -1){
+    	    			log_info(memoria->logger, "La memoria no cuenta con la cantidad de paginas necesarias");
+    	    			return -10002;
+    	    		}
 
-    		if(hay_paginas_necesarias == -1){
-    			log_info(memoria->logger, "La memoria no cuenta con la cantidad de paginas necesarias");
-    			return -10002;
-    		}
+    	    		log_info(memoria->logger, "La memoria tiene la cantidad de páginas necesarias.");
 
-    		log_info(memoria->logger, "La memoria tiene la cantidad de páginas necesarias.");
+    	    		for(pagina = 0; pagina < paginas_necesarias; pagina++){
 
-    		for(pagina = 0; pagina < paginas_necesarias; pagina++){
+    	    			char* particion_string = string_new();
+    					int contador,lineas_usadas = 0;
+    					char* linea;
 
-    			char* particion_string = string_new();
-				int contador,lineas_usadas = 0;
-				char* linea;
+    					log_info(memoria->logger, "Calculamos marco según página %d e id_dtb %d...", pagina, id_dtb);
+    	    			posicion_marco = calcular_marco_hash(memoria->storage, pagina, id_dtb);
 
-				log_info(memoria->logger, "Calculamos marco según página %d e id_dtb %d...", pagina, id_dtb);
-    			posicion_marco = calcular_marco_hash(memoria->storage, pagina, id_dtb);
+    	    			log_info(memoria->logger, "Nos dió el marco nro %d, revisamos si hace falta encadenar y calcular otro marco...", posicion_marco);
+    	    			posicion_definitiva_marco = encadenamiento_tabla_paginas_invertida(memoria, posicion_marco);
 
-    			log_info(memoria->logger, "Nos dió el marco nro %d, revisamos si hace falta encadenar y calcular otro marco...", posicion_marco);
-    			posicion_definitiva_marco = encadenamiento_tabla_paginas_invertida(memoria, posicion_marco);
+    	    			log_info(memoria->logger, "El marco difinitivo es %d...",posicion_definitiva_marco);
+    	    			log_info(memoria->logger, "Escribiendo pagina %d en el marco %d", pagina, posicion_definitiva_marco);
 
-    			log_info(memoria->logger, "El marco difinitivo es %d...",posicion_definitiva_marco);
-    			log_info(memoria->logger, "Escribiendo pagina %d en el marco %d", pagina, posicion_definitiva_marco);
+    	    			int base_escritura = posicion_definitiva_marco * memoria->storage->cant_lineas_pagina;
 
-				for(contador = 0; contador < memoria->storage->cant_lineas_pagina; contador++){
+    					for(contador = 0; contador < memoria->storage->cant_lineas_pagina; contador++){
 
-					if((linea=strsep(&string, "\n")) != NULL){
-						lineas_usadas ++;
-						string_append(&particion_string, linea);
-						log_info(memoria->logger, "Escribiendo en storage las siguientes lineas '%s', desde la posicion '%d'", linea, (posicion_definitiva_marco * memoria->storage->cant_lineas_pagina)+ contador);
-					}
+    						if((linea=strsep(&string, "\n")) != NULL){
+    							lineas_usadas ++;
+    							string_append(&particion_string, linea);
+    							log_info(memoria->logger, "Escribiendo en storage las siguientes lineas '%s', desde la posicion '%d'", linea, (posicion_definitiva_marco * memoria->storage->cant_lineas_pagina)+ contador);
+    							escribir_linea(memoria->storage, linea, base_escritura + contador, true);
+    						}
 
-				}
+    					}
+    	    			//escribir_archivo_en_storage(memoria->storage, particion_string, base_escritura, true);
 
-    			int base_escritura = posicion_definitiva_marco * memoria->storage->cant_lineas_pagina;
-    			escribir_archivo_en_storage(memoria->storage, particion_string, base_escritura, true);
+    	    			nodo_lista_tabla_paginas_invertida->id_tabla = posicion_definitiva_marco;
+    	    			nodo_lista_tabla_paginas_invertida->id_dtb = id_dtb;
+    	    			nodo_lista_tabla_paginas_invertida->nro_pagina = pagina;
+    	    			nodo_lista_tabla_paginas_invertida->lineas_usadas = lineas_usadas;
+    	    			nodo_lista_tabla_paginas_invertida->encadenamiento = -1;
 
-    			nodo_lista_tabla_paginas_invertida->id_tabla = posicion_definitiva_marco;
-    			nodo_lista_tabla_paginas_invertida->id_dtb = id_dtb;
-    			nodo_lista_tabla_paginas_invertida->nro_pagina = pagina;
-    			nodo_lista_tabla_paginas_invertida->lineas_usadas = contador;
-    			nodo_lista_tabla_paginas_invertida->encadenamiento = -1;
+    	    			log_info(memoria->logger, "Guardando en la tabla de paginas invertidas, id %d, id_dtb %d, pagina %d, lineas_usadas %d",
+    	    					nodo_lista_tabla_paginas_invertida->id_tabla,nodo_lista_tabla_paginas_invertida->id_dtb, nodo_lista_tabla_paginas_invertida->nro_pagina,
+    							nodo_lista_tabla_paginas_invertida->lineas_usadas);
 
-    			log_info(memoria->logger, "Guardando en la tabla de paginas invertidas, id %d, id_dtb %d, pagina %d, lineas_usadas %d",
-    					nodo_lista_tabla_paginas_invertida->id_tabla,nodo_lista_tabla_paginas_invertida->id_dtb, nodo_lista_tabla_paginas_invertida->nro_pagina,
-						nodo_lista_tabla_paginas_invertida->lineas_usadas);
+    	    			list_replace(memoria->lista_tabla_de_paginas_invertida, posicion_definitiva_marco, nodo_lista_tabla_paginas_invertida);
 
-    			list_add_in_index(memoria->lista_tabla_de_paginas_invertida, nodo_lista_tabla_paginas_invertida->id_tabla, nodo_lista_tabla_paginas_invertida);
+    	    			if(posicion_marco != posicion_definitiva_marco){
+    	    				nodo_lista_tabla_paginas_invertida = list_get(memoria->lista_tabla_de_paginas_invertida, posicion_marco);
+    	    				nodo_lista_tabla_paginas_invertida->encadenamiento = posicion_definitiva_marco;
+    	    				list_replace(memoria->lista_tabla_de_paginas_invertida, posicion_marco, nodo_lista_tabla_paginas_invertida);
+    	    			}
+    	    		}
 
-    			if(posicion_marco != posicion_definitiva_marco){
-    				nodo_lista_tabla_paginas_invertida = list_get(memoria->lista_tabla_de_paginas_invertida, posicion_marco);
-    				nodo_lista_tabla_paginas_invertida->encadenamiento = posicion_definitiva_marco;
-    				list_add_in_index(memoria->lista_tabla_de_paginas_invertida, nodo_lista_tabla_paginas_invertida->id_tabla, nodo_lista_tabla_paginas_invertida);
-    			}
-    		}
+    	    		return 0;
 
-    		return 0;
 	}
 	else if(memoria->modo == SPA){
 

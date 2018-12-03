@@ -8,6 +8,13 @@ extern PCP* pcp;
 extern t_log* logger;
 extern bool correr;
 
+/*!
+ * Encuentra y aborta un DTB, informando error y liberando memoria
+ * @param plp
+ * @param id_dtb
+ * @param codigo_error
+ * @param archivos_abiertos
+ */
 void abortar_dtb(PLP* plp, int id_dtb, int codigo_error, t_dictionary* archivos_abiertos){
     DTB* dtb_seleccionado;
     codigo_error = abs(codigo_error);
@@ -26,6 +33,13 @@ void abortar_dtb(PLP* plp, int id_dtb, int codigo_error, t_dictionary* archivos_
     abortar_dtb_seleccionado(plp, dtb_seleccionado, codigo_error, archivos_abiertos);
 }
 
+/*!
+ * Aborta un DTB ya seleccionado, informando error y liberando memoria
+ * @param plp
+ * @param dtb_seleccionado
+ * @param codigo_error
+ * @param archivos_abiertos
+ */
 void abortar_dtb_seleccionado(PLP* plp, DTB* dtb_seleccionado, int codigo_error, t_dictionary* archivos_abiertos){
     char* string_error = codigo_error_a_string(codigo_error);
     ArchivoAbierto* archivo;
@@ -141,6 +155,13 @@ void imprimir_estado_plp(PLP* plp){
     pthread_mutex_unlock(&(plp->mutex_new));
 }
 
+/*!
+ * Encuentra y retorna un DTB de NEW
+ * @param plp
+ * @param id_dtb
+ * @param eliminar eliminar al DTB de NEW
+ * @return
+ */
 DTB* obtener_dtb_de_new(PLP *plp, int id_dtb, bool eliminar){
     DTB* dtb_seleccionado;
 
@@ -153,6 +174,11 @@ DTB* obtener_dtb_de_new(PLP *plp, int id_dtb, bool eliminar){
     return dtb_seleccionado;
 }
 
+/*!
+ * Actualiza todas las metricas de DTB sumando la cantidad de instrucciones ejecutadas pasadas por parametro
+ * @param plp
+ * @param cantidad_instrucciones_ejecutadas
+ */
 void actualizar_cantidad_instrucciones_en_new(PLP* plp, int cantidad_instrucciones_ejecutadas){
     int lista_size;
     MetricasDTB* metricas;
@@ -166,6 +192,11 @@ void actualizar_cantidad_instrucciones_en_new(PLP* plp, int cantidad_instruccion
     }
 }
 
+/*!
+ * Toma un int codigo de error y devuelve un string con la descripcion
+ * @param codigo_error
+ * @return
+ */
 char* codigo_error_a_string(int codigo_error){
     char* string_error = string_new();
 
@@ -180,6 +211,10 @@ char* codigo_error_a_string(int codigo_error){
 
         case -3:
             string_append(&string_error, "Flag inicializado de DTB invalida\n");
+            break;
+
+        case -4:
+            string_append(&string_error, "Un mensaje de comunicacion de una instruccion de CPU no fue enviado correctamente\n");
             break;
 
         case 10001:

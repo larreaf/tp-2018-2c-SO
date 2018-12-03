@@ -22,11 +22,20 @@ extern t_log* logger;
 extern int correr;
 extern cfg_safa* configuracion;
 
+/*!
+ * Monitorea el archivo de config con inotify y actualiza la config de PCP/PLP si el mismo se actualiza
+ * @param arg nombre del archivo de config
+ * @return
+ */
 void* monitorear_config(void *arg) {
     char buffer[BUF_LEN];
-    char* filename = (char*)arg;
+    char* filename = (char*)arg, *path_final;
     struct inotify_event *event;
     int buffer_semaforo;
+
+    path_final = string_new();
+    string_append(&path_final, "./");
+    string_append(&path_final, filename);
 
     // Al inicializar inotify este nos devuelve un descriptor de archivo
     int file_descriptor = inotify_init();
@@ -35,7 +44,7 @@ void* monitorear_config(void *arg) {
     }
 
     // Creamos un monitor sobre un path indicando que eventos queremos escuchar
-    int watch_descriptor = inotify_add_watch(file_descriptor, "./safa.cfg", IN_MODIFY);
+    int watch_descriptor = inotify_add_watch(file_descriptor, (const char*)path_final, IN_MODIFY);
 
     log_info(logger, "Monitoreando config...");
 
@@ -102,6 +111,7 @@ void* monitorear_config(void *arg) {
 
     inotify_rm_watch(file_descriptor, watch_descriptor);
     close(file_descriptor);
+    free(path_final);
 
     return NULL;
 }

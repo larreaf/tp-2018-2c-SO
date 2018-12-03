@@ -94,6 +94,10 @@ void destruir_dtb(void* arg){
     free(dtb);
 }
 
+/*!
+ * Destruye un recurso (semaforo), liberando memoria
+ * @param arg
+ */
 void destruir_recurso(void *arg){
     Recurso* recurso_seleccionado = (Recurso*)arg;
 
@@ -175,6 +179,11 @@ void desbloquear_dtb(PCP* pcp, int id_DTB){
     pthread_mutex_unlock(&(pcp->mutex_block));
 }
 
+/*!
+ * Desbloquea un DTB
+ * @param pcp
+ * @param dtb_seleccionado
+ */
 void desbloquear_dtb_seleccionado(PCP* pcp, DTB* dtb_seleccionado){
     if (dtb_seleccionado->quantum && pcp->algoritmo_planificacion == VRR && dtb_seleccionado->inicializado) {
         log_info(pcp->logger, "Pasando DTB %d a READY AUX (quantum %d)", dtb_seleccionado->id,
@@ -186,6 +195,12 @@ void desbloquear_dtb_seleccionado(PCP* pcp, DTB* dtb_seleccionado){
     }
 }
 
+/*!
+ * Encuentra y retorna un DTB de la lista BLOCK
+ * @param pcp
+ * @param id_dtb
+ * @return
+ */
 DTB* obtener_dtb_de_block(PCP* pcp, int id_dtb){
     DTB* dtb_seleccionado;
 
@@ -200,6 +215,14 @@ DTB* obtener_dtb_de_block(PCP* pcp, int id_dtb){
     return dtb_seleccionado;
 }
 
+/*!
+ * Encuentra y desbloquea un DTB, agregando un archivo a su tabla de archivos abiertos
+ * @param pcp
+ * @param id_DTB
+ * @param path
+ * @param direccion_archivo
+ * @param cant_lineas
+ */
 void desbloquear_dtb_cargando_archivo(PCP* pcp, int id_DTB, char* path, int direccion_archivo, int cant_lineas){
     DTB* dtb_seleccionado;
     ArchivoAbierto* archivo_a_cargar = malloc(sizeof(ArchivoAbierto));
@@ -452,6 +475,12 @@ void imprimir_estado_pcp(PCP* pcp){
     pthread_mutex_unlock(&(pcp->mutex_exec));
 }
 
+/*!
+ * Busca un DTB en el PCP de acuerdo al ID pasado
+ * @param pcp
+ * @param id_dtb
+ * @return
+ */
 DTB* encontrar_dtb_pcp(PCP* pcp, int id_dtb){
     DTB* dtb_seleccionado;
 

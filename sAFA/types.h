@@ -21,9 +21,7 @@ typedef enum{
 	STATUS,
 	FINALIZAR,
 	METRICAS,
-	EXIT,
-	PAUSAR,
-	RESUMIR
+	EXIT
 } tipo_accion_consola_safa;
 
 typedef struct{

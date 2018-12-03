@@ -11,10 +11,11 @@
  * @return struct MemoriaReal*
  */
 
-MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea, int tamanio_pagina){
+MemoriaReal* inicializar_memoria_real(int tamanio, int tamanio_linea, int tamanio_pagina, char* logger_level,
+		int logger_consola){
     MemoriaReal* memoria_real = malloc(sizeof(MemoriaReal));
 
-    memoria_real->logger = log_create("fm9.log", "MemoriaReal", true, log_level_from_string("info"));
+    memoria_real->logger = log_create("fm9.log", "MemoriaReal", (bool)logger_consola, log_level_from_string(logger_level));
 
     if(tamanio % tamanio_linea)
         log_warning(memoria_real->logger, "Tamanio (%d) no divisible por tamanio de linea (%d)", tamanio, tamanio_linea);
@@ -59,7 +60,8 @@ void destruir_memoria_real(MemoriaReal* storage){
  * @param modo Modo de ejecucion
  * @return Memoria* inicializado
  */
-Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_segmento){
+Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_segmento, char* logger_level,
+		int logger_consola){
     Memoria* memoria = malloc(sizeof(Memoria));
 
     memoria->storage = storage;
@@ -70,14 +72,18 @@ Memoria* inicializar_memoria(MemoriaReal* storage, int modo, int tamanio_maximo_
     memoria->tamanio_maximo_segmento = tamanio_maximo_segmento;
 
     if(modo == SEG){
-        memoria->logger = log_create("fm9.log", "MemoriaSegmentada", true, log_level_from_string("info"));
+        memoria->logger = log_create("fm9.log", "MemoriaSegmentada", (bool)logger_consola,
+        		log_level_from_string(logger_level));
 	}
     else if(modo == SPA){
-        memoria->logger = log_create("fm9.log", "MemoriaSegmentacionPaginada", true, log_level_from_string("info"));
+        memoria->logger = log_create("fm9.log", "MemoriaSegmentacionPaginada", (bool)logger_consola,
+        		log_level_from_string(logger_level));
     }
     else if(modo == TPI){
-        memoria->logger = log_create("fm9.log", "MemoriaPaginacionInvertida", true, log_level_from_string("info"));
-    	log_info(memoria->logger, "TPI tiene %d páginas de %d líneas cada una.", storage->cant_paginas, storage->cant_lineas_pagina);
+        memoria->logger = log_create("fm9.log", "MemoriaPaginacionInvertida", (bool)logger_consola,
+        		log_level_from_string(logger_level));
+    	log_info(memoria->logger, "TPI tiene %d páginas de %d líneas cada una.", storage->cant_paginas,
+    			storage->cant_lineas_pagina);
 	}
 
     log_info(memoria->logger, "Memoria inicializada correctamente");

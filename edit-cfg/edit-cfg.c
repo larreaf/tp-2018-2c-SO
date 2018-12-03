@@ -13,13 +13,17 @@ void validar_parametros(int argc){
 
 int main(int argc, char **argv) {
 	t_config* configuracion = config_create(argv[1]);
-	if(config_has_property(configuracion,argv[2])){
-		config_set_value(configuracion,argv[2],argv[3]);
-		config_save(configuracion);
-		printf("%s seteado a: %s\n",argv[2],argv[3]);
-	}else {
-		printf("El archivo no tiene la propiedad: %s\n",argv[2]);
+	if(configuracion != NULL){
+		if(config_has_property(configuracion,argv[2])){
+			config_set_value(configuracion,argv[2],argv[3]);
+			config_save(configuracion);
+			printf("%s seteado a: %s\n",argv[2],argv[3]);
+		}else {
+			printf("El archivo no tiene la propiedad: %s\n",argv[2]);
+		}
+		config_destroy(configuracion);
+	} else {
+		printf("El archivo no existe\n");
 	}
-	config_destroy(configuracion);
 	return EXIT_SUCCESS;
 }

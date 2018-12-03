@@ -21,13 +21,25 @@ bool correr = 1;
 void cerrar_safa(t_log* logger, cfg_safa* configuracion, ConexionesActivas server){
     log_info(logger, "Cerrando s-AFA...");
 
+    pthread_join(thread_consola, NULL);
+    pthread_cancel(thread_plp);
+    pthread_join(thread_plp, NULL);
+    pthread_cancel(thread_pcp);
+    pthread_join(thread_pcp, NULL);
+    pthread_cancel(thread_servidor);
+    pthread_join(thread_servidor, NULL);
+    pthread_cancel(thread_config);
+    pthread_join(thread_config, NULL);
+
+    destruir_plp(plp);
+    destruir_pcp(pcp);
+
     // destruir_conexiones_activas manda headers CONEXION_CERRADA a todos los clientes conectados para que se enteren y despues
     // cierra cada socket
     destruir_conexiones_activas(server);
     log_destroy(logger);
     destroy_cfg(configuracion, t_safa);
     dictionary_destroy(archivos_abiertos);
-    exit(0);
 }
 
 void sig_handler(int signo){
@@ -86,20 +98,6 @@ int main(int argc, char **argv) {
 
     printf("Listo\n");
 
-    // cerrar todos los hilos
-    // TODO mover todo esto a cerrar_safa
-    pthread_join(thread_consola, NULL);
-    pthread_cancel(thread_plp);
-    pthread_join(thread_plp, NULL);
-    pthread_cancel(thread_pcp);
-    pthread_join(thread_pcp, NULL);
-    pthread_cancel(thread_servidor);
-    pthread_join(thread_servidor, NULL);
-    pthread_cancel(thread_config);
-    pthread_join(thread_config, NULL);
-
-    destruir_plp(plp);
-    destruir_pcp(pcp);
     cerrar_safa(logger, configuracion, conexiones_activas);
 
     return 0;

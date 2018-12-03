@@ -234,23 +234,6 @@ void* ejecutar_servidor(void *arg){
 
                 break;
 
-            // en cada case del switch se puede manejar cada header como se desee
-            case STRING_DIEGO_SAFA:
-                // este header indica que el diego nos esta mandando un string
-
-                // recibir_string recibe un stream de datos del socket del cual se envio el mensaje y los interpreta
-                // como string, agregando \0 al final y metiendo los datos en el array str
-                recibir_string(&str, mensaje);
-                printf("s-AFA recibio: %s\n", str);
-                free(str);
-
-                // para probar la capacidad de comunicacion bidireccional, le contestamos un "hola!"
-                // el header STRING_MDJ_DIEGO significa que le estamos mandando un string al diego desde MDJ
-                mensaje_respuesta = crear_mensaje(STRING_SAFA_DIEGO, mensaje->socket, 0);
-                agregar_string(mensaje_respuesta, "Hola!");
-                enviar_mensaje(mensaje_respuesta);
-                break;
-
             case CONEXION_CERRADA:
                 // el header CONEXION_CERRADA indica que el que nos envio ese mensaje se desconecto, idealmente los
                 // procesos que cierran deberian mandar este header antes de hacerlo para que los procesos a los cuales
@@ -264,7 +247,7 @@ void* ejecutar_servidor(void *arg){
                 break;
 
             default:
-                log_error(logger, "Recibido header invalido (%d)", mensaje->header);
+                log_error(logger, "Se recibio un header invalido (%d)", mensaje->header);
                 break;
         }
 

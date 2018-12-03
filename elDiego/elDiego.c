@@ -361,6 +361,7 @@ int main(int argc, char **argv) {
                 }
 
             default:
+                log_error(logger, "Se recibio un header invalido (%d)", nuevo_mensaje->header);
                 break;
         }
         destruir_mensaje(nuevo_mensaje);

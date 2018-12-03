@@ -31,42 +31,6 @@ void cerrar_mdj(t_log* logger, cfg_mdj* configuracion, ConexionesActivas conexio
     destroy_cfg(configuracion, t_mdj);
     exit(0);
 }
-/*
-void* ejecutar_consola(void* arg){
-    char *linea;
-    MensajeDinamico* mensaje_saliente;
-    int puerto = (int)arg;
-    struct sockaddr_in addr;
-    int socket = crearSocket(), header, retsocket = 0;
-
-    inicializarDireccion(&addr,puerto,"127.0.0.1");
-    conectar_Servidor(socket,&addr, t_consola_mdj);
-
-    while(1) {
-        // leemos linea y la mandamos al servidor (o sea al proceso MDJ porque somos la consola de MDJ)
-        mensaje_saliente = crear_mensaje(STRING_CONSOLA_PROPIA, socket,0);
-
-        linea = readline("> ");
-
-        agregar_string(mensaje_saliente, linea);
-        retsocket = enviar_mensaje(mensaje_saliente);
-        comprobar_error(retsocket, "Error al enviar mensaje en hilo de consola de MDJ");
-
-        // si la linea es "exit" dejamos de leer mas lineas y retornamos del thread
-        if(!strcmp(linea, "exit")) {
-            free(linea);
-            return NULL;
-        }
-        free(linea);
-
-        // aca nuestro servidor nos indica que termino de ejecutar lo que le pedimos, entonces volvemos al principio
-        // del while
-        retsocket = recv(socket, &header, sizeof(header), MSG_WAITALL);
-        comprobar_error(retsocket, "Error en recv en hilo de consola de MDJ");
-        if(header==OPERACION_CONSOLA_TERMINADA)
-            continue;
-    }
-}*/
 
 void abs_to_rel_pto_montaje();
 
@@ -310,7 +274,7 @@ int main(int argc, char **argv) {
                 break;
 
             default:
-                // TODO aca habria que programar que pasa si se manda un header invalido
+                log_error(logger, "Se recibio un header invalido (%d)", mensaje_recibido->header);
                 break;
 
         }

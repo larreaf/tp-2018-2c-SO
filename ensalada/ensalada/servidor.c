@@ -37,8 +37,6 @@ void cerrar_conexion(ConexionesActivas conexiones_activas, int socket){
     ConexionCliente* cliente_seleccionado;
     CPU* cpu_seleccionado;
 
-    // TODO optimizar
-
     for(int i = 0; i<list_size(conexiones_activas.lista_clientes); i++) {
 
         cliente_seleccionado = list_get(conexiones_activas.lista_clientes, i);

@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     validar_parametros(argc);
     cfg_fm9 *configuracion = asignar_config(argv[1], fm9);
 
-    t_log *logger = log_create("fm9.log", "fm9", configuracion->logger_consola, log_level_from_string(configuracion->logger_level));
+    t_log *logger = log_create("fm9.log", "fm9", (bool)configuracion->logger_consola, log_level_from_string(configuracion->logger_level));
     log_info(logger, "Configuración cargada");
     log_info(logger, "Inicializando conexiones_activas...");
     conexiones_permitidas[t_cpu] = 10;
@@ -60,8 +60,10 @@ int main(int argc, char **argv) {
     conexiones_activas = inicializar_conexiones_activas(logger, configuracion->ip,configuracion->puerto,
             conexiones_permitidas, t_fm9);
 
-    storage = inicializar_memoria_real(configuracion->tamanio, configuracion->max_linea, configuracion->tam_pagina);
-    memoria = inicializar_memoria(storage, configuracion->modo, configuracion->tam_max_segmento);
+    storage = inicializar_memoria_real(configuracion->tamanio, configuracion->max_linea, configuracion->tam_pagina,
+            configuracion->logger_level, configuracion->logger_consola);
+    memoria = inicializar_memoria(storage, configuracion->modo, configuracion->tam_max_segmento,
+            configuracion->logger_level, configuracion->logger_consola);
 
     pthread_create(&thread_consola, NULL, (void*)ejecutar_consola_fm9, NULL);
 

@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../config.c \
 ../consola.c \
 ../pcp.c \
 ../plp.c \
@@ -11,6 +12,7 @@ C_SRCS += \
 ../servidor_safa.c 
 
 OBJS += \
+./config.o \
 ./consola.o \
 ./pcp.o \
 ./plp.o \
@@ -18,6 +20,7 @@ OBJS += \
 ./servidor_safa.o 
 
 C_DEPS += \
+./config.d \
 ./consola.d \
 ./pcp.d \
 ./plp.d \

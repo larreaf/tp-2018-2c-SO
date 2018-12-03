@@ -26,6 +26,7 @@ void* consola_safa(void* arg){
 }
 
 void ejecutar_linea(char* linea){
+    int argumento_entero;
 	operacionConsolaSafa* op_consola = parsear_linea(linea);
 	switch (op_consola->accion){
 		case EJECUTAR:
@@ -34,17 +35,42 @@ void ejecutar_linea(char* linea){
 			break;
 
 		case STATUS:
-			con_status(strtol(strsep(&op_consola->argumento," "), NULL, 10));
+		    argumento_entero = strtol(op_consola->argumento, NULL, 10);
+            if (!argumento_entero) {
+                printf("Error al parsear comando\n");
+                destroy_operacion(op_consola);
+                break;
+            }
+
+			con_status(argumento_entero);
 			destroy_operacion(op_consola);
 			break;
 
 		case FINALIZAR:
-            con_finalizar(strtol(strsep(&op_consola->argumento," "), NULL, 10));
+            argumento_entero = strtol(op_consola->argumento, NULL, 10);
+            if (!argumento_entero) {
+                printf("Error al parsear comando\n");
+                destroy_operacion(op_consola);
+                break;
+            }
+
+            con_finalizar(argumento_entero);
 			destroy_operacion(op_consola);
 			break;
 
 		case METRICAS:
-            con_metricas(strtol(strsep(&op_consola->argumento," "), NULL, 10));
+
+		    if(strcmp(op_consola->argumento, "")) {
+                argumento_entero = strtol(op_consola->argumento, NULL, 10);
+                if (!argumento_entero) {
+                    printf("Error al parsear comando\n");
+                    destroy_operacion(op_consola);
+                    break;
+                }
+            }else
+                argumento_entero = 0;
+
+            con_metricas(argumento_entero);
 			destroy_operacion(op_consola);
 			break;
 
@@ -74,7 +100,6 @@ operacionConsolaSafa* parsear_linea(char* linea){
 	operacionConsolaSafa* retorno = malloc(sizeof(operacionConsolaSafa));
 	retorno->accion = 9999;
 	retorno->argumento = string_new();
-	int offset = 0;
 	int i = 0;
 	char* word;
 
@@ -95,7 +120,7 @@ operacionConsolaSafa* parsear_linea(char* linea){
 }
 
 void destroy_operacion(operacionConsolaSafa* op_safa){
-	free(op_safa->argumento);
+    free(op_safa->argumento);
 	free(op_safa);
 	return;
 }
@@ -181,14 +206,21 @@ void con_status(int id_DTB){
 void con_finalizar(int id_DTB){
     DTB* dtb_seleccionado;
 
-    // TODO mutex
+    if(!id_DTB){
+        printf("No es posible finalizar el DTB DUMMY!\n");
+        return;
+    }
 
+    pthread_mutex_lock(&pcp->mutex_block);
     dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_DTB, true);
+    pthread_mutex_unlock(&pcp->mutex_block);
 
     if(dtb_seleccionado == NULL){
         printf("DTB %d no encontrado en BLOCK\n", id_DTB);
 
+        pthread_mutex_lock(&pcp->mutex_exec);
         dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_exec, id_DTB, false);
+        pthread_mutex_unlock(&pcp->mutex_exec);
 
         if(dtb_seleccionado == NULL) {
             printf("DTB %d encontrado en EXEC\n", id_DTB);
@@ -205,23 +237,37 @@ void con_finalizar(int id_DTB){
 }
 
 void con_metricas(int id_DTB){
-    int lista_size, acumulador_instr_ejecutadas = 0, acumulador_instr_dma = 0, i = 0;
-    float cantidad_instrucciones_promedio, cantidad_instrucciones_dma_promedio, porcentaje_dma;
+    int lista_size, acumulador_instr_ejecutadas = 0, acumulador_instr_dma = 0, i = 0,
+    acumulador_tiempos_respuesta = 0, j;
+    float cantidad_instrucciones_promedio, cantidad_instrucciones_dma_promedio, porcentaje_dma, tiempo_respuesta_prom;
     MetricasDTB* metricas;
 
     pthread_mutex_lock(&plp->mutex_metricas);
     if(!id_DTB){
         lista_size = list_size(plp->metricas_dtbs);
 
-        for(; i<lista_size; i++){
+        for(; i<lista_size; i++) {
             metricas = list_get(plp->metricas_dtbs, i);
 
             acumulador_instr_ejecutadas += metricas->cantidad_instrucciones_ejecutadas;
             acumulador_instr_dma += metricas->cantidad_instrucciones_dma;
         }
+
         cantidad_instrucciones_promedio = (float)acumulador_instr_ejecutadas/(float)i;
         cantidad_instrucciones_dma_promedio = (float)acumulador_instr_dma/(float)i;
         porcentaje_dma = ((float)acumulador_instr_dma/(float)acumulador_instr_ejecutadas)*100;
+
+        for(j = 0; j<TIEMPOS_RESPUESTA_SIZE; j++){
+            if(pcp->tiempos_respuesta[j] == -1)
+                break;
+
+            acumulador_tiempos_respuesta += pcp->tiempos_respuesta[j];
+        }
+
+        if(j)
+            tiempo_respuesta_prom = (float)acumulador_tiempos_respuesta/(float)j;
+        else
+            tiempo_respuesta_prom = -1;
 
         printf("--------------\n");
         printf("Metricas generales:\n");
@@ -229,6 +275,7 @@ void con_metricas(int id_DTB){
                 cantidad_instrucciones_promedio);
         printf("Cantidad de instrucciones promedio que usaron a El Diego: %.1f\n", cantidad_instrucciones_dma_promedio);
         printf("Porcentaje de instrucciones que usaron a El Diego: %1.f%%\n", porcentaje_dma);
+        printf("Tiempo de respuesta promedio: %1.fs\n", tiempo_respuesta_prom);
         printf("--------------\n");
     }else{
         metricas = encontrar_metricas_en_lista(plp->metricas_dtbs, id_DTB, false);
@@ -240,8 +287,10 @@ void con_metricas(int id_DTB){
             printf("Cantidad instrucciones DMA: %d\n", metricas->cantidad_instrucciones_dma);
             printf("Cantidad instrucciones esperadas en NEW: %d\n", metricas->cantidad_instrucciones_new);
             printf("--------------\n");
-        } else
-            log_error(plp->logger, "DTB %d no encontrado en metricas", id_DTB);
+        } else {
+            log_warning(plp->logger, "DTB %d no encontrado en metricas", id_DTB);
+            printf("DTB %d no encontrado en metricas\n", id_DTB);
+        }
     }
     pthread_mutex_unlock(&plp->mutex_metricas);
 

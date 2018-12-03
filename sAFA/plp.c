@@ -52,7 +52,7 @@ void abortar_dtb_seleccionado(PLP* plp, DTB* dtb_seleccionado, int codigo_error,
         dictionary_remove(archivos_abiertos, archivo->path);
     }
 
-    printf("El DTB %d fue abortado por error, revisar log para mas informacion\n", dtb_seleccionado->id);
+    printf("El DTB %d fue abortado, revisar log para mas informacion\n", dtb_seleccionado->id);
     destruir_dtb(dtb_seleccionado);
     sem_post(&plp->semaforo_multiprogramacion);
     free(string_error);
@@ -215,6 +215,10 @@ char* codigo_error_a_string(int codigo_error){
 
         case -4:
             string_append(&string_error, "Un mensaje de comunicacion de una instruccion de CPU no fue enviado correctamente");
+            break;
+
+        case -5:
+            string_append(&string_error, "DTB finalizado manualmente");
             break;
 
         case 10001:

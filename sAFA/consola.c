@@ -4,6 +4,7 @@
 extern bool correr;
 extern PLP* plp;
 extern PCP* pcp;
+extern t_dictionary* archivos_abiertos;
 
 void* consola_safa(void* arg){
 	while(correr){
@@ -34,12 +35,15 @@ void ejecutar_linea(char* linea){
 			break;
 
 		case STATUS:
-		    argumento_entero = strtol(op_consola->argumento, NULL, 10);
-            if (!argumento_entero) {
-                printf("Error al parsear comando\n");
-                destroy_operacion(op_consola);
-                break;
-            }
+            if(strcmp(op_consola->argumento, "")) {
+                argumento_entero = strtol(op_consola->argumento, NULL, 10);
+                if (!argumento_entero) {
+                    printf("Error al parsear comando\n");
+                    destroy_operacion(op_consola);
+                    break;
+                }
+            }else
+                argumento_entero = 0;
 
 			con_status(argumento_entero);
 			destroy_operacion(op_consola);
@@ -189,35 +193,13 @@ void con_status(int id_DTB){
 }
 
 void con_finalizar(int id_DTB){
-    DTB* dtb_seleccionado;
 
     if(!id_DTB){
         printf("No es posible finalizar el DTB DUMMY!\n");
         return;
     }
 
-    pthread_mutex_lock(&pcp->mutex_block);
-    dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_block, id_DTB, true);
-    pthread_mutex_unlock(&pcp->mutex_block);
-
-    if(dtb_seleccionado == NULL){
-        printf("DTB %d no encontrado en BLOCK\n", id_DTB);
-
-        pthread_mutex_lock(&pcp->mutex_exec);
-        dtb_seleccionado = encontrar_dtb_en_lista(pcp->lista_exec, id_DTB, false);
-        pthread_mutex_unlock(&pcp->mutex_exec);
-
-        if(dtb_seleccionado == NULL) {
-            printf("DTB %d encontrado en EXEC\n", id_DTB);
-            pcp->finalizar_dtb = id_DTB;
-            return;
-        }
-    }else{
-        printf("DTB %d encontrado en BLOCK, finalizando\n", id_DTB);
-        destruir_dtb(dtb_seleccionado);
-        sem_post(&plp->semaforo_multiprogramacion);
-    }
-
+    abortar_dtb(plp, id_DTB, -5, archivos_abiertos);
 	return;
 }
 

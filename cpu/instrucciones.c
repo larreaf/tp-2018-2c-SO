@@ -39,8 +39,9 @@ int in_abrir(DTB* dtb, char* path){
     peticion_abrir = crear_mensaje(ABRIR_ARCHIVO_CPU_DIEGO, socket_elDiego, 0);
     agregar_int(peticion_abrir, dtb->id);
     agregar_string(peticion_abrir, path);
-    enviar_mensaje(peticion_abrir);
-    // TODO verificar error en enviar_mensaje
+
+    if(enviar_mensaje(peticion_abrir)==-1)
+        return -4;
 
     return BLOQUEAR;
 }
@@ -73,15 +74,20 @@ int in_close(DTB* dtb, char* path){
 
     notificacion_safa = crear_mensaje(CERRAR_ARCHIVO_CPU_FM9, socket_safa, 0);
     agregar_string(notificacion_safa, path);
-    enviar_mensaje(notificacion_safa);
+    if(enviar_mensaje(notificacion_safa)==-1)
+        return -4;
 
     peticion_cerrar = crear_mensaje(CERRAR_ARCHIVO_CPU_FM9, socket_fm9, 0);
     agregar_int(peticion_cerrar, dtb->id);
     agregar_int(peticion_cerrar, nodo_aux->direccion_memoria);
-    enviar_mensaje(peticion_cerrar);
+
+    if(enviar_mensaje(peticion_cerrar)==-1) {
+        free(nodo_aux->path);
+        free(nodo_aux);
+        return -4;
+    }
     free(nodo_aux->path);
     free(nodo_aux);
-    // TODO verificar error en enviar_mensaje
 
     return READY;
 }
@@ -115,7 +121,8 @@ int in_flush(DTB* dtb, char* path){
     agregar_int(peticion_flush, dtb->id);
     agregar_int(peticion_flush, nodo_aux->direccion_memoria);
     agregar_string(peticion_flush, nodo_aux->path);
-    enviar_mensaje(peticion_flush);
+    if(enviar_mensaje(peticion_flush)==-1)
+        return -4;
 
     return BLOQUEAR;
 }
@@ -134,8 +141,8 @@ int in_crear(int dtb_id, char* path, int cant_lineas){
     agregar_int(peticion_crear, dtb_id);
     agregar_string(peticion_crear, path);
     agregar_int(peticion_crear, cant_lineas);
-    enviar_mensaje(peticion_crear);
-    // TODO verificar error en enviar_mensaje
+    if(enviar_mensaje(peticion_crear)==-1)
+        return -4;
 
     return BLOQUEAR;
 }
@@ -152,8 +159,8 @@ int in_borrar(int dtb_id, char* path){
     peticion_borrar = crear_mensaje(BORRAR_ARCHIVO_CPU_DIEGO, socket_elDiego, 0);
     agregar_int(peticion_borrar, dtb_id);
     agregar_string(peticion_borrar, path);
-    enviar_mensaje(peticion_borrar);
-    // TODO verificar error en enviar_mensaje
+    if(enviar_mensaje(peticion_borrar)==-1)
+        return -4;
 
     return BLOQUEAR;
 }
@@ -189,7 +196,8 @@ int in_asignar(DTB* dtb, char* path, int linea, char* datos){
     agregar_int(peticion_asignar, dtb->id);
     agregar_int(peticion_asignar, direccion);
     agregar_string(peticion_asignar, datos);
-    enviar_mensaje(peticion_asignar);
+    if(enviar_mensaje(peticion_asignar)==-1)
+        return -4;
 
     peticion_asignar = recibir_mensaje(socket_fm9);
     recibir_int(&resultado, peticion_asignar);
@@ -198,11 +206,15 @@ int in_asignar(DTB* dtb, char* path, int linea, char* datos){
     if(resultado)
         return resultado;
 
-    // TODO verificar error en enviar_mensaje
-
     return READY;
 }
 
+/*!
+ * Funcion que representa la instruccion "wait"
+ * @param dtb
+ * @param nombre_recurso
+ * @return
+ */
 int in_wait(DTB* dtb, char* nombre_recurso){
     MensajeDinamico* peticion_wait;
     int resultado;
@@ -210,7 +222,8 @@ int in_wait(DTB* dtb, char* nombre_recurso){
     peticion_wait = crear_mensaje(SOLICITUD_RECURSO, socket_safa, 0);
     agregar_int(peticion_wait, dtb->id);
     agregar_string(peticion_wait, nombre_recurso);
-    enviar_mensaje(peticion_wait);
+    if(enviar_mensaje(peticion_wait)==-1)
+        return -4;
 
     peticion_wait = recibir_mensaje(socket_safa);
     recibir_int(&resultado, peticion_wait);
@@ -222,12 +235,18 @@ int in_wait(DTB* dtb, char* nombre_recurso){
         return BLOQUEAR;
 }
 
+/*!
+ * Funcion que representa la operacion "signal"
+ * @param nombre_recurso
+ * @return
+ */
 int in_signal(char* nombre_recurso){
     MensajeDinamico* peticion_signal;
 
     peticion_signal = crear_mensaje(LIBERAR_RECURSO, socket_safa, 0);
     agregar_string(peticion_signal, nombre_recurso);
-    enviar_mensaje(peticion_signal);
+    if(enviar_mensaje(peticion_signal)==-1)
+        return -4;
 
     return READY;
 }
@@ -237,6 +256,5 @@ int in_signal(char* nombre_recurso){
  * @return READY
  */
 int in_concentrar(){
-
     return READY;
 }

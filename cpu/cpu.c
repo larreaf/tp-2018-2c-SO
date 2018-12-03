@@ -202,6 +202,7 @@ int main(int argc, char **argv) {
                     default:
                         break;
                 }
+                break;
 
             default:
                 log_error(logger, "Se recibio un header invalido (%d)", mensaje->header);

@@ -80,6 +80,8 @@ void* monitorear_config(void *arg) {
                     pcp->cantidad_lineas_equipo_grande = configuracion->cant_lineas_equipo_grande;
                     pcp->quantum = configuracion->quantum;
                     pcp->retardo_planificacion = configuracion->retardo;
+                    memset(pcp->tiempos_respuesta, -1, TIEMPOS_RESPUESTA_SIZE);
+                    pcp->cantidad_tiempos_respuesta = 0;
 
                     sem_destroy(&plp->semaforo_multiprogramacion);
                     sem_init(&plp->semaforo_multiprogramacion, 0, (unsigned int)configuracion->multiprogramacion);

@@ -361,6 +361,9 @@ int main(int argc, char **argv) {
                 }
                 break;
 
+            case NUEVA_CONEXION:
+                break;
+
             default:
                 log_error(logger, "Se recibio un header invalido (%d)", nuevo_mensaje->header);
                 break;

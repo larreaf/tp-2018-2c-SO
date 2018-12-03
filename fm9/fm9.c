@@ -201,6 +201,9 @@ int main(int argc, char **argv) {
                     cerrar_fm9(logger, configuracion, conexiones_activas, memoria);
                 break;
 
+            case NUEVA_CONEXION:
+                break;
+
             default:
                 log_error(logger, "Se recibio un header invalido (%d)", mensaje->header);
                 break;

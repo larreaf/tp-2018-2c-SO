@@ -1315,7 +1315,8 @@ void dump(Memoria* memoria, int id_dtb){
     }
     else if(memoria->modo == TPI){
 
-    	bool _es_del_id_dtb(NodoTablaPaginasInvertida* nodo){
+    	bool _es_del_id_dtb(void* arg){
+    		NodoTablaPaginasInvertida* nodo = (NodoTablaPaginasInvertida*)arg;
     		return nodo->id_dtb == id_dtb;
     	}
 

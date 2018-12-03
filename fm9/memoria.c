@@ -803,9 +803,9 @@ char* leer_linea(Memoria* memoria, int id_dtb, int numero_linea){
     else if(memoria->modo == TPI){
 
     	NodoTablaPaginasInvertida* nodo_filtrado;
-    	nodo_filtrado = malloc(sizeof(NodoTablaPaginasInvertida*));
+    	nodo_filtrado = malloc(sizeof(NodoTablaPaginasInvertida));
 		t_list * tabla_invertida_id_dtb;
-		tabla_invertida_id_dtb = malloc(sizeof(NodoTablaPaginasInvertida*));
+		tabla_invertida_id_dtb = malloc(sizeof(NodoTablaPaginasInvertida));
 		tabla_invertida_id_dtb = traer_tabla_pagina_invertida_por_id_dtb(memoria->lista_tabla_de_paginas_invertida, id_dtb);
 		int desplazamiento, pagina, marco;
 
@@ -977,7 +977,7 @@ char* flush_archivo(Memoria* memoria, int id_dtb, int direccion){
 
     	int desplazamiento, pagina, marco, tamanio_archivo;
     	NodoTablaPaginasInvertida* nodo_filtrado;
-    	nodo_filtrado = malloc(sizeof(NodoTablaPaginasInvertida*));
+    	nodo_filtrado = malloc(sizeof(NodoTablaPaginasInvertida));
 
 
     	pagina = direccion / memoria->storage->tamanio_pagina;
@@ -1096,7 +1096,7 @@ int cerrar_archivo(Memoria* memoria, int id_dtb, int direccion){
     else if(memoria->modo == TPI){
     	int desplazamiento, pagina, marco, tamanio_archivo, cantidad_de_paginas_ocupadas;
 		NodoTablaPaginasInvertida* nodo_filtrado;
-		nodo_filtrado = malloc(sizeof(NodoTablaPaginasInvertida*));
+		nodo_filtrado = malloc(sizeof(NodoTablaPaginasInvertida));
 
 
 		pagina = direccion / memoria->storage->tamanio_pagina;
@@ -1217,11 +1217,11 @@ int desalojar_script(Memoria* memoria, int id_dtb){
     else if(memoria->modo == TPI){
 
     	NodoTablaPaginasInvertida* nodo;
-    	nodo = malloc(sizeof(NodoTablaPaginasInvertida*));
+    	nodo = malloc(sizeof(NodoTablaPaginasInvertida));
     	NodoTablaPaginasInvertida* nodo_inicializado;
-    	nodo_inicializado = malloc(sizeof(NodoTablaPaginasInvertida*));
+    	nodo_inicializado = malloc(sizeof(NodoTablaPaginasInvertida));
     	NodoTablaPaginasInvertida* nodo_encadenamiento_inicializado;
-		nodo_encadenamiento_inicializado = malloc(sizeof(NodoTablaPaginasInvertida*));
+		nodo_encadenamiento_inicializado = malloc(sizeof(NodoTablaPaginasInvertida));
 
     	nodo_inicializado->id_dtb = -1;
     	nodo_inicializado->nro_pagina = -1;
@@ -1321,7 +1321,7 @@ void dump(Memoria* memoria, int id_dtb){
 
     	if(list_any_satisfy(memoria->lista_tabla_de_paginas_invertida, _es_del_id_dtb)){
     		t_list* tabla;
-    		tabla = malloc(sizeof(NodoTablaPaginasInvertida*));
+    		tabla = malloc(sizeof(NodoTablaPaginasInvertida));
     		tabla = traer_tabla_pagina_invertida_por_id_dtb(memoria->lista_tabla_de_paginas_invertida, id_dtb);
     		int cantidad_paginas = list_size(tabla);
 

@@ -1187,6 +1187,10 @@ int desalojar_script(Memoria* memoria, int id_dtb){
 
     if(memoria->modo == SEG) {
         tabla_segmentos_proceso = encontrar_tabla_segmentos_por_id_dtb(memoria->lista_tablas_de_segmentos, id_dtb);
+
+        if(tabla_segmentos_proceso == NULL)
+            return -1;
+
         cantidad_segmentos = list_size(tabla_segmentos_proceso->tabla_de_segmentos);
 
         for(int i = 0; i<cantidad_segmentos; i++) {

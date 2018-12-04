@@ -201,23 +201,23 @@ char* codigo_error_a_string(int codigo_error){
     char* string_error = string_new();
 
     switch(codigo_error){
-        case -1:
+        case 1:
             string_append(&string_error, "Cantidad de argumentos erroneos en una linea (detalle en cpu.log)");
             break;
 
-        case -2:
+        case 2:
             string_append(&string_error, "Instruccion no reconocida (detalle en cpu.log)");
             break;
 
-        case -3:
+        case 3:
             string_append(&string_error, "Flag inicializado de DTB invalida");
             break;
 
-        case -4:
+        case 4:
             string_append(&string_error, "Un mensaje de comunicacion de una instruccion de CPU no fue enviado correctamente");
             break;
 
-        case -5:
+        case 5:
             string_append(&string_error, "DTB finalizado manualmente");
             break;
 

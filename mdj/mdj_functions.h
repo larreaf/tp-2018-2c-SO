@@ -124,4 +124,10 @@ char* asignar_bloques(int cantidad_de_bloques);
  */
 int obtener_un_nuevo_bloque();
 
+/*
+ * @NAME:	crear_un_bloque
+ * @DESC:	Crea un bloque vacio, si existe borra el contenido
+ */
+void crear_un_bloque(int nro_bloque);
+
 #endif /* MDJ_FUNCTIONS_C_ */

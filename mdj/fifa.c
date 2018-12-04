@@ -13,6 +13,14 @@ void crear_bloques(char* pto_montaje, int cantidad_bloques){
 		free(bloque_name);
 	}
 }
+void crear_un_bloque(int nro_bloque){
+	char* path_fifa_bloques = obtener_path_bloques_fifa();
+	char* bloque_name = string_new();
+	string_append_with_format(&bloque_name,"%s%d.bin",path_fifa_bloques,nro_bloque);
+	FILE* ptr = fopen(bloque_name,"w");
+	fclose(ptr);
+	free(bloque_name);
+}
 
 void levantar_metadata(t_log* logger){
 

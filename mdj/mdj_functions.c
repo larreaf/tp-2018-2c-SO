@@ -274,6 +274,7 @@ int borrar_archivo(t_mdj_interface* mdj_interface){
 
 	while(bloques[index]!=NULL){
 		bitarray_clean_bit(bitmap,atoi(bloques[index]));
+		crear_un_bloque(atoi(bloques[index]));
 		index++;
 	}
 
